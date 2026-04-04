@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nexuradata.pages.dev/sitemap.xml
+Sitemap: https://nexuradata.ca/sitemap.xml

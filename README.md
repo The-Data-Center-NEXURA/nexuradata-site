@@ -15,7 +15,7 @@ Site vitrine statique pour un laboratoire de recuperation de donnees et forensiq
 1. Confirmer le nom legal exact de l'entreprise.
 2. Valider toutes les certifications, statistiques et claims marketing.
 3. Remplacer les coordonnees de demonstration si necessaire.
-4. Mettre a jour `sitemap.xml`, `robots.txt` et les URL canoniques si le domaine final differe de `https://nexuradata.pages.dev/`.
+4. Mettre a jour `sitemap.xml`, `robots.txt` et les URL canoniques si le domaine final differe de `https://nexuradata.ca/`.
 
 ## Mise en ligne
 

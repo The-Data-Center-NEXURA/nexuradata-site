@@ -95,7 +95,7 @@ if (intakeForm) {
       statusTarget.textContent = "Ouverture de votre application courriel avec un message prérempli.";
     }
 
-    window.location.href = `mailto:contact@nexura.ca?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join("\n"))}`;
+    window.location.href = `mailto:contact@nexuradata.ca?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join("\n"))}`;
   });
 }
 
