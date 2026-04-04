@@ -22,11 +22,42 @@ Site vitrine statique pour un laboratoire de recuperation de donnees et forensiq
 Le site etant statique, il peut etre heberge sur toute plateforme compatible HTML/CSS/JS statique:
 
 - Cloudflare Pages
+- Cloudflare Workers Static Assets
 - GitHub Pages
 - Netlify
 
-Le point d'entree a publier est la racine du projet.
+Pour Cloudflare, le choix recommande pour ce depot est `GitHub + Cloudflare Pages`. Le depot contient aussi des scripts `Wrangler` si vous voulez garder une voie CLI en parallele.
 
-## Chemin le plus rapide
+- le site est purement statique
+- `release-cloudflare/` est un dossier de publication genere automatiquement
+- `main` sert de branche de production et `staging` peut servir de branche de previsualisation
+- le site profite nativement des fichiers `_headers` et `_redirects`
+- `package.json` declare le nom du projet Pages pour les commandes CLI
 
-Pour publier vite, l'option la plus simple est Cloudflare Pages en `Direct Upload`, puis l'ajout du domaine personnalise.
+Le point d'entree a publier sur Cloudflare est `release-cloudflare/`.
+
+## Cloudflare Pages avec GitHub
+
+1. Pousser ce depot sur GitHub.
+2. Connecter le repo a Cloudflare Pages.
+3. Choisir `main` comme branche de production.
+4. Utiliser `.` comme root directory.
+5. Utiliser `exit 0` comme build command si vous publiez directement la racine du depot.
+6. Ajouter ensuite le domaine personnalise.
+
+## Cloudflare Pages avec Wrangler
+
+1. Installer Node.js puis npm.
+2. Depuis la racine du depot, lancer `npm install`.
+3. Verifier l'authentification Cloudflare avec `npm run cf:whoami`.
+4. Generer le dossier de publication avec `npm run build`.
+5. Creer le projet Pages avec `npm run cf:pages:project:create` si necessaire.
+6. Verifier l'acces au projet Pages avec `npm run cf:check`.
+7. Deployer la production avec `npm run cf:deploy`.
+8. Deployer la previsualisation avec `npm run cf:deploy:staging`.
+
+`release-cloudflare/` est regenere automatiquement pendant les commandes de build puis envoye vers Pages. La branche `main` correspond a la production et la branche `staging` fournit un environnement de previsualisation distinct.
+
+## Option sans Wrangler
+
+Si vous voulez eviter Wrangler, vous pouvez utiliser `Cloudflare Pages` en `Direct Upload` avec le dossier `release-cloudflare/` apres l'avoir genere localement via `npm run build`. Sans Node.js, cette generation locale n'est pas disponible sur cette machine.

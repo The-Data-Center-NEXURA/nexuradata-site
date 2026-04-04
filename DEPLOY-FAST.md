@@ -1,26 +1,48 @@
 # Mise en ligne rapide
 
-## Option la plus rapide: Cloudflare Pages
+## Recommandation pour ce depot: GitHub + Cloudflare Pages
+
+Le site est purement statique. La voie la plus stable est un repo GitHub prive connecte a Cloudflare Pages, avec `main` en production et `staging` en preview si vous voulez une branche de previsualisation.
+
+1. Creer un repo GitHub prive.
+2. Pousser la branche `main`.
+3. Dans Cloudflare Pages, choisir `Connect to Git`.
+4. Selectionner le repo.
+5. Utiliser `main` comme branche de production.
+6. Laisser `.` comme root directory.
+7. Utiliser `exit 0` comme build command si vous publiez directement la racine du depot.
+8. Ajouter ensuite votre domaine personnalise.
+
+Les fichiers `_headers` et `_redirects` peuvent etre publies avec le site. Ils gerent les en-tetes de securite, le cache et les redirections simples comme `index2.html -> /`.
+
+## Option CLI: Pages avec Wrangler
+
+1. Installer Node.js et npm.
+2. Dans `NEXURA`, lancer `npm install`.
+3. Verifier l'authentification avec `npm run cf:whoami`.
+4. Generer `release-cloudflare/` avec `npm run build`.
+5. Creer le projet Pages avec `npm run cf:pages:project:create`.
+6. Verifier la configuration avec `npm run cf:check`.
+7. Deployer la production avec `npm run cf:deploy`.
+8. Deployer la preview avec `npm run cf:deploy:staging`.
+
+## Option sans Wrangler: Cloudflare Pages Direct Upload
 
 1. Ouvrir `dash.cloudflare.com`.
 2. Aller dans `Workers & Pages`.
-3. Créer un projet `Pages`.
-4. Choisir `Direct Upload` si vous voulez publier sans Git.
-5. Envoyer tout le contenu du dossier `NEXURA`.
-6. Vérifier que `index.html` est bien la page d'accueil.
-7. Ajouter ensuite votre domaine personnalisé si vous utilisez `nexura.ca`.
+3. Creer un projet `Pages`.
+4. Choisir `Direct Upload`.
+5. Generer `release-cloudflare/` avec `npm run build`.
+6. Envoyer tout le contenu du dossier `release-cloudflare/`.
+7. Verifier que `index.html` est bien la page d'accueil.
+8. Ajouter ensuite votre domaine personnalise.
 
-## Option plus propre à long terme: Cloudflare Pages + Git
+Cette option evite Wrangler, mais elle demande toujours Node.js pour generer `release-cloudflare/`.
 
-1. Mettre ce dossier dans un dépôt GitHub.
-2. Dans Cloudflare Pages, choisir `Connect to Git`.
-3. Sélectionner le dépôt.
-4. Laisser le `Build command` vide pour ce site statique.
-5. Utiliser la racine du dépôt comme source.
-6. Déployer la branche de production.
+Attention: un projet Pages cree en `Direct Upload` ne peut pas etre converti ensuite en projet avec integration Git. Si vous voulez des deploiements depuis Git, creez directement un projet relie au depot.
 
-## Juste après la mise en ligne
+## Juste apres la mise en ligne
 
 1. Tester `index.html`, `mentions-legales.html` et `politique-confidentialite.html`.
-2. Vérifier que le domaine final correspond aux URL canoniques et au `sitemap.xml`.
-3. Mettre à jour les vraies coordonnées, chiffres et certifications si nécessaire.
+2. Verifier que le domaine final correspond aux URL canoniques et au `sitemap.xml`.
+3. Mettre a jour les vraies coordonnees, chiffres et certifications si necessaire.
