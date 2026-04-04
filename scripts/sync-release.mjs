@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 const releaseDir = path.join(projectRoot, "release-cloudflare");
+const excludedHtmlFiles = new Set(["index2.html"]);
 
 const rootFiles = new Set([
   "_headers",
@@ -25,7 +26,11 @@ const shouldCopyRootEntry = (entry) => {
     return true;
   }
 
-  return path.extname(entry).toLowerCase() === ".html";
+  if (path.extname(entry).toLowerCase() === ".html") {
+    return !excludedHtmlFiles.has(entry);
+  }
+
+  return false;
 };
 
 await rm(releaseDir, { recursive: true, force: true });
