@@ -1,64 +1,61 @@
 # NEXURADATA
 
-Site vitrine statique pour un laboratoire de recuperation de donnees et forensique numerique.
+Site marketing et plateforme de lancement pour un laboratoire de recuperation de donnees et forensique numerique.
 
-## Structure
+Le depot couvre maintenant:
 
-- `index.html`: page d'accueil principale
-- `mentions-legales.html`: page legale de base
-- `politique-confidentialite.html`: page de confidentialite de base
+- le site public
+- le formulaire d'ouverture de dossier
+- le portail client de suivi
+- la console interne `/operations/`
+- les Pages Functions Cloudflare pour l'intake, le suivi et les actions operateur
+- la base D1 et la configuration `wrangler.jsonc`
+
+## Structure utile
+
+- `index.html`: page d'accueil publique
+- `suivi-dossier-client-montreal.html`: portail client `noindex`
+- `operations/index.html`: console interne a proteger via Cloudflare Access
 - `assets/css/site.css`: styles partages
-- `assets/js/site.js`: interactions progressives et non bloquantes
+- `assets/js/site.js`: interactions publiques et console operateur
+- `functions/api/intake.js`: ouverture de dossier
+- `functions/api/status.js`: suivi client par numero + code
+- `functions/api/ops/cases.js`: recherche et actions operateur
+- `functions/_lib/`: logique partagee D1, acces et emails
+- `migrations/0001_launch.sql`: schema D1
+- `wrangler.jsonc`: configuration Pages/Functions a servir de source de verite
+- `.dev.vars.example`: variables locales a copier vers `.dev.vars`
 
-## Avant mise en ligne
+## Prerequis de lancement
 
-1. Confirmer le nom legal exact de l'entreprise.
-2. Valider toutes les certifications, statistiques et claims marketing.
-3. Remplacer les coordonnees de demonstration si necessaire.
-4. Mettre a jour `sitemap.xml`, `robots.txt` et les URL canoniques si le domaine final differe de `https://nexuradata.ca/`.
+1. Remplacer les IDs D1 placeholder dans `wrangler.jsonc`.
+2. Creer un secret fort `ACCESS_CODE_SECRET`.
+3. Configurer les alias `contact@`, `urgence@`, `dossiers@` dans Cloudflare Email Routing.
+4. Verifier le domaine d'envoi dans Resend et fournir `RESEND_API_KEY`.
+5. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
 
-## Mise en ligne
+Le runbook detaille est dans `LAUNCH-RUNBOOK.md`.
 
-Le site etant statique, il peut etre heberge sur toute plateforme compatible HTML/CSS/JS statique:
+## Commandes
 
-- Cloudflare Pages
-- Cloudflare Workers Static Assets
-- GitHub Pages
-- Netlify
+- `npm install`
+- `npm run build`
+- `npm run cf:whoami`
+- `npm run cf:d1:migrate:local`
+- `npm run cf:d1:migrate:remote`
+- `npm run cf:dev`
+- `npm run cf:check`
+- `npm run cf:deploy`
+- `npm run cf:deploy:staging`
 
-Pour Cloudflare, le choix recommande pour ce depot est `GitHub + Cloudflare Pages`. Le depot contient aussi des scripts `Wrangler` si vous voulez garder une voie CLI en parallele.
+`release-cloudflare/` est regenere a chaque build pour les assets statiques. Les `functions/` restent a la racine du projet pour Cloudflare Pages Functions.
 
-- le site est purement statique
-- `release-cloudflare/` est un dossier de publication genere automatiquement
-- `main` sert de branche de production et `staging` peut servir de branche de previsualisation
-- le site profite nativement des fichiers `_headers` et `_redirects`
-- `package.json` declare le nom du projet Pages pour les commandes CLI
-
-Le point d'entree a publier sur Cloudflare est `release-cloudflare/`.
-
-## Cloudflare Pages avec GitHub
+## Cloudflare Pages
 
 1. Connecter le repo GitHub a Cloudflare Pages.
-2. Choisir `main` comme branche de production.
-3. Utiliser `.` comme root directory.
-4. Utiliser `npm run build` comme build command.
-5. Utiliser `release-cloudflare` comme build output directory.
-6. Utiliser `staging` comme branche de preview si vous voulez un environnement de previsualisation dedie.
-7. Ajouter ensuite le domaine personnalise.
-
-## Cloudflare Pages avec Wrangler
-
-1. Installer Node.js puis npm.
-2. Depuis la racine du depot, lancer `npm install`.
-3. Verifier l'authentification Cloudflare avec `npm run cf:whoami`.
-4. Generer le dossier de publication avec `npm run build`.
-5. Creer le projet Pages avec `npm run cf:pages:project:create` si necessaire.
-6. Verifier l'acces au projet Pages avec `npm run cf:check`.
-7. Deployer la production avec `npm run cf:deploy`.
-8. Deployer la previsualisation avec `npm run cf:deploy:staging`.
-
-`release-cloudflare/` est regenere automatiquement pendant les commandes de build puis envoye vers Pages. La branche `main` correspond a la production et la branche `staging` fournit un environnement de previsualisation distinct.
-
-## Option sans Wrangler
-
-Si vous voulez eviter Wrangler, vous pouvez utiliser `Cloudflare Pages` en `Direct Upload` avec le dossier `release-cloudflare/` apres l'avoir genere localement via `npm run build`. Sans Node.js, cette generation locale n'est pas disponible sur cette machine.
+2. Utiliser `.` comme root directory.
+3. Utiliser `npm run build` comme build command.
+4. Utiliser `release-cloudflare` comme build output directory.
+5. Laisser `main` comme branche de production.
+6. Utiliser la branche de lancement ou `staging` pour les previews.
+7. Une fois `wrangler.jsonc` rempli avec les vrais bindings, traiter ce fichier comme source de verite pour la configuration.

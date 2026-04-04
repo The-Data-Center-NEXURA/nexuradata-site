@@ -6,7 +6,7 @@
   <title>Suivi de dossier client | NEXURADATA Montréal</title>
   <meta name="description" content="Portail de suivi de dossier client NEXURADATA à Montréal. Consultez l'état d'une demande avec un numéro de dossier et un code d'accès transmis par le laboratoire.">
   <meta name="robots" content="noindex, follow">
-  <meta name="theme-color" content="#172423">
+  <meta name="theme-color" content="#050b12">
   <meta name="author" content="NEXURADATA">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="fr_CA">
@@ -58,7 +58,7 @@
       <div class="status-layout">
         <section class="page-card status-gate">
           <h2>Accéder au suivi</h2>
-          <form class="status-form" data-status-form novalidate>
+          <form class="status-form" data-status-form data-status-endpoint="/api/status" novalidate>
             <label class="field">
               <span>Numéro de dossier</span>
               <input type="text" name="dossier" placeholder="Exemple : NX-2026-0412" required>
@@ -75,10 +75,8 @@
             </div>
 
             <p class="form-note">
-              En l'absence d'un accès valide, aucune information de dossier n'est affichée. Pour des
-              raisons de confidentialité, ce portail ne doit pas exposer de données sensibles sans
-              contrôle d'accès. La version publique doit être reliée à un accès serveur sécurisé avant
-              activation complète.
+              Le portail affiche uniquement l'état utile du dossier. En l'absence d'un accès valide,
+              aucune information n'est renvoyée. Les détails sensibles restent hors du portail client.
             </p>
             <p class="form-status" data-status-form-message aria-live="polite"></p>
           </form>
