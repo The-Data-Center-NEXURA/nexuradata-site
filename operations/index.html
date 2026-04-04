@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Console interne | NEXURADATA</title>
+  <meta name="description" content="Console interne NEXURADATA pour l'exploitation des dossiers, le suivi client et les actions opérateur.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#050b12">
+  <meta name="author" content="NEXURADATA">
+  <link rel="manifest" href="../site.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <script src="../assets/js/site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Navigation opérateur">
+      <a class="brand" href="../index.html" aria-label="NEXURADATA, retour à l'accueil">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span class="brand-text">NEXURADATA</span>
+      </a>
+      <div class="nav-links">
+        <a href="../suivi-dossier-client-montreal.html">Portail client</a>
+        <a href="../index.html" class="button button-outline button-small">Retour au site</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="contenu" class="page-shell">
+    <div class="container" data-ops-app data-ops-endpoint="/api/ops/cases">
+      <header class="page-hero ops-hero">
+        <p class="eyebrow">Console interne</p>
+        <h1>Exploitation des dossiers</h1>
+        <p class="page-intro">
+          Cette surface sert à qualifier les demandes, gérer le suivi client et déclencher les
+          communications utiles. Elle doit être protégée par Cloudflare Access avant exposition.
+        </p>
+      </header>
+
+      <div class="ops-layout">
+        <aside class="page-card ops-sidebar">
+          <h2>Rechercher un dossier</h2>
+          <form class="ops-search-form" data-ops-search-form>
+            <label class="field">
+              <span>Numéro, client ou courriel</span>
+              <input type="search" name="query" placeholder="NX-2026..., client@..." autocomplete="off">
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="button button-primary">Chercher</button>
+            </div>
+            <p class="form-status" data-ops-search-status aria-live="polite"></p>
+          </form>
+
+          <div class="ops-results" data-ops-results></div>
+        </aside>
+
+        <section class="page-card ops-panel" data-ops-case-panel hidden>
+          <div class="ops-panel-head">
+            <div>
+              <p class="guide-meta">Dossier</p>
+              <h2 data-ops-case-title>NX-0000-0000</h2>
+            </div>
+            <input type="hidden" data-ops-current-case-id>
+          </div>
+
+          <div class="ops-meta-grid">
+            <article class="contact-card">
+              <h3>Dates</h3>
+              <p><strong>Créé:</strong> <span data-ops-meta-created></span></p>
+              <p><strong>Mis à jour:</strong> <span data-ops-meta-updated></span></p>
+            </article>
+
+            <article class="contact-card">
+              <h3>Client</h3>
+              <p><strong>Nom:</strong> <span data-ops-meta-client></span></p>
+              <p><strong>Courriel:</strong> <span data-ops-meta-email></span></p>
+            </article>
+
+            <article class="contact-card">
+              <h3>Support</h3>
+              <p><strong>Type:</strong> <span data-ops-meta-support></span></p>
+              <p><strong>Urgence:</strong> <span data-ops-meta-urgency></span></p>
+            </article>
+          </div>
+
+          <article class="contact-card ops-message-card">
+            <h3>Message initial</h3>
+            <p data-ops-message></p>
+          </article>
+
+          <form class="ops-case-form" data-ops-case-form>
+            <div class="form-grid">
+              <label class="field">
+                <span>Statut client</span>
+                <input type="text" name="status" required>
+              </label>
+
+              <label class="field">
+                <span>Prochaine étape</span>
+                <input type="text" name="nextStep" required>
+              </label>
+
+              <label class="field field-full">
+                <span>Résumé client</span>
+                <textarea name="clientSummary" rows="4" required></textarea>
+              </label>
+
+              <label class="consent-check field-full">
+                <input type="checkbox" name="notifyClient">
+                <span>Envoyer automatiquement une mise à jour au client au moment de l'enregistrement.</span>
+              </label>
+            </div>
+
+            <div class="ops-steps-head">
+              <h3>Timeline visible côté client</h3>
+              <button type="button" class="button button-secondary button-small" data-ops-add-step>Ajouter une étape</button>
+            </div>
+
+            <div class="ops-steps" data-ops-steps></div>
+
+            <div class="form-actions">
+              <button type="submit" class="button button-primary">Enregistrer le dossier</button>
+              <button type="button" class="button button-secondary" data-ops-send-update>Envoyer une mise à jour</button>
+            </div>
+
+            <p class="form-status" data-ops-case-status aria-live="polite"></p>
+          </form>
+
+          <section class="ops-access-card">
+            <h3>Accès client</h3>
+            <p class="form-note">Le code client n'est jamais exposé publiquement. Vous pouvez renvoyer le code actuel ou en générer un nouveau.</p>
+            <div class="form-actions">
+              <button type="button" class="button button-secondary" data-ops-send-access>Renvoyer le code</button>
+              <button type="button" class="button button-primary" data-ops-regenerate-access>Régénérer le code</button>
+            </div>
+            <p class="form-status" data-ops-access-result aria-live="polite"></p>
+          </section>
+
+          <section class="ops-history-card">
+            <h3>Historique</h3>
+            <div class="ops-history" data-ops-history></div>
+          </section>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>© <span data-year></span> NEXURADATA. Tous droits réservés.</p>
+    </div>
+  </footer>
+</body>
+</html>
