@@ -1,22 +1,22 @@
 ﻿:root {
-  --color-bg: #050b12;
-  --color-bg-soft: #0b1320;
-  --color-surface: rgba(11, 19, 32, 0.9);
-  --color-surface-strong: #101b29;
-  --color-surface-elevated: rgba(14, 23, 36, 0.98);
-  --color-panel: #08131f;
-  --color-panel-soft: #0d1b2b;
-  --color-line: rgba(125, 211, 252, 0.14);
-  --color-line-strong: rgba(34, 211, 238, 0.24);
-  --color-text: #eaf4ff;
-  --color-text-soft: #98aec2;
-  --color-text-muted: #6f8498;
-  --color-accent: #22d3ee;
-  --color-accent-strong: #0ea5e9;
-  --color-accent-ink: #031018;
-  --color-highlight: #7dd3fc;
-  --shadow-soft: 0 18px 45px -30px rgba(0, 0, 0, 0.5);
-  --shadow-strong: 0 38px 90px -52px rgba(0, 0, 0, 0.72);
+  --color-bg: #141618;
+  --color-bg-soft: #1a1d20;
+  --color-surface: rgba(24, 27, 31, 0.94);
+  --color-surface-strong: #1d2126;
+  --color-surface-elevated: rgba(28, 31, 36, 0.98);
+  --color-panel: #171b20;
+  --color-panel-soft: #1d2228;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line-strong: rgba(150, 166, 184, 0.22);
+  --color-text: #f1f3f5;
+  --color-text-soft: #c0c6ce;
+  --color-text-muted: #8f98a3;
+  --color-accent: #b7c4d3;
+  --color-accent-strong: #8fa2b7;
+  --color-accent-ink: #101417;
+  --color-highlight: #d9e1e8;
+  --shadow-soft: 0 14px 32px -28px rgba(0, 0, 0, 0.48);
+  --shadow-strong: 0 24px 56px -40px rgba(0, 0, 0, 0.62);
   --radius-sm: 1rem;
   --radius-md: 1.5rem;
   --radius-lg: 2rem;
@@ -39,10 +39,7 @@ body {
   min-width: 320px;
   font-family: "IBM Plex Sans", sans-serif;
   color: var(--color-text);
-  background:
-    radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 22rem),
-    radial-gradient(circle at 88% 10%, rgba(14, 165, 233, 0.12), transparent 18rem),
-    linear-gradient(180deg, #040a10 0%, #08111b 40%, #0a1420 100%);
+  background: #141618;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -66,7 +63,7 @@ select {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(34, 211, 238, 0.35);
+  outline: 3px solid rgba(183, 196, 211, 0.35);
   outline-offset: 3px;
 }
 
@@ -96,9 +93,9 @@ select {
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(20px);
-  background: rgba(4, 10, 16, 0.82);
-  border-bottom: 1px solid rgba(125, 211, 252, 0.08);
+  backdrop-filter: blur(16px);
+  background: rgba(20, 22, 24, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .navbar {
@@ -124,18 +121,16 @@ select {
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 0.6rem 1rem 0.6rem 1rem;
-  background: linear-gradient(145deg, rgba(34, 211, 238, 0.96), rgba(14, 165, 233, 0.86));
-  color: var(--color-accent-ink);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 10px 20px -14px rgba(0, 0, 0, 0.6);
+  border-radius: 0.75rem;
+  background: #3a434c;
+  color: #ffffff;
+  box-shadow: none;
 }
 
 .brand-text {
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 1.35rem;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -170,9 +165,9 @@ select {
   justify-content: center;
   min-height: 2.75rem;
   padding: 0.72rem 1rem;
-  border: 1px solid rgba(34, 211, 238, 0.24);
+  border: 1px solid rgba(183, 196, 211, 0.22);
   border-radius: 1rem 1rem 1rem 0.35rem;
-  background: rgba(9, 18, 29, 0.78);
+  background: rgba(27, 31, 36, 0.94);
   color: var(--color-accent);
   font-family: inherit;
   font-size: 0.92rem;
@@ -189,8 +184,8 @@ select {
 
 .nav-toggle:hover {
   transform: translateY(-2px);
-  border-color: rgba(34, 211, 238, 0.44);
-  background: rgba(14, 23, 36, 0.98);
+  border-color: rgba(183, 196, 211, 0.34);
+  background: rgba(34, 38, 43, 0.98);
 }
 
 .button {
@@ -232,44 +227,44 @@ select {
 }
 
 .button-primary {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+  background: var(--color-accent);
   color: var(--color-accent-ink);
-  box-shadow: 0 18px 38px -24px rgba(34, 211, 238, 0.45);
+  box-shadow: none;
 }
 
 .button-secondary {
-  border-color: rgba(34, 211, 238, 0.24);
-  background: rgba(12, 22, 35, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(31, 34, 38, 0.96);
   color: var(--color-text);
 }
 
 .button-outline {
-  border-color: rgba(34, 211, 238, 0.26);
+  border-color: rgba(183, 196, 211, 0.22);
   color: var(--color-accent);
-  background: rgba(9, 18, 29, 0.78);
+  background: rgba(27, 31, 36, 0.94);
 }
 
 .button-secondary:hover,
 .button-outline:hover {
-  border-color: rgba(34, 211, 238, 0.44);
-  background: rgba(14, 23, 36, 0.98);
+  border-color: rgba(183, 196, 211, 0.34);
+  background: rgba(34, 38, 43, 0.98);
 }
 
 .section {
   position: relative;
-  padding: 4.75rem 0;
+  padding: 4.25rem 0;
 }
 
 .section-surface {
-  background: linear-gradient(180deg, rgba(10, 17, 28, 0.78), rgba(8, 13, 22, 0.54));
-  border-top: 1px solid rgba(125, 211, 252, 0.08);
-  border-bottom: 1px solid rgba(125, 211, 252, 0.08);
+  background: linear-gradient(180deg, rgba(24, 27, 31, 0.76), rgba(20, 22, 25, 0.54));
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .section-lined {
-  border-top: 1px solid rgba(34, 211, 238, 0.14);
-  border-bottom: 1px solid rgba(34, 211, 238, 0.14);
-  background: rgba(7, 14, 23, 0.64);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(20, 22, 25, 0.56);
 }
 
 .section-heading {
@@ -297,14 +292,15 @@ select {
 .page-hero h1 {
   margin: 0;
   line-height: 1.05;
-  letter-spacing: -0.04em;
-  font-family: "Syne", sans-serif;
+  letter-spacing: -0.03em;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-weight: 700;
   text-wrap: balance;
 }
 
 .hero-copy h1 {
-  max-width: 9ch;
-  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  max-width: 13ch;
+  font-size: clamp(2.55rem, 5vw, 4.1rem);
 }
 
 .section-heading h2,
@@ -314,42 +310,32 @@ select {
 
 .hero {
   overflow: clip;
-  padding-top: 5.75rem;
-  padding-bottom: 4.5rem;
+  padding-top: 4.75rem;
+  padding-bottom: 3.75rem;
 }
 
 .hero-backdrop {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 18% 26%, rgba(34, 211, 238, 0.16), transparent 20rem),
-    radial-gradient(circle at 85% 18%, rgba(14, 165, 233, 0.14), transparent 18rem),
-    linear-gradient(0deg, rgba(7, 14, 23, 0.54), rgba(7, 14, 23, 0.24));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(20, 22, 25, 0));
   pointer-events: none;
 }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(16rem, 0.78fr);
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
   align-items: center;
 }
 
 .hero-copy {
   position: relative;
   z-index: 1;
+  max-width: 58rem;
 }
 
 .hero-copy::after {
-  content: "MTL";
-  position: absolute;
-  top: -0.2rem;
-  right: min(2rem, 6vw);
-  z-index: -1;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: clamp(3.6rem, 9vw, 6rem);
-  letter-spacing: -0.14em;
-  color: rgba(125, 211, 252, 0.08);
+  content: none;
 }
 
 .headline-mark {
@@ -366,7 +352,7 @@ select {
   bottom: 0.16em;
   z-index: -1;
   height: 0.24em;
-  background: rgba(34, 211, 238, 0.18);
+  background: rgba(183, 196, 211, 0.16);
   transform: skewX(-16deg);
 }
 
@@ -380,16 +366,32 @@ select {
 }
 
 .hero-lead {
-  max-width: 42rem;
-  margin: 1.5rem 0 0;
-  font-size: 1.12rem;
+  max-width: 50rem;
+  margin: 1.25rem 0 0;
+  font-size: 1.05rem;
+}
+
+.hero-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-points li {
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-text-soft);
+  font-size: 0.96rem;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 1.75rem;
 }
 
 .hero-highlights {
@@ -407,9 +409,9 @@ select {
   align-items: center;
   min-height: 2.75rem;
   padding: 0.65rem 1rem;
-  border: 1px solid rgba(125, 211, 252, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: rgba(10, 18, 29, 0.84);
+  background: rgba(26, 29, 33, 0.9);
   color: var(--color-text-soft);
 }
 
@@ -425,10 +427,10 @@ select {
 .page-card,
 .faq-item {
   position: relative;
-  border: 1px solid rgba(125, 211, 252, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(14, 23, 36, 0.98), rgba(9, 17, 28, 0.95));
-  box-shadow: var(--shadow-soft);
+  background: #1a1d21;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -442,14 +444,14 @@ select {
   position: absolute;
   inset: 0 auto auto 0;
   width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, var(--color-accent), var(--color-highlight));
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .hero-panel .panel-card,
 .contact-card {
-  background: linear-gradient(180deg, rgba(8, 19, 31, 0.98), rgba(10, 25, 39, 0.94));
-  border-color: rgba(125, 211, 252, 0.1);
+  background: #1a1d21;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .hero-panel .panel-value,
@@ -507,7 +509,7 @@ select {
   justify-content: space-between;
   gap: 1rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(125, 211, 252, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .panel-ledger span {
@@ -678,7 +680,7 @@ select {
   color: var(--color-text);
   font-size: 1rem;
   letter-spacing: -0.03em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .proof-caption p {
@@ -765,7 +767,7 @@ select {
 .authority-item h3 {
   margin: 0 0 0.75rem;
   letter-spacing: -0.03em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .triage-card p,
@@ -849,7 +851,7 @@ select {
   margin: 0 0 0.8rem;
   font-size: 1.2rem;
   letter-spacing: -0.03em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .service-link {
@@ -891,7 +893,7 @@ select {
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.05em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .stat-card p {
@@ -942,7 +944,7 @@ select {
   margin: 0 0 0.7rem;
   font-size: 1.08rem;
   letter-spacing: -0.03em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .metro-card p {
@@ -959,13 +961,11 @@ select {
 }
 
 .contact-shell {
-  padding: 2rem;
-  border: 1px solid rgba(125, 211, 252, 0.12);
+  padding: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 18rem),
-    linear-gradient(180deg, rgba(14, 23, 36, 0.98), rgba(9, 17, 28, 0.94));
-  box-shadow: var(--shadow-strong);
+  background: #191c20;
+  box-shadow: none;
 }
 
 .contact-grid {
@@ -975,7 +975,7 @@ select {
 
 .contact-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.8fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(16rem, 0.78fr);
   gap: 1.25rem;
   margin-top: 1.75rem;
   align-items: start;
@@ -1008,9 +1008,9 @@ select {
   width: 100%;
   min-height: 3.15rem;
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(125, 211, 252, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
-  background: rgba(6, 14, 24, 0.95);
+  background: rgba(20, 23, 27, 0.98);
   color: var(--color-text);
 }
 
@@ -1023,8 +1023,8 @@ select {
 .field select:focus,
 .field textarea:focus {
   outline: none;
-  border-color: rgba(34, 211, 238, 0.42);
-  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.08);
+  border-color: rgba(183, 196, 211, 0.32);
+  box-shadow: 0 0 0 4px rgba(183, 196, 211, 0.08);
 }
 
 .field-full {
@@ -1036,9 +1036,9 @@ select {
   gap: 0.8rem;
   align-items: flex-start;
   padding: 1rem 1.05rem;
-  border: 1px solid rgba(125, 211, 252, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
-  background: rgba(10, 18, 29, 0.82);
+  background: rgba(23, 26, 30, 0.92);
 }
 
 .consent-check input {
@@ -1112,18 +1112,16 @@ select {
 
 .site-footer {
   padding: 0 0 2rem;
-  color: rgba(234, 244, 255, 0.92);
-  background:
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.18), transparent 18rem),
-    linear-gradient(180deg, #08111b 0%, #040a10 100%);
-  border-top: 1px solid rgba(125, 211, 252, 0.14);
+  color: rgba(241, 243, 245, 0.92);
+  background: #131518;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-  padding: 2.5rem 0;
+  grid-template-columns: 1.4fr repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  padding: 2rem 0;
 }
 
 .brand-footer {
@@ -1133,8 +1131,8 @@ select {
 .footer-title {
   margin: 0 0 1rem;
   color: rgba(234, 244, 255, 0.96);
-  font-size: 1rem;
-  font-family: "Syne", sans-serif;
+  font-size: 0.96rem;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .site-footer a,
@@ -1142,7 +1140,7 @@ select {
   display: block;
   margin: 0 0 0.65rem;
   text-decoration: none;
-  color: rgba(152, 174, 194, 0.78);
+  color: rgba(192, 198, 206, 0.78);
 }
 
 .site-footer a:hover {
@@ -1151,7 +1149,7 @@ select {
 
 .footer-bottom {
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(125, 211, 252, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .footer-bottom p {
@@ -1396,7 +1394,7 @@ select {
 
 .guide-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
 }
 
@@ -1408,7 +1406,7 @@ select {
 .guide-card h3 {
   margin: 0 0 0.75rem;
   letter-spacing: -0.03em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .guide-card p:last-of-type {
@@ -1449,7 +1447,7 @@ select {
   margin: 0 0 0.9rem;
   font-size: 1.25rem;
   letter-spacing: -0.03em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .price-tag {
@@ -1458,7 +1456,7 @@ select {
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.05em;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .pricing-card p:last-child {
@@ -1492,7 +1490,7 @@ select {
 
 .status-gate h2 {
   margin: 0 0 1rem;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   letter-spacing: -0.03em;
 }
 
@@ -1515,7 +1513,7 @@ select {
 
 .status-panel-head h2 {
   margin: 0;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   letter-spacing: -0.03em;
 }
 
@@ -1669,7 +1667,7 @@ select {
 
 .ops-panel-head h2 {
   margin: 0;
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   letter-spacing: -0.03em;
 }
 
@@ -1827,7 +1825,7 @@ select {
   padding: 1.25rem 1.4rem;
   font-weight: 700;
   color: var(--color-text);
-  font-family: "Syne", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .faq-item summary::-webkit-details-marker {
@@ -1932,9 +1930,9 @@ select {
     width: 100%;
     padding: 0.45rem;
     gap: 0.35rem;
-    border: 1px solid rgba(125, 211, 252, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.15rem;
-    background: rgba(8, 16, 27, 0.94);
+    background: rgba(28, 31, 35, 0.98);
     box-shadow: var(--shadow-soft);
   }
 
@@ -1962,8 +1960,8 @@ select {
   .nav-links a:not(.button):hover,
   .nav-links a:not(.button):focus-visible {
     transform: none;
-    border-color: rgba(34, 211, 238, 0.16);
-    background: rgba(10, 18, 29, 0.82);
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(37, 40, 44, 0.98);
   }
 
   .section {
@@ -1990,13 +1988,24 @@ select {
   }
 
   .hero-copy h1 {
-    max-width: 8ch;
-    font-size: clamp(2.35rem, 12vw, 3.5rem);
+    max-width: 12ch;
+    font-size: clamp(2.3rem, 11vw, 3.25rem);
   }
 
   .hero-lead {
     margin-top: 1rem;
     font-size: 1rem;
+  }
+
+  .hero-points {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+    margin-top: 1.35rem;
+  }
+
+  .hero-points li {
+    padding-top: 0.8rem;
+    font-size: 0.94rem;
   }
 
   .hero-actions,
