@@ -561,6 +561,27 @@ const mapPaymentRow = (row) => ({
   createdBy: row.created_by
 });
 
+const mapPublicPayment = (payment) => {
+  const status = normalizeText(payment.status, 24).toLowerCase() || "open";
+  const isPayable = status === "open" && normalizeText(payment.checkoutUrl, 2000);
+
+  return {
+    paymentRequestId: payment.paymentRequestId,
+    paymentKind: payment.paymentKind,
+    status,
+    label: payment.label,
+    description: payment.description,
+    amountCents: payment.amountCents,
+    amountFormatted: payment.amountFormatted,
+    currency: payment.currency,
+    checkoutUrl: isPayable ? payment.checkoutUrl : "",
+    createdAt: payment.createdAt,
+    sentAt: payment.sentAt,
+    paidAt: payment.paidAt,
+    expiresAt: payment.expiresAt
+  };
+};
+
 export const listCasePayments = async (env, caseId) => {
   const db = ensureDb(env);
   const normalizedCaseId = normalizeCaseId(caseId);
@@ -615,6 +636,8 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
     return null;
   }
 
+  const payments = await listCasePayments(env, row.case_id);
+
   return {
     caseId: row.case_id,
     updatedAt: row.updated_at,
@@ -622,7 +645,8 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
     status: row.status,
     nextStep: row.next_step,
     summary: row.client_summary,
-    steps: await getVisibleTimeline(env, row.case_id)
+    steps: await getVisibleTimeline(env, row.case_id),
+    payments: payments.map(mapPublicPayment)
   };
 };
 

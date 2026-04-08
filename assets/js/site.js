@@ -143,15 +143,37 @@ const paymentFeedback = document.querySelector("[data-payment-feedback]");
 
 if (paymentFeedback) {
   const params = new URLSearchParams(window.location.search);
+  const caseId = params.get("caseId") || "";
+  const paymentRequestId = params.get("paymentRequestId") || "";
   const caseTarget = paymentFeedback.querySelector("[data-payment-feedback-case]");
   const requestTarget = paymentFeedback.querySelector("[data-payment-feedback-request]");
+  const followLink = paymentFeedback.querySelector("[data-payment-feedback-follow]");
+  const mailLink = paymentFeedback.querySelector("[data-payment-feedback-mail]");
 
   if (caseTarget) {
-    caseTarget.textContent = params.get("caseId") || "Non précisé";
+    caseTarget.textContent = caseId || "Non précisé";
   }
 
   if (requestTarget) {
-    requestTarget.textContent = params.get("paymentRequestId") || "Non précisée";
+    requestTarget.textContent = paymentRequestId || "Non précisée";
+  }
+
+  if (followLink && caseId) {
+    followLink.href = `suivi-dossier-client-montreal.html?caseId=${encodeURIComponent(caseId)}`;
+  }
+
+  if (mailLink) {
+    const subject = caseId
+      ? `Dossier ${caseId} - suivi paiement`
+      : "Suivi paiement NEXURADATA";
+    const body = [
+      caseId ? `Numéro de dossier: ${caseId}` : "",
+      paymentRequestId ? `Référence de paiement: ${paymentRequestId}` : "",
+      "",
+      "Message:"
+    ].filter(Boolean).join("\n");
+
+    mailLink.href = `mailto:contact@nexuradata.ca?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 }
 
@@ -250,6 +272,91 @@ const createStatusStep = (step) => {
   return article;
 };
 
+const formatPaymentKindLabel = (paymentKind) => {
+  if (paymentKind === "deposit") {
+    return "Acompte";
+  }
+
+  if (paymentKind === "final") {
+    return "Solde";
+  }
+
+  return "Paiement";
+};
+
+const formatPaymentStatusLabel = (status) => {
+  if (status === "paid") {
+    return "Payé";
+  }
+
+  if (status === "expired") {
+    return "Expiré";
+  }
+
+  if (status === "failed") {
+    return "À reprendre";
+  }
+
+  return "Ouvert";
+};
+
+const createStatusPayment = (payment) => {
+  const article = document.createElement("article");
+  article.className = "status-payment";
+
+  const head = document.createElement("div");
+  head.className = "status-payment-head";
+
+  const title = document.createElement("p");
+  title.className = "status-payment-title";
+  title.textContent = payment.label;
+
+  const badge = document.createElement("span");
+  badge.className = `status-payment-badge is-${payment.status || "open"}`;
+  badge.textContent = formatPaymentStatusLabel(payment.status);
+
+  head.append(title, badge);
+
+  const meta = document.createElement("p");
+  meta.className = "status-payment-meta";
+  meta.textContent = `${payment.amountFormatted || formatCurrency(payment.amountCents, payment.currency)} · ${formatPaymentKindLabel(payment.paymentKind)}`;
+
+  const note = document.createElement("p");
+  note.className = "status-payment-note";
+  note.textContent = payment.description;
+
+  const details = document.createElement("p");
+  details.className = "status-payment-meta";
+  details.textContent =
+    payment.status === "paid" && payment.paidAt
+      ? `Paiement confirmé le ${formatTimestamp(payment.paidAt)}`
+      : payment.status === "open" && payment.expiresAt
+        ? `Lien disponible jusqu'au ${formatTimestamp(payment.expiresAt)}`
+        : payment.sentAt
+          ? `Lien transmis le ${formatTimestamp(payment.sentAt)}`
+          : `Référence ${payment.paymentRequestId}`;
+
+  article.append(head, meta, note);
+
+  if (payment.checkoutUrl) {
+    const actions = document.createElement("div");
+    actions.className = "status-payment-actions";
+
+    const link = document.createElement("a");
+    link.className = "button button-primary button-small";
+    link.href = payment.checkoutUrl;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = "Régler en ligne";
+
+    actions.append(link);
+    article.append(actions);
+  }
+
+  article.append(details);
+  return article;
+};
+
 const renderStatusRecord = (record, statusPanel) => {
   if (!statusPanel) {
     return;
@@ -263,6 +370,8 @@ const renderStatusRecord = (record, statusPanel) => {
   const nextTarget = statusPanel.querySelector("[data-status-next]");
   const summaryTarget = statusPanel.querySelector("[data-status-summary]");
   const timelineTarget = statusPanel.querySelector("[data-status-timeline]");
+  const paymentsSection = statusPanel.querySelector("[data-status-payments-section]");
+  const paymentsTarget = statusPanel.querySelector("[data-status-payments]");
 
   if (caseTarget) caseTarget.textContent = record.caseId;
   if (badgeTarget) badgeTarget.textContent = record.status;
@@ -270,6 +379,18 @@ const renderStatusRecord = (record, statusPanel) => {
   if (supportTarget) supportTarget.textContent = record.support;
   if (nextTarget) nextTarget.textContent = record.nextStep;
   if (summaryTarget) summaryTarget.textContent = record.summary;
+
+  if (paymentsSection && paymentsTarget) {
+    const payments = Array.isArray(record.payments) ? record.payments : [];
+
+    paymentsSection.hidden = payments.length === 0;
+
+    if (payments.length > 0) {
+      paymentsTarget.replaceChildren(...payments.map(createStatusPayment));
+    } else {
+      paymentsTarget.replaceChildren();
+    }
+  }
 
   if (timelineTarget) {
     timelineTarget.replaceChildren(...(record.steps || []).map(createStatusStep));
@@ -378,7 +499,8 @@ if (statusForm) {
         { title: "Évaluation en cours", note: "Lecture initiale et qualification du cas.", state: "active" },
         { title: "Soumission", note: "À transmettre après évaluation.", state: "pending" },
         { title: "Traitement", note: "Commence après autorisation.", state: "pending" }
-      ]
+      ],
+      payments: []
     },
     "NX-2026-0419|RAIDSECURE": {
       caseId: "NX-2026-0419",
@@ -392,9 +514,39 @@ if (statusForm) {
         { title: "Évaluation", note: "Analyse initiale terminée.", state: "complete" },
         { title: "Soumission envoyée", note: "En attente d'acceptation.", state: "active" },
         { title: "Traitement", note: "Débute après autorisation.", state: "pending" }
+      ],
+      payments: [
+        {
+          paymentRequestId: "PAY-20260404-A1B2C3",
+          paymentKind: "deposit",
+          status: "open",
+          label: "Acompte d'intervention",
+          description: "Ouverture du traitement après autorisation et prise en charge du dossier.",
+          amountCents: 65000,
+          amountFormatted: "650,00 $",
+          currency: "cad",
+          checkoutUrl: "https://checkout.stripe.com/pay/demo",
+          createdAt: "2026-04-04T14:10:00.000Z",
+          sentAt: "2026-04-04T14:11:00.000Z",
+          paidAt: "",
+          expiresAt: "2026-04-11T14:10:00.000Z"
+        }
       ]
     }
   };
+
+  const caseIdField = statusForm.querySelector('[name="dossier"]');
+  const accessCodeField = statusForm.querySelector('[name="code"]');
+  const params = new URLSearchParams(window.location.search);
+  const presetCaseId = `${params.get("caseId") || ""}`.trim().toUpperCase();
+
+  if (caseIdField && presetCaseId) {
+    caseIdField.value = presetCaseId;
+  }
+
+  if (accessCodeField && presetCaseId && !accessCodeField.value) {
+    accessCodeField.focus();
+  }
 
   statusForm.addEventListener("submit", async (event) => {
     event.preventDefault();
