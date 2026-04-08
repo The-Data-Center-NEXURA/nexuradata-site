@@ -1,4 +1,116 @@
 const yearTarget = document.querySelector("[data-year]");
+const documentLanguage = document.documentElement.lang?.toLowerCase() || "fr-ca";
+const isEnglishDocument = documentLanguage.startsWith("en");
+
+const publicI18n = isEnglishDocument
+  ? {
+      locale: "en-CA",
+      navOpen: "Open navigation",
+      navClose: "Close navigation",
+      navMenu: "Menu",
+      navCloseLabel: "Close",
+      intakeSubjectPrefix: "NEXURADATA inquiry",
+      fieldName: "Name",
+      fieldEmail: "Email",
+      fieldPhone: "Phone",
+      fieldSupport: "Support",
+      fieldUrgency: "Urgency",
+      fieldDescription: "Issue description",
+      intakeRequired: "Complete the required fields before opening a case.",
+      intakeBusy: "Opening...",
+      intakeOpening: "Opening your case...",
+      intakeOpenedSent: (caseId) => `Case ${caseId} opened. The access code was sent to the client.`,
+      intakeOpenedQueued: (caseId) => `Case ${caseId} opened. The lab can now review the request.`,
+      intakeFallback: "The backend is unavailable. Your email application is opening with a prefilled message.",
+      intakeError: "The request could not be processed.",
+      intakeOffline: "The backend is unreachable. Your email application is opening with a prefilled message.",
+      statusRequired: "Enter a valid case number and access code.",
+      statusNotFound: "No case matched this access. Check the credentials provided by NEXURADATA or request an update.",
+      statusFound: "Case found.",
+      statusBusy: "Searching...",
+      statusSearching: "Searching for your case...",
+      statusOffline: "The status portal is currently unavailable.",
+      demoCaseOne: {
+        status: "Assessment in progress",
+        updatedAt: "April 4, 2026 11:40 AM",
+        support: "USB external drive",
+        nextStep: "Initial assessment update",
+        summary: "The support was received and logged. Initial assessment is in progress before the quote or next steps are sent.",
+        steps: [
+          { title: "Case received", note: "Support received and logged.", state: "complete" },
+          { title: "Assessment in progress", note: "Initial review and case qualification.", state: "active" },
+          { title: "Quote", note: "To be issued after assessment.", state: "pending" },
+          { title: "Recovery work", note: "Starts after authorization.", state: "pending" }
+        ]
+      },
+      demoCaseTwo: {
+        status: "Quote sent",
+        updatedAt: "April 4, 2026 10:15 AM",
+        support: "RAID / NAS",
+        nextStep: "Awaiting client authorization",
+        summary: "Initial assessment is complete. The quote and intervention framework were sent to the client for approval.",
+        steps: [
+          { title: "Case received", note: "Support received and logged.", state: "complete" },
+          { title: "Assessment complete", note: "Initial technical review completed.", state: "complete" },
+          { title: "Quote sent", note: "Awaiting acceptance.", state: "active" },
+          { title: "Recovery work", note: "Begins after authorization.", state: "pending" }
+        ]
+      }
+    }
+  : {
+      locale: "fr-CA",
+      navOpen: "Ouvrir la navigation",
+      navClose: "Fermer la navigation",
+      navMenu: "Menu",
+      navCloseLabel: "Fermer",
+      intakeSubjectPrefix: "Demande NEXURADATA",
+      fieldName: "Nom",
+      fieldEmail: "Courriel",
+      fieldPhone: "Téléphone",
+      fieldSupport: "Support",
+      fieldUrgency: "Urgence",
+      fieldDescription: "Description du problème",
+      intakeRequired: "Complétez les champs requis avant d'ouvrir un dossier.",
+      intakeBusy: "Ouverture...",
+      intakeOpening: "Ouverture du dossier en cours...",
+      intakeOpenedSent: (caseId) => `Dossier ${caseId} ouvert. Le code d'accès a été envoyé au client.`,
+      intakeOpenedQueued: (caseId) => `Dossier ${caseId} ouvert. Le laboratoire peut maintenant qualifier le cas.`,
+      intakeFallback: "Le backend n'est pas disponible. Votre application courriel s'ouvre avec un message prérempli.",
+      intakeError: "La demande n'a pas pu être traitée.",
+      intakeOffline: "Le backend n'est pas joignable. Votre application courriel s'ouvre avec un message prérempli.",
+      statusRequired: "Entrez un numéro de dossier et un code d'accès valides.",
+      statusNotFound: "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour.",
+      statusFound: "Dossier trouvé.",
+      statusBusy: "Recherche...",
+      statusSearching: "Recherche du dossier en cours...",
+      statusOffline: "Le portail de suivi n'est pas joignable pour le moment.",
+      demoCaseOne: {
+        status: "Évaluation en cours",
+        updatedAt: "4 avril 2026 à 11 h 40",
+        support: "Disque externe USB",
+        nextStep: "Communication de l'évaluation initiale",
+        summary: "Le support a été reçu et enregistré. L'évaluation initiale est en cours avant l'envoi de la soumission ou des prochaines étapes.",
+        steps: [
+          { title: "Dossier reçu", note: "Support reçu et pris en charge.", state: "complete" },
+          { title: "Évaluation en cours", note: "Lecture initiale et qualification du cas.", state: "active" },
+          { title: "Soumission", note: "À transmettre après évaluation.", state: "pending" },
+          { title: "Traitement", note: "Commence après autorisation.", state: "pending" }
+        ]
+      },
+      demoCaseTwo: {
+        status: "Soumission envoyée",
+        updatedAt: "4 avril 2026 à 10 h 15",
+        support: "RAID / NAS",
+        nextStep: "Attente de l'autorisation client",
+        summary: "L'évaluation initiale a été complétée. La soumission et le cadre d'intervention ont été transmis au client pour acceptation.",
+        steps: [
+          { title: "Dossier reçu", note: "Support reçu et enregistré.", state: "complete" },
+          { title: "Évaluation", note: "Analyse initiale terminée.", state: "complete" },
+          { title: "Soumission envoyée", note: "En attente d'acceptation.", state: "active" },
+          { title: "Traitement", note: "Débute après autorisation.", state: "pending" }
+        ]
+      }
+    };
 
 if (yearTarget) {
   yearTarget.textContent = new Date().getFullYear();
@@ -36,8 +148,8 @@ const initializeMobileNav = () => {
       const isOpen = Boolean(open) && mobileNavQuery.matches;
       navbar.classList.toggle("is-nav-open", isOpen);
       toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      toggle.setAttribute("aria-label", isOpen ? "Fermer la navigation" : "Ouvrir la navigation");
-      toggle.textContent = isOpen ? "Fermer" : "Menu";
+      toggle.setAttribute("aria-label", isOpen ? publicI18n.navClose : publicI18n.navOpen);
+      toggle.textContent = isOpen ? publicI18n.navCloseLabel : publicI18n.navMenu;
     };
 
     setOpen(false);
@@ -190,22 +302,22 @@ const formatTimestamp = (value) => {
     return value;
   }
 
-  return new Intl.DateTimeFormat("fr-CA", {
+  return new Intl.DateTimeFormat(publicI18n.locale, {
     dateStyle: "long",
     timeStyle: "short"
   }).format(date);
 };
 
 const buildIntakeMailto = (formData) => {
-  const subject = `Demande NEXURADATA - ${formData.get("support")} - ${formData.get("urgence")}`;
+  const subject = `${publicI18n.intakeSubjectPrefix} - ${formData.get("support")} - ${formData.get("urgence")}`;
   const bodyLines = [
-    `Nom: ${formData.get("nom") || ""}`,
-    `Courriel: ${formData.get("courriel") || ""}`,
-    `Téléphone: ${formData.get("telephone") || ""}`,
-    `Support: ${formData.get("support") || ""}`,
-    `Urgence: ${formData.get("urgence") || ""}`,
+    `${publicI18n.fieldName}: ${formData.get("nom") || ""}`,
+    `${publicI18n.fieldEmail}: ${formData.get("courriel") || ""}`,
+    `${publicI18n.fieldPhone}: ${formData.get("telephone") || ""}`,
+    `${publicI18n.fieldSupport}: ${formData.get("support") || ""}`,
+    `${publicI18n.fieldUrgency}: ${formData.get("urgence") || ""}`,
     "",
-    "Description du problème:",
+    `${publicI18n.fieldDescription}:`,
     `${formData.get("message") || ""}`
   ];
 
@@ -266,7 +378,7 @@ if (intakeForm) {
 
     if (!intakeForm.checkValidity()) {
       intakeForm.reportValidity();
-      setMessage(statusTarget, "error", "Complétez les champs requis avant d'ouvrir un dossier.");
+      setMessage(statusTarget, "error", publicI18n.intakeRequired);
       return;
     }
 
@@ -283,9 +395,9 @@ if (intakeForm) {
       sourcePath: window.location.pathname
     };
 
-    setButtonBusy(submitButton, true, "Ouverture...");
+    setButtonBusy(submitButton, true, publicI18n.intakeBusy);
 
-    setMessage(statusTarget, "success", "Ouverture du dossier en cours...");
+    setMessage(statusTarget, "success", publicI18n.intakeOpening);
 
     try {
       const response = await fetch(endpoint, {
@@ -304,8 +416,8 @@ if (intakeForm) {
           statusTarget,
           "success",
           data?.delivery?.client === "sent"
-            ? `Dossier ${data.caseId} ouvert. Le code d'accès a été envoyé au client.`
-            : `Dossier ${data.caseId} ouvert. Le laboratoire peut maintenant qualifier le cas.`
+            ? publicI18n.intakeOpenedSent(data.caseId)
+            : publicI18n.intakeOpenedQueued(data.caseId)
         );
         return;
       }
@@ -315,18 +427,18 @@ if (intakeForm) {
         setMessage(
           statusTarget,
           "success",
-          "Le backend n'est pas disponible. Votre application courriel s'ouvre avec un message prérempli."
+          publicI18n.intakeFallback
         );
         return;
       }
 
-      setMessage(statusTarget, "error", data?.message || "La demande n'a pas pu être traitée.");
+      setMessage(statusTarget, "error", data?.message || publicI18n.intakeError);
     } catch {
       window.location.href = buildIntakeMailto(formData);
       setMessage(
         statusTarget,
         "success",
-        "Le backend n'est pas joignable. Votre application courriel s'ouvre avec un message prérempli."
+        publicI18n.intakeOffline
       );
     } finally {
       setButtonBusy(submitButton, false);
@@ -346,31 +458,11 @@ if (statusForm) {
   const demoCases = {
     "NX-2026-0412|MONTREAL24": {
       caseId: "NX-2026-0412",
-      status: "Évaluation en cours",
-      updatedAt: "4 avril 2026 à 11 h 40",
-      support: "Disque externe USB",
-      nextStep: "Communication de l'évaluation initiale",
-      summary: "Le support a été reçu et enregistré. L'évaluation initiale est en cours avant l'envoi de la soumission ou des prochaines étapes.",
-      steps: [
-        { title: "Dossier reçu", note: "Support reçu et pris en charge.", state: "complete" },
-        { title: "Évaluation en cours", note: "Lecture initiale et qualification du cas.", state: "active" },
-        { title: "Soumission", note: "À transmettre après évaluation.", state: "pending" },
-        { title: "Traitement", note: "Commence après autorisation.", state: "pending" }
-      ]
+      ...publicI18n.demoCaseOne
     },
     "NX-2026-0419|RAIDSECURE": {
       caseId: "NX-2026-0419",
-      status: "Soumission envoyée",
-      updatedAt: "4 avril 2026 à 10 h 15",
-      support: "RAID / NAS",
-      nextStep: "Attente de l'autorisation client",
-      summary: "L'évaluation initiale a été complétée. La soumission et le cadre d'intervention ont été transmis au client pour acceptation.",
-      steps: [
-        { title: "Dossier reçu", note: "Support reçu et enregistré.", state: "complete" },
-        { title: "Évaluation", note: "Analyse initiale terminée.", state: "complete" },
-        { title: "Soumission envoyée", note: "En attente d'acceptation.", state: "active" },
-        { title: "Traitement", note: "Débute après autorisation.", state: "pending" }
-      ]
+      ...publicI18n.demoCaseTwo
     }
   };
 
@@ -379,7 +471,7 @@ if (statusForm) {
 
     if (!statusForm.checkValidity()) {
       statusForm.reportValidity();
-      setMessage(messageTarget, "error", "Entrez un numéro de dossier et un code d'accès valides.");
+      setMessage(messageTarget, "error", publicI18n.statusRequired);
       return;
     }
 
@@ -399,18 +491,18 @@ if (statusForm) {
         setMessage(
           messageTarget,
           "error",
-          "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour."
+          publicI18n.statusNotFound
         );
         return;
       }
 
       renderStatusRecord(record, statusPanel);
-      setMessage(messageTarget, "success", "Dossier trouvé.");
+      setMessage(messageTarget, "success", publicI18n.statusFound);
       return;
     }
 
-    setButtonBusy(submitButton, true, "Recherche...");
-    setMessage(messageTarget, "success", "Recherche du dossier en cours...");
+    setButtonBusy(submitButton, true, publicI18n.statusBusy);
+    setMessage(messageTarget, "success", publicI18n.statusSearching);
 
     try {
       const response = await fetch(endpoint, {
@@ -428,7 +520,7 @@ if (statusForm) {
 
       if (response.ok && data?.ok) {
         renderStatusRecord(data, statusPanel);
-        setMessage(messageTarget, "success", "Dossier trouvé.");
+        setMessage(messageTarget, "success", publicI18n.statusFound);
         return;
       }
 
@@ -439,14 +531,14 @@ if (statusForm) {
       setMessage(
         messageTarget,
         "error",
-        data?.message || "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour."
+        data?.message || publicI18n.statusNotFound
       );
     } catch {
       if (statusPanel) {
         statusPanel.hidden = true;
       }
 
-      setMessage(messageTarget, "error", "Le portail de suivi n'est pas joignable pour le moment.");
+      setMessage(messageTarget, "error", publicI18n.statusOffline);
     } finally {
       setButtonBusy(submitButton, false);
     }
