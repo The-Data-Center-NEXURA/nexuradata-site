@@ -109,30 +109,18 @@ select {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.9rem;
   min-width: 0;
   text-decoration: none;
-  font-weight: 800;
-  letter-spacing: -0.03em;
 }
 
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.75rem;
-  background: #3a434c;
-  color: #ffffff;
-  box-shadow: none;
+.brand img {
+  display: block;
+  height: 24px;
+  width: auto;
 }
 
-.brand-text {
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 1.35rem;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
+.brand-footer img {
+  height: 18px;
 }
 
 .nav-links {
@@ -2100,8 +2088,8 @@ select {
     gap: 0.9rem;
   }
 
-  .brand-text {
-    font-size: clamp(1.05rem, 5vw, 1.2rem);
+  .brand img {
+    height: clamp(18px, 5vw, 22px);
   }
 
   .nav-toggle {
