@@ -1,27 +1,18 @@
 ---
-description: "Scaffold a new bilingual page pair (FR + EN) with correct meta tags, canonical/hreflang links, and design-system classes."
+description: "Scaffold a new bilingual page pair (FR + EN) with correct meta tags, hreflang links, and design-system classes."
 agent: "agent"
+argument-hint: "Page slug and topic, e.g. 'faq-recuperation-donnees-montreal — FAQ page'"
 ---
 Create a new bilingual page pair for the NEXURADATA site.
 
-**Page slug**: {{slug}}
-**French title**: {{titleFR}}
-**English title**: {{titleEN}}
-**French meta description**: {{descFR}}
-**English meta description**: {{descEN}}
-**Page type**: {{type}} (content page or legal/shell page)
+Ask for anything not provided: slug, French title, English title, FR/EN meta descriptions, page type (content or legal/shell).
 
-## Requirements
+## Steps
 
-1. Create the French page at root: `{{slug}}.html`
-2. Create the English page at: `en/{{slug}}.html`
-3. Follow the exact `<head>` structure from existing pages (see `mentions-legales.html` for reference):
-   - `lang="fr-CA"` / `lang="en-CA"`
-   - All OG and Twitter meta tags
-   - Canonical + hreflang (FR, EN, x-default) links
-   - EN page uses `../` relative paths for assets, manifest, and favicon
-4. Follow the design system from `.github/instructions/design-system.instructions.md`
-5. For legal/shell pages, use `.page-shell`, `.page-hero`, `.page-grid`, `.page-card`, `.page-content` classes
-6. Include skip-link, site-header, main content, and site-footer matching existing pages
-7. Add the new page to `sitemap.xml`
-8. The build script (`npm run build`) copies HTML files automatically — no changes needed to `scripts/sync-release.mjs`
+1. Create `{{slug}}.html` (FR, `lang="fr-CA"`) and `en/{{slug}}.html` (EN, `lang="en-CA"`).
+2. Copy the full `<head>` structure from `mentions-legales.html` as a reference — include all OG, Twitter, canonical, and hreflang tags. EN pages use `../` relative paths for assets.
+3. Apply the design system (loaded automatically via `applyTo` on `.html` files).
+4. For legal/shell pages use `.page-shell` / `.page-hero` / `.page-grid` / `.page-card` / `.page-content`.
+5. Include skip-link, `<header class="site-header">`, `<main>`, and `<footer>` matching existing pages.
+6. Add both URLs to `sitemap.xml`.
+7. No build-script changes needed — `npm run build` copies all root HTML and `en/` automatically.

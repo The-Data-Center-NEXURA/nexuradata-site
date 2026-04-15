@@ -1,6 +1,6 @@
 ---
 description: "Use when writing HTML, CSS, or JS for the NEXURADATA site. Covers design tokens, typography, layout, forms, animation, and editorial rules. Triggers on: styling, CSS, layout, new page, component, section, form, animation."
-applyTo: ["**/*.html", "**/*.css", "**/*.js"]
+applyTo: ["**/*.html", "assets/**/*.css", "assets/**/*.js"]
 ---
 # NEXURADATA Design System
 
