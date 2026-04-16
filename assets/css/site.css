@@ -1100,7 +1100,7 @@ select {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 32px;
   padding: 32px 0;
   border-top: var(--rule);
@@ -1183,7 +1183,8 @@ select {
   margin-bottom: 2rem;
 }
 
-.page-intro {
+.page-intro,
+.section-intro {
   max-width: 44rem;
   margin: 1rem 0 0;
   font-size: 1.05rem;
@@ -1212,6 +1213,12 @@ select {
 
 .page-content li + li {
   margin-top: 0.55rem;
+}
+
+.page-content strong {
+  color: rgba(232, 228, 220, 0.92);
+  font-weight: 700;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .page-links {
@@ -1386,6 +1393,10 @@ select {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
+}
+
+.guide-grid > :nth-child(odd):last-child {
+  grid-column: 1 / -1;
 }
 
 .guide-card {
