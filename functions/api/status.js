@@ -7,6 +7,9 @@ export const onRequestOptions = () => onOptions("POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
   try {
+    if (!context.env?.INTAKE_DB) {
+      return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
+    }
     const payload = await parsePayload(context.request);
     const { caseId, accessCode } = validateStatusLookup(payload);
     const detail = await getPublicCaseByCredentials(context.env, caseId, accessCode);

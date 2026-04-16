@@ -20,6 +20,10 @@ const authorizeOrReject = (request, env) => {
 export const onRequestOptions = () => onOptions("GET, OPTIONS");
 
 export const onRequestGet = async (context) => {
+  if (!context.env?.INTAKE_DB) {
+    return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
+  }
+
   const auth = authorizeOrReject(context.request, context.env);
 
   if (auth instanceof Response) {
