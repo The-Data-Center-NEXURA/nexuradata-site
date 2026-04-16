@@ -49,10 +49,8 @@ const runWrangler = async (args, options = {}) => {
   await ensurePath(wranglerBin, "Wrangler binary");
 
   return new Promise((resolve, reject) => {
-    const command = process.platform === "win32" ? (process.env.ComSpec || "cmd.exe") : wranglerBin;
-    const commandArgs = process.platform === "win32"
-      ? ["/d", "/s", "/c", wranglerBin, ...args]
-      : args;
+    const command = wranglerBin;
+    const commandArgs = args;
 
     const child = spawn(command, commandArgs, {
       cwd: projectRoot,
