@@ -1180,17 +1180,16 @@ select {
 
 .footer-legal a,
 .footer-block a {
-  color: var(--os);
+  color: var(--color-text-soft);
   text-decoration: none;
   font-size: 0.75rem;
   letter-spacing: var(--tracking-xwide);
-  opacity: 0.38;
-  transition: opacity 0.2s ease;
+  transition: color 180ms var(--ease-out);
 }
 
 .footer-legal a:hover,
 .footer-block a:hover {
-  opacity: 1;
+  color: var(--color-accent);
 }
 
 .footer-legal {
