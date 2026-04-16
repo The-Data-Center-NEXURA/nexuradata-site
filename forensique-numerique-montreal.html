@@ -28,6 +28,7 @@
   <link rel="alternate" hreflang="x-default" href="https://nexuradata.ca/en/forensique-numerique-montreal.html">
   <link rel="manifest" href="site.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,15 +38,35 @@
       "@context": "https://schema.org",
       "@type": "Service",
       "name": "Forensique numérique à Montréal",
-      "description": "Forensique numérique à Montréal pour analyse d'incident, acquisition de données, chronologie et documentation exploitable.",
+      "description": "Forensique numérique à Montréal par un examinateur certifié CFE : acquisition forensique, chaîne de possession, rapports judiciaires, témoignage expert.",
       "url": "https://nexuradata.ca/forensique-numerique-montreal.html",
+      "image": "https://nexuradata.ca/assets/icons/og-default.png",
       "provider": {
         "@type": "ProfessionalService",
         "name": "NEXURADATA",
-        "url": "https://nexuradata.ca/"
+        "url": "https://nexuradata.ca/",
+        "employee": {
+          "@type": "Person",
+          "name": "Olivier",
+          "jobTitle": "Examinateur forensique certifié (CFE)",
+          "hasCredential": {
+            "@type": "EducationalOccupationalCredential",
+            "credentialCategory": "Professional Certification",
+            "name": "Certified Forensic Examiner (CFE)"
+          }
+        }
       },
       "areaServed": ["Montréal", "Laval", "Longueuil", "Grand Montréal"],
-      "availableLanguage": ["fr-CA", "en-CA"]
+      "availableLanguage": ["fr-CA", "en-CA"],
+      "offers": {
+        "@type": "Offer",
+        "name": "Forensique numérique",
+        "price": "500",
+        "priceCurrency": "CAD",
+        "priceValidUntil": "2027-04-16",
+        "availability": "https://schema.org/InStock"
+      },
+      "termsOfService": "https://nexuradata.ca/conditions-intervention-paiement.html"
     }
   </script>
   <script src="assets/js/site.js" defer></script>
@@ -65,6 +86,7 @@
           <a href="/politique-confidentialite.html">Confidentialité</a>
           <a href="/conditions-intervention-paiement.html">Conditions</a>
           <a href="/#contact">Contact</a>
+          <a href="/en/forensique-numerique-montreal.html" class="lang-switch" lang="en">EN</a>
         </div>
       </nav>
     </div>
@@ -73,15 +95,26 @@
   <main id="contenu" class="page-shell">
     <div class="container">
       <header class="page-hero">
-        <p class="eyebrow">Investigation</p>
+        <p class="eyebrow">Investigation · Examinateur certifié CFE</p>
         <h1>Forensique numérique à Montréal</h1>
         <p class="page-intro">
-          Pour les dossiers où la question n'est pas seulement de récupérer des fichiers, mais de
-          comprendre ce qui s'est produit, préserver l'intégrité du support et documenter les faits.
+          Examinateur certifié CFE avec expérience en témoignage devant les tribunaux fédéraux et
+          provinciaux. Chaîne de possession documentée, rapports structurés pour décideurs et avocats,
+          réponse aux incidents avec préservation intégrale du support.
         </p>
       </header>
 
       <div class="page-grid">
+        <section class="page-card page-content">
+          <h2>Méthodologie forensique</h2>
+          <ul>
+            <li><strong>Préservation</strong> — bloqueurs d'écriture matériels systématiques, imagerie forensique complète (dd/dcfldd, FTK Imager) avant toute analyse.</li>
+            <li><strong>Acquisition</strong> — copie bit-à-bit vérifiée par empreinte cryptographique (SHA-256), chaîne de possession documentée du début à la remise.</li>
+            <li><strong>Analyse</strong> — reconstruction chronologique, extraction ciblée, corrélation d'artefacts avec EnCase, Autopsy, outils propriétaires et scripts personnalisés.</li>
+            <li><strong>Rapport</strong> — livrable structuré conçu pour des décideurs, avocats et assureurs, pas uniquement pour des techniciens.</li>
+          </ul>
+        </section>
+
         <section class="page-card page-content">
           <h2>Cas de figure fréquents</h2>
           <ul>
@@ -89,32 +122,26 @@
             <li>Besoin de préserver un appareil ou un compte avant analyse.</li>
             <li>Ransomware, compromission ou exfiltration présumée.</li>
             <li>Dossier exigeant une chronologie claire des événements.</li>
+            <li>Préparation de preuve numérique pour litige civil ou pénal.</li>
           </ul>
         </section>
 
         <section class="page-card page-content">
-          <h2>Points souvent attendus par les décideurs</h2>
+          <h2>Garanties pour les mandataires</h2>
           <ul>
-            <li>Préservation du support et traçabilité du dossier.</li>
-            <li>Analyse structurée et restitution compréhensible.</li>
-            <li>Éléments exploitables pour enquête interne ou conseil juridique.</li>
-            <li>Communication claire avec les responsables TI, RH, juridiques ou assurance.</li>
+            <li><strong>Certification CFE</strong> — qualification reconnue internationalement en analyse forensique numérique.</li>
+            <li><strong>Expérience judiciaire</strong> — rapports d'expertise et témoignage devant les tribunaux fédéraux et provinciaux.</li>
+            <li><strong>Assurance E&O</strong> — couverture responsabilité professionnelle active pour chaque mandat.</li>
+            <li><strong>Arsenal technique complet</strong> — FTK Imager, EnCase, Autopsy, Cellebrite, bloqueurs matériels, outils d'analyse mobile et scripts personnalisés.</li>
+            <li><strong>Conformité Loi 25</strong> — collecte minimale, chiffrement, destruction contrôlée après remise.</li>
           </ul>
-        </section>
-
-        <section class="page-card page-content">
-          <h2>Quand une approche forensique devient utile</h2>
-          <p>
-            Elle devient essentielle lorsqu'il faut préserver l'intégrité d'un support, documenter les
-            faits, reconstruire une chronologie ou remettre des éléments suffisamment clairs pour une
-            équipe interne, un cabinet ou un assureur.
-          </p>
         </section>
 
         <section class="page-card page-content">
           <h2>Profils de clients concernés</h2>
           <ul>
             <li>Cabinets juridiques et experts externes.</li>
+            <li>Entreprises du secteur santé — dossiers médicaux, systèmes cliniques.</li>
             <li>PME et entreprises avec incident sensible.</li>
             <li>Assureurs et gestionnaires de risques.</li>
             <li>Équipes de cybersécurité et TI internes.</li>
@@ -123,8 +150,9 @@
       </div>
 
       <div class="page-links">
-        <a class="button button-primary" href="index.html#contact">Parler à un spécialiste</a>
-        <a class="button button-secondary" href="recuperation-donnees-montreal.html">Voir récupération de données</a>
+        <a class="button button-primary" href="index.html#contact">Parler à l'examinateur</a>
+        <a class="button button-secondary" href="mandats-entreprise.html">Mandats d'entreprise</a>
+        <a class="button button-outline" href="le-laboratoire.html">Le laboratoire</a>
       </div>
     </div>
   </main>
@@ -149,6 +177,12 @@
         <div class="footer-block">
           <small>COURRIEL</small>
           <p><a href="mailto:contact@nexuradata.ca">contact@nexuradata.ca</a></p>
+        </div>
+
+        <div class="footer-block">
+          <small>HORAIRE</small>
+          <p>7 jours, 9 h à 18 h</p>
+          <p>Urgences acceptées en tout temps</p>
         </div>
 
         <div class="footer-block">
