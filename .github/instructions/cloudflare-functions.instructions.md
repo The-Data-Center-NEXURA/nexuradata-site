@@ -25,10 +25,11 @@ Import from `functions/_lib/` — never duplicate logic between endpoints.
 
 | Module | Exports |
 |--------|---------|
-| `http.js` | `json()`, `onOptions()`, `parsePayload()`, `methodNotAllowed()` |
+| `http.js` | `json()`, `onOptions()`, `parsePayload()`, `methodNotAllowed()`, `authorizeOrReject()` |
 | `cases.js` | `normalizeText()`, `normalizeMultilineText()`, `validateSubmission()`, case CRUD, access code crypto |
-| `email.js` | `sendClientAccessEmail()`, `sendClientStatusEmail()`, `sendLabNotificationEmail()` |
+| `email.js` | `sendClientAccessEmail()`, `sendClientStatusEmail()`, `sendLabNotificationEmail()`, `sendClientPaymentLinkEmail()` |
 | `stripe.js` | `createHostedCheckoutSession()`, `verifyStripeWebhook()` |
+| `rate-limit.js` | `checkRateLimit()` — per-isolate sliding window; layer Cloudflare WAF for production |
 
 ## Input → Normalize → Validate → Respond
 
@@ -44,7 +45,16 @@ Wrap every handler body in try/catch — return user-safe messages, never leak i
 
 ## Auth & Secrets
 
-- Protected ops endpoints (`functions/api/ops/`): call `authorizeOpsRequest(request, env)` from `_lib/cases.js`, return 403 on failure.
+- Protected ops endpoints (`functions/api/ops/`): use `authorizeOrReject(request, env, authorizeOpsRequest)` from `_lib/http.js` — returns a 403 Response or auth result.
 - Access secrets via `context.env.SECRET_NAME`. Never log, hardcode, or return them.
 - Check D1 binding before querying: `if (!context.env?.INTAKE_DB)` → return 503.
 - D1: parameterized queries only — never interpolate user input into SQL.
+- Validate enum inputs against allow-list `Set` objects (e.g., `allowedSupports.has(value)`).
+
+## Rate Limiting
+
+Public endpoints (`intake.js`, `status.js`) must call `checkRateLimit(request, maxPerMinute)` before processing. The limiter is per-isolate (not global) — layer Cloudflare WAF rules for production-grade protection.
+
+## Email Safety
+
+Use `escapeHtml()` from `_lib/email.js` for any user-controlled content in HTML email templates. Include a Resend `Idempotency-Key` header to prevent duplicate sends.
