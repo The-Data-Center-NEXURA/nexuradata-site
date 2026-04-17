@@ -26,7 +26,7 @@ Le depot couvre maintenant:
 - `wrangler.jsonc`: configuration Pages/Functions a servir de source de verite
 - `.dev.vars.example`: variables locales a copier vers `.dev.vars`
 
-## Prerequis de lancement
+Prerequis de lancement
 
 1. Remplacer les IDs D1 placeholder dans `wrangler.jsonc`.
 2. Creer un secret fort `ACCESS_CODE_SECRET`.
@@ -36,7 +36,7 @@ Le depot couvre maintenant:
 
 Le runbook detaille est dans `LAUNCH-RUNBOOK.md`.
 
-## Commandes
+Commandes
 
 - `npm install`
 - `npm run build`
@@ -50,7 +50,7 @@ Le runbook detaille est dans `LAUNCH-RUNBOOK.md`.
 
 `release-cloudflare/` est regenere a chaque build pour les assets statiques. Les `functions/` restent a la racine du projet pour Cloudflare Pages Functions.
 
-## Cloudflare Pages
+Cloudflare Pages
 
 1. Connecter le repo GitHub a Cloudflare Pages.
 2. Utiliser `.` comme root directory.
