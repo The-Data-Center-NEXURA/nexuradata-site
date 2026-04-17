@@ -42,3 +42,19 @@ export const methodNotAllowed = () =>
     },
     { status: 405 }
   );
+
+export const authorizeOrReject = (request, env, authorizeFn) => {
+  const auth = authorizeFn(request, env);
+
+  if (!auth.ok) {
+    return json(
+      {
+        ok: false,
+        message: "Accès opérateur refusé."
+      },
+      { status: 403 }
+    );
+  }
+
+  return auth;
+};

@@ -1634,8 +1634,8 @@ select {
 }
 
 .status-payment-badge.is-paid {
-  border-color: rgba(143, 162, 183, 0.34);
-  background: rgba(143, 162, 183, 0.08);
+  border-color: rgba(232, 228, 220, 0.22);
+  background: rgba(232, 228, 220, 0.06);
   color: var(--color-text);
 }
 

@@ -1,21 +1,5 @@
 import { authorizeOpsRequest, listFollowUps } from "../../_lib/cases.js";
-import { json, methodNotAllowed, onOptions } from "../../_lib/http.js";
-
-const authorizeOrReject = (request, env) => {
-  const auth = authorizeOpsRequest(request, env);
-
-  if (!auth.ok) {
-    return json(
-      {
-        ok: false,
-        message: "Accès opérateur refusé."
-      },
-      { status: 403 }
-    );
-  }
-
-  return auth;
-};
+import { authorizeOrReject, json, methodNotAllowed, onOptions } from "../../_lib/http.js";
 
 export const onRequestOptions = () => onOptions("GET, OPTIONS");
 
@@ -24,7 +8,7 @@ export const onRequestGet = async (context) => {
     return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
   }
 
-  const auth = authorizeOrReject(context.request, context.env);
+  const auth = authorizeOrReject(context.request, context.env, authorizeOpsRequest);
 
   if (auth instanceof Response) {
     return auth;
