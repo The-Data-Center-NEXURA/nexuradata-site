@@ -1058,14 +1058,27 @@ export const listAllPayments = async (env, filters = {}) => {
 
 export const listFollowUps = async (env, filters = {}) => {
   const sql = getDb(env);
-  const filterReason = normalizeText(filters.reason || "", 60);
+  const knownReasons = new Set([
+    "quote_pending",
+    "payment_open",
+    "awaiting_authorization",
+    "missing_information",
+    "new_unqualified",
+    "dormant"
+  ]);
+  const rawReason = normalizeText(filters.reason || "", 60);
+  // Unknown reasons fall back to no reason filter (preserves pre-refactor behavior).
+  const filterReason = knownReasons.has(rawReason) ? rawReason : "";
   const filterQuery = normalizeText(filters.query || "", 160);
   const daysSince = Number(filters.daysSinceLastContact) || 0;
   const like = filterQuery ? `%${filterQuery}%` : null;
 
   // Single query that conditionally applies the reason-specific predicate.
-  // Postgres short-circuits on the ${filterReason} = '<key>' guard, so each
-  // branch only matters when its reason is selected. An empty reason matches all.
+  // The ${filterReason} = '<key>' guard means each branch only contributes when
+  // its reason is selected; an empty reason matches all rows.
+  // NULLIF guards `last_client_contact_at::timestamptz` against the empty-string
+  // default — Postgres does not guarantee left-to-right short-circuit on OR,
+  // so the cast can be evaluated even when the empty-check is true.
   const results = await sql`SELECT
     case_id, name, email, status, next_step, quote_status,
     last_reminder_sent_at, last_client_contact_at, updated_at,
@@ -1082,7 +1095,11 @@ export const listFollowUps = async (env, filters = {}) => {
       OR (${filterReason} = 'dormant' AND status IN ('awaiting_client', 'paused', 'En attente du client', 'En pause') AND updated_at < NOW() - INTERVAL '7 days')
     )
     AND (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like}))
-    AND (${daysSince} = 0 OR last_client_contact_at = '' OR last_client_contact_at::timestamptz < NOW() - (${daysSince} || ' days')::interval)
+    AND (
+      ${daysSince} = 0
+      OR NULLIF(last_client_contact_at, '') IS NULL
+      OR NULLIF(last_client_contact_at, '')::timestamptz < NOW() - (${daysSince} || ' days')::interval
+    )
   ORDER BY CASE WHEN last_client_contact_at = '' THEN 0 ELSE 1 END, last_client_contact_at ASC, updated_at ASC
   LIMIT 50`;
   return mapFollowUpResults(results);
