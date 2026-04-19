@@ -4,7 +4,7 @@ import { authorizeOrReject, json, methodNotAllowed, onOptions } from "../../_lib
 export const onRequestOptions = () => onOptions("GET, OPTIONS");
 
 export const onRequestGet = async (context) => {
-  if (!context.env?.INTAKE_DB) {
+  if (!context.env?.DATABASE_URL) {
     return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
   }
 

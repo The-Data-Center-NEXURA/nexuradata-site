@@ -2,55 +2,57 @@
 
 Site marketing et plateforme de lancement pour un laboratoire de recuperation de donnees et forensique numerique.
 
-Le depot couvre maintenant:
+Le depot couvre:
 
-- le site public
+- le site public bilingue (FR + EN)
 - le formulaire d'ouverture de dossier
 - le portail client de suivi
 - la console interne `/operations/`
 - les Pages Functions Cloudflare pour l'intake, le suivi et les actions operateur
-- la base D1 et la configuration `wrangler.jsonc`
+- la base Neon Postgres et la configuration `wrangler.jsonc`
 
 ## Structure utile
 
-- `index.html`: page d'accueil publique
-- `suivi-dossier-client-montreal.html`: portail client `noindex`
-- `operations/index.html`: console interne a proteger via Cloudflare Access
-- `assets/css/site.css`: styles partages
-- `assets/js/site.js`: interactions publiques et console operateur
-- `functions/api/intake.js`: ouverture de dossier
-- `functions/api/status.js`: suivi client par numero + code
-- `functions/api/ops/cases.js`: recherche et actions operateur
-- `functions/_lib/`: logique partagee D1, acces et emails
-- `migrations/0001_launch.sql`: schema D1
-- `wrangler.jsonc`: configuration Pages/Functions a servir de source de verite
-- `.dev.vars.example`: variables locales a copier vers `.dev.vars`
+- `index.html` / `en/index.html` : pages d'accueil publiques (FR / EN)
+- `suivi-dossier-client-montreal.html` : portail client `noindex`
+- `operations/index.html` : console interne a proteger via Cloudflare Access
+- `assets/css/site.css` : styles partages
+- `assets/js/site.js` : interactions publiques et console operateur
+- `functions/api/intake.js` : ouverture de dossier
+- `functions/api/status.js` : suivi client par numero + code
+- `functions/api/ops/cases.js` : recherche et actions operateur
+- `functions/_lib/` : logique partagee (DB, auth, emails, Stripe, rate-limit)
+- `migrations/neon/0001_full_schema.sql` : schema Postgres consolide
+- `migrations/d1-archive/` : ancienne base D1 (archive historique uniquement)
+- `wrangler.jsonc` : configuration Pages/Functions, source de verite
+- `.dev.vars.example` : variables locales a copier vers `.dev.vars`
 
-Prerequis de lancement
+## Prerequis de lancement
 
-1. Remplacer les IDs D1 placeholder dans `wrangler.jsonc`.
-2. Creer un secret fort `ACCESS_CODE_SECRET`.
-3. Configurer les alias `contact@`, `urgence@`, `dossiers@` dans Cloudflare Email Routing.
-4. Verifier le domaine d'envoi dans Resend et fournir `RESEND_API_KEY`.
-5. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
+1. Provisionner une base Neon Postgres et recuperer son `DATABASE_URL`.
+2. Appliquer le schema `migrations/neon/0001_full_schema.sql` via `psql` ou la console Neon.
+3. Declarer `DATABASE_URL` comme secret Cloudflare Pages.
+4. Creer un secret fort `ACCESS_CODE_SECRET`.
+5. Configurer les alias `contact@`, `urgence@`, `dossiers@` dans Cloudflare Email Routing.
+6. Verifier le domaine d'envoi dans Resend et fournir `RESEND_API_KEY`.
+7. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
 
-Le runbook detaille est dans `LAUNCH-RUNBOOK.md`.
+Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md). Voir aussi [`docs/`](docs/) pour la checklist de lancement, le guide de deploiement rapide et les notes de recherche concurrentielle / tarifaire.
 
-Commandes
+## Commandes
 
 - `npm install`
 - `npm run build`
 - `npm run cf:whoami`
-- `npm run cf:d1:migrate:local`
-- `npm run cf:d1:migrate:remote`
 - `npm run cf:dev`
 - `npm run cf:check`
 - `npm run cf:deploy`
 - `npm run cf:deploy:staging`
+- `npm test`
 
 `release-cloudflare/` est regenere a chaque build pour les assets statiques. Les `functions/` restent a la racine du projet pour Cloudflare Pages Functions.
 
-Cloudflare Pages
+## Cloudflare Pages
 
 1. Connecter le repo GitHub a Cloudflare Pages.
 2. Utiliser `.` comme root directory.

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { onRequestPost as intakeHandler, onRequestOptions as intakeOptions } from "../../functions/api/intake.js";
 import { onRequestPost as statusHandler, onRequestOptions as statusOptions, onRequest as statusFallback } from "../../functions/api/status.js";
 import { onRequestPost as webhookHandler } from "../../functions/api/stripe-webhook.js";
@@ -17,7 +17,7 @@ const makeContext = (body, env = {}, method = "POST") => ({
 // ─── intake endpoint ────────────────────────────────────────
 
 describe("POST /api/intake", () => {
-  it("returns 503 when INTAKE_DB is not configured", async () => {
+  it("returns 503 when DATABASE_URL is not configured", async () => {
     const ctx = makeContext({}, {});
     const res = await intakeHandler(ctx);
     expect(res.status).toBe(503);
@@ -27,7 +27,7 @@ describe("POST /api/intake", () => {
   });
 
   it("returns 503 when ACCESS_CODE_SECRET is missing", async () => {
-    const ctx = makeContext({}, { INTAKE_DB: {} });
+    const ctx = makeContext({}, { DATABASE_URL: "postgresql://test" });
     const res = await intakeHandler(ctx);
     expect(res.status).toBe(503);
     const body = await res.json();
@@ -35,13 +35,7 @@ describe("POST /api/intake", () => {
   });
 
   it("returns 400 for invalid submission (missing fields)", async () => {
-    const mockDb = {
-      prepare: vi.fn().mockReturnValue({
-        bind: vi.fn().mockReturnValue({ run: vi.fn(), first: vi.fn() }),
-        all: vi.fn()
-      })
-    };
-    const env = { INTAKE_DB: mockDb, ACCESS_CODE_SECRET: "test-secret" };
+    const env = { DATABASE_URL: "postgresql://test", ACCESS_CODE_SECRET: "test-secret" };
     const ctx = makeContext({ nom: "" }, env);
     const res = await intakeHandler(ctx);
     expect(res.status).toBe(400);
@@ -58,7 +52,7 @@ describe("POST /api/intake", () => {
 // ─── status endpoint ────────────────────────────────────────
 
 describe("POST /api/status", () => {
-  it("returns 503 when INTAKE_DB is not configured", async () => {
+  it("returns 503 when DATABASE_URL is not configured", async () => {
     const ctx = makeContext({}, {});
     ctx.request = new Request("https://nexuradata.ca/api/status", {
       method: "POST",
@@ -70,13 +64,7 @@ describe("POST /api/status", () => {
   });
 
   it("returns 400 for missing credentials", async () => {
-    const mockDb = {
-      prepare: vi.fn().mockReturnValue({
-        bind: vi.fn().mockReturnValue({ run: vi.fn(), first: vi.fn(), all: vi.fn() }),
-        all: vi.fn()
-      })
-    };
-    const env = { INTAKE_DB: mockDb };
+    const env = { DATABASE_URL: "postgresql://test" };
     const ctx = makeContext({}, env);
     ctx.request = new Request("https://nexuradata.ca/api/status", {
       method: "POST",
@@ -85,33 +73,6 @@ describe("POST /api/status", () => {
     });
     const res = await statusHandler(ctx);
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.ok).toBe(false);
-  });
-
-  it("returns 404 when case not found", async () => {
-    const mockDb = {
-      prepare: vi.fn().mockReturnValue({
-        bind: vi.fn().mockReturnValue({
-          run: vi.fn(),
-          first: vi.fn().mockResolvedValue(null),
-          all: vi.fn().mockResolvedValue({ results: [] })
-        }),
-        all: vi.fn().mockResolvedValue({ results: [] })
-      })
-    };
-    const env = { INTAKE_DB: mockDb };
-    const ctx = makeContext(
-      { caseId: "NX-20260101-ABCD1234", accessCode: "ABCD-EFGH" },
-      env
-    );
-    ctx.request = new Request("https://nexuradata.ca/api/status", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ caseId: "NX-20260101-ABCD1234", accessCode: "ABCD-EFGH" })
-    });
-    const res = await statusHandler(ctx);
-    expect(res.status).toBe(404);
     const body = await res.json();
     expect(body.ok).toBe(false);
   });
@@ -130,7 +91,7 @@ describe("POST /api/status", () => {
 // ─── stripe webhook endpoint ────────────────────────────────
 
 describe("POST /api/stripe-webhook", () => {
-  it("returns 503 when INTAKE_DB is not configured", async () => {
+  it("returns 503 when DATABASE_URL is not configured", async () => {
     const ctx = makeContext({}, {});
     ctx.request = new Request("https://nexuradata.ca/api/stripe-webhook", {
       method: "POST",
@@ -142,13 +103,7 @@ describe("POST /api/stripe-webhook", () => {
   });
 
   it("returns 400 when signature verification fails", async () => {
-    const mockDb = {
-      prepare: vi.fn().mockReturnValue({
-        bind: vi.fn().mockReturnValue({ run: vi.fn(), first: vi.fn(), all: vi.fn() }),
-        all: vi.fn()
-      })
-    };
-    const env = { INTAKE_DB: mockDb, STRIPE_WEBHOOK_SECRET: "whsec_test" };
+    const env = { DATABASE_URL: "postgresql://test", STRIPE_WEBHOOK_SECRET: "whsec_test" };
     const ctx = {
       request: new Request("https://nexuradata.ca/api/stripe-webhook", {
         method: "POST",

@@ -1,5 +1,5 @@
 ---
-description: "Use when writing or editing Cloudflare Pages Functions. Covers ESM exports, _lib reuse, input normalization, error handling, auth, and secret access. Triggers on: API endpoint, function, worker, D1 query, webhook."
+description: "Use when writing or editing Cloudflare Pages Functions. Covers ESM exports, _lib reuse, input normalization, error handling, auth, and secret access. Triggers on: API endpoint, function, worker, Neon query, webhook."
 applyTo: "functions/**/*.js"
 ---
 # Cloudflare Pages Functions
@@ -12,7 +12,7 @@ Export named ESM handlers — not default exports:
 export const onRequestOptions = () => onOptions("POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
-  // context.env     → D1 bindings, env vars, secrets
+  // context.env     → env vars and secrets (DATABASE_URL, RESEND_API_KEY, etc.)
   // context.request → standard Request object
 };
 ```
@@ -47,8 +47,8 @@ Wrap every handler body in try/catch — return user-safe messages, never leak i
 
 - Protected ops endpoints (`functions/api/ops/`): use `authorizeOrReject(request, env, authorizeOpsRequest)` from `_lib/http.js` — returns a 403 Response or auth result.
 - Access secrets via `context.env.SECRET_NAME`. Never log, hardcode, or return them.
-- Check D1 binding before querying: `if (!context.env?.INTAKE_DB)` → return 503.
-- D1: parameterized queries only — never interpolate user input into SQL.
+- Check the database before querying: `if (!context.env?.DATABASE_URL)` → return 503. Use `getDb(env)` from `_lib/cases.js` to obtain a Neon client.
+- Neon: tagged-template parameterization only (`` db`SELECT ... WHERE id = ${id}` ``) — never interpolate user input into SQL strings.
 - Validate enum inputs against allow-list `Set` objects (e.g., `allowedSupports.has(value)`).
 
 ## Rate Limiting

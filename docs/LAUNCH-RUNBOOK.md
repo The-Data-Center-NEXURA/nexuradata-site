@@ -1,15 +1,14 @@
 # Runbook Lancement NEXURADATA
 
-## 1. Cloudflare Pages et D1
+## 1. Cloudflare Pages et Neon Postgres
 
 1. Connecter le repo a Cloudflare Pages si ce n'est pas deja fait.
-2. Creer une base D1 nommee `nexuradata-launch`.
-3. Recuperer son `database_id` et son `preview_database_id`.
-4. Remplacer les UUID placeholder dans `wrangler.jsonc`.
-5. Copier `.dev.vars.example` vers `.dev.vars` pour le dev local.
-6. Appliquer le schema:
-   - local: `npm run cf:d1:migrate:local`
-   - distant: `npm run cf:d1:migrate:remote`
+2. Provisionner une base Neon Postgres (https://neon.tech) pour le projet.
+3. Recuperer le `DATABASE_URL` (chaine de connexion pooled).
+4. Declarer `DATABASE_URL` comme secret Cloudflare Pages (production + preview).
+5. Copier `.dev.vars.example` vers `.dev.vars` pour le dev local et y placer un `DATABASE_URL` de branche Neon.
+6. Appliquer le schema consolide via `psql` ou la console Neon:
+   - `psql "$DATABASE_URL" -f migrations/neon/0001_full_schema.sql`
 
 ## 2. Emails
 
@@ -58,7 +57,7 @@ Evenements minimum:
 - les paiements sont crees depuis `/operations/`
 - types prevus: acompte, solde final, paiement ponctuel
 - chaque lien de paiement Stripe est rattache a un `caseId`
-- le webhook met a jour le statut du paiement dans D1 et l'historique du dossier
+- le webhook met a jour le statut du paiement dans Neon et l'historique du dossier
 
 ## 3. Protection de la console interne
 
@@ -81,7 +80,7 @@ Recommandation v1:
 2. Soumettre un dossier test.
 3. Verifier:
    - creation du `caseId`
-   - insertion D1
+   - insertion en base Neon
    - notification interne
    - email client avec numero + code
 
@@ -125,6 +124,7 @@ Variables:
 
 Secrets:
 
+- `DATABASE_URL`
 - `RESEND_API_KEY`
 - `ACCESS_CODE_SECRET`
 - `STRIPE_SECRET_KEY`
