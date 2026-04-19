@@ -26,7 +26,9 @@ Import from `functions/_lib/` — never duplicate logic between endpoints.
 | Module | Exports |
 |--------|---------|
 | `http.js` | `json()`, `onOptions()`, `parsePayload()`, `methodNotAllowed()`, `authorizeOrReject()` |
-| `cases.js` | `normalizeText()`, `normalizeMultilineText()`, `validateSubmission()`, case CRUD, access code crypto |
+| `cases.js` | `normalizeText()`, `normalizeMultilineText()`, `validateSubmission()`, case CRUD (also re-exports access-code crypto for back-compat) |
+| `access-code.js` | `generateAccessCode()`, `normalizeAccessCode()`, `hashAccessCode()`, `encrypt()`, `decrypt()` |
+| `db.js` | `getDb(env)` — Neon client factory |
 | `email.js` | `sendClientAccessEmail()`, `sendClientStatusEmail()`, `sendLabNotificationEmail()`, `sendClientPaymentLinkEmail()` |
 | `stripe.js` | `createHostedCheckoutSession()`, `verifyStripeWebhook()` |
 | `rate-limit.js` | `checkRateLimit()` — per-isolate sliding window; layer Cloudflare WAF for production |
@@ -47,7 +49,7 @@ Wrap every handler body in try/catch — return user-safe messages, never leak i
 
 - Protected ops endpoints (`functions/api/ops/`): use `authorizeOrReject(request, env, authorizeOpsRequest)` from `_lib/http.js` — returns a 403 Response or auth result.
 - Access secrets via `context.env.SECRET_NAME`. Never log, hardcode, or return them.
-- Check the database before querying: `if (!context.env?.DATABASE_URL)` → return 503. Use `getDb(env)` from `_lib/cases.js` to obtain a Neon client.
+- Check the database before querying: `if (!context.env?.DATABASE_URL)` → return 503. Use `getDb(env)` from `_lib/db.js` to obtain a Neon client.
 - Neon: tagged-template parameterization only (`` db`SELECT ... WHERE id = ${id}` ``) — never interpolate user input into SQL strings.
 - Validate enum inputs against allow-list `Set` objects (e.g., `allowedSupports.has(value)`).
 
