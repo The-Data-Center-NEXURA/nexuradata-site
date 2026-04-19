@@ -1,7 +1,7 @@
 ---
 description: "Generate vitest unit tests for a functions/_lib/ module, following project mock and assertion conventions."
 agent: "agent"
-argument-hint: "Module name, e.g. 'cases.d1 — D1 query helpers'"
+argument-hint: "Module name, e.g. 'access-code — AES-GCM crypto helpers'"
 ---
 Write comprehensive vitest unit tests for the specified `functions/_lib/` module.
 
@@ -22,7 +22,7 @@ Ask for anything not provided: which module, which exported functions to cover, 
 | Dependency | How to mock |
 |------------|-------------|
 | `fetch` (Resend, any HTTP) | `vi.spyOn(globalThis, "fetch").mockResolvedValue(…)` — restore after each test |
-| D1 / Neon DB | `vi.mock("@neondatabase/serverless", () => ({ neon: () => vi.fn().mockResolvedValue([]) }))` at top |
+| Neon DB | `vi.mock("@neondatabase/serverless", () => ({ neon: () => vi.fn().mockResolvedValue([]) }))` at top |
 | `env` object | Plain object with test values: `{ RESEND_API_KEY: "re_test", … }` — never real secrets |
 | `Request` / `Response` | Use the Web API constructors directly |
 | Crypto | Use real Web Crypto API (don't mock) |
