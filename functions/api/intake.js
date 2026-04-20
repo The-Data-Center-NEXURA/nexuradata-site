@@ -62,10 +62,16 @@ export const onRequestPost = async (context) => {
       }
     });
   } catch (error) {
+    const isUserError = error instanceof Error && (
+      error.message.includes("obligatoire") ||
+      error.message.includes("invalide") ||
+      error.message.includes("format") ||
+      error.message.includes("courriel")
+    );
     return json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Erreur de traitement."
+        message: isUserError ? error.message : "Erreur de traitement."
       },
       { status: 400 }
     );
