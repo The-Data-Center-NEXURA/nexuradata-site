@@ -325,6 +325,7 @@ select {
   letter-spacing: -0.03em;
   font-family: "IBM Plex Sans", sans-serif;
   font-weight: 700;
+  overflow-wrap: break-word;
   text-wrap: balance;
 }
 
@@ -401,6 +402,7 @@ select {
   max-width: 50rem;
   margin: 1.25rem 0 0;
   font-size: 1.05rem;
+  overflow-wrap: break-word;
   text-wrap: pretty;
 }
 
@@ -2019,7 +2021,6 @@ select {
 
 .ops-view-table-wrap {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .ops-view-table {
@@ -2269,6 +2270,7 @@ select {
 .process-step p {
   margin: 0;
   color: var(--color-text-soft);
+  overflow-wrap: break-word;
   text-wrap: pretty;
 }
 
@@ -2313,6 +2315,7 @@ select {
 .tier-card p:not(.tier-label):not(.tier-delay) {
   margin: 0 0 0.25rem;
   color: var(--color-text-soft);
+  overflow-wrap: break-word;
   text-wrap: pretty;
 }
 
@@ -2376,7 +2379,24 @@ select {
   margin: 0 0 0.9rem;
   color: var(--color-text-soft);
   font-size: 0.95rem;
+  overflow-wrap: break-word;
   text-wrap: pretty;
+}
+
+/* ── 404 page ──────────────────────────────────────────────── */
+.page-404-section {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.page-404-desc {
+  opacity: 0.65;
+  max-width: 480px;
+  margin: 0 auto 2rem;
+}
+
+.page-404-links {
+  justify-content: center;
 }
 
 [data-reveal] {
@@ -2454,7 +2474,6 @@ select {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    min-height: auto;
     padding: 0.9rem 0;
     gap: 0.9rem;
   }

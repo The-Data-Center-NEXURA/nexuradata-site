@@ -36,7 +36,7 @@ Do **not** open a public GitHub issue for security vulnerabilities.
 ## Response Commitment
 
 | Timeline | Action |
-|---|---|
+| --- | --- |
 | Within 48 h | Acknowledgment of your report |
 | Within 7 days | Initial assessment and severity classification |
 | Within 30 days | Resolution or documented remediation plan |
