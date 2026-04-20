@@ -6,7 +6,7 @@ import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 export const onRequestOptions = () => onOptions("POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
-  const limit = checkRateLimit(context.request, 5);
+  const limit = checkRateLimit(context.request, 3);
   if (!limit.allowed) return tooManyRequests(limit.retryAfter);
 
   try {

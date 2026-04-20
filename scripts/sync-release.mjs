@@ -48,7 +48,7 @@ const shouldCopyRootEntry = (entry) => {
 const GA4_ID = "G-TC31YSS01P";
 const GA4_SNIPPET = `  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_ID}');</script>
+  <script src="/assets/js/ga4-init.js" defer></script>
 </head>`;
 
 const injectGa4 = async (dir) => {

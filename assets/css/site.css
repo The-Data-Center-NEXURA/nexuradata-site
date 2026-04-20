@@ -1,5 +1,6 @@
 ﻿/* ── Locked branding tokens ─────────────────────────────────── */
 :root {
+  color-scheme: dark;
   --noir: #0d0d0b;
   --os: #e8e4dc;
   --os-dim: rgba(232, 228, 220, 0.22);
@@ -228,6 +229,7 @@ select {
   text-decoration: none;
   font-weight: 800;
   letter-spacing: -0.02em;
+  touch-action: manipulation;
   transition:
     transform 180ms var(--ease-out),
     background-color 180ms var(--ease-out),
@@ -345,15 +347,17 @@ select {
 .hero-backdrop {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(18, 18, 16, 0));
+  background:
+    radial-gradient(ellipse 80% 55% at 65% 30%, rgba(232, 228, 220, 0.032) 0%, transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.012), rgba(18, 18, 16, 0));
   pointer-events: none;
 }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  align-items: center;
+  grid-template-columns: 1.2fr 0.42fr;
+  gap: 2.5rem;
+  align-items: start;
 }
 
 .hero-copy {
@@ -397,6 +401,7 @@ select {
   max-width: 50rem;
   margin: 1.25rem 0 0;
   font-size: 1.05rem;
+  text-wrap: pretty;
 }
 
 .hero-points {
@@ -502,6 +507,7 @@ select {
   margin: 0.4rem 0 0;
   font-size: 1.05rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .panel-meta {
@@ -814,7 +820,7 @@ select {
   font-family: "IBM Plex Mono", monospace;
 }
 
-.service-card > p:not(.service-index),
+.service-card>p:not(.service-index),
 .contact-card p:last-child {
   margin: 0;
   color: var(--color-text-soft);
@@ -835,10 +841,16 @@ select {
 .service-link {
   display: inline-flex;
   align-items: center;
+  gap: 0.3em;
   margin-top: 1.1rem;
   color: var(--color-accent);
   font-weight: 700;
   text-decoration: none;
+}
+
+.service-link::after {
+  content: "→";
+  font-style: normal;
 }
 
 .service-link:hover {
@@ -1084,7 +1096,7 @@ select {
   color: rgba(232, 228, 220, 0.6);
 }
 
-.contact-list li + li {
+.contact-list li+li {
   margin-top: 0.5rem;
 }
 
@@ -1211,7 +1223,7 @@ select {
   padding-left: 1.1rem;
 }
 
-.page-content li + li {
+.page-content li+li {
   margin-top: 0.55rem;
 }
 
@@ -1262,6 +1274,7 @@ select {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
+  margin-top: 1.5rem;
 }
 
 .trust-tags span {
@@ -1323,7 +1336,7 @@ select {
   color: var(--color-text-soft);
 }
 
-.lane-card li + li {
+.lane-card li+li {
   margin-top: 0.55rem;
 }
 
@@ -1395,13 +1408,22 @@ select {
   gap: 1.25rem;
 }
 
-.guide-grid > :nth-child(odd):last-child {
+.guide-grid> :nth-child(odd):last-child {
   grid-column: 1 / -1;
 }
 
 .guide-card {
   height: 100%;
   padding: 1.5rem;
+}
+
+.guide-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(232, 228, 220, 0.26), rgba(232, 228, 220, 0.04));
 }
 
 .guide-card h3 {
@@ -2166,8 +2188,8 @@ select {
   color: var(--color-text-soft);
 }
 
-.catalog-card li + li,
-.page-content li + li {
+.catalog-card li+li,
+.page-content li+li {
   margin-top: 0.55rem;
 }
 
@@ -2203,6 +2225,153 @@ select {
   border-color: rgba(232, 228, 220, 0.18);
 }
 
+/* ── Process steps ───────────────────────────────────────────── */
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.process-step {
+  position: relative;
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.process-step::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(232, 228, 220, 0.22), rgba(232, 228, 220, 0.03));
+}
+
+.process-num {
+  display: block;
+  margin: 0 0 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.process-step h3 {
+  margin: 0 0 0.7rem;
+  letter-spacing: -0.03em;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.process-step p {
+  margin: 0;
+  color: var(--color-text-soft);
+  text-wrap: pretty;
+}
+
+/* ── Urgency tiers ───────────────────────────────────────────── */
+.tier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.tier-card {
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.tier-label {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.tier-delay {
+  margin: 0.2rem 0 0.9rem;
+  color: var(--color-accent);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.tier-card h3 {
+  margin: 0;
+  letter-spacing: -0.03em;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.tier-card p:not(.tier-label):not(.tier-delay) {
+  margin: 0 0 0.25rem;
+  color: var(--color-text-soft);
+  text-wrap: pretty;
+}
+
+.tier-card-featured {
+  background: var(--color-surface-strong);
+  border-color: rgba(232, 228, 220, 0.16);
+}
+
+.tier-card-featured .tier-label {
+  color: var(--color-accent);
+}
+
+/* ── Credential / certification cards ─────────────────────────── */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.cert-card {
+  position: relative;
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.cert-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(90deg, rgba(232, 228, 220, 0.32), rgba(232, 228, 220, 0.04));
+}
+
+.cert-kicker {
+  margin: 0 0 0.65rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.cert-card h3 {
+  margin: 0 0 0.6rem;
+  letter-spacing: -0.03em;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 1.05rem;
+}
+
+.cert-card p:not(.cert-kicker) {
+  margin: 0 0 0.9rem;
+  color: var(--color-text-soft);
+  font-size: 0.95rem;
+  text-wrap: pretty;
+}
+
 [data-reveal] {
   opacity: 0;
   transform: translateY(22px);
@@ -2217,6 +2386,7 @@ select {
 }
 
 @media (max-width: 1080px) {
+
   .hero-grid,
   .tactical-grid,
   .authority-grid,
@@ -2239,7 +2409,10 @@ select {
   .info-grid,
   .service-grid,
   .stats-grid,
-  .warning-grid {
+  .warning-grid,
+  .process-grid,
+  .tier-grid,
+  .cert-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -2455,7 +2628,10 @@ select {
   .info-grid,
   .service-grid,
   .stats-grid,
-  .warning-grid {
+  .warning-grid,
+  .process-grid,
+  .tier-grid,
+  .cert-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2522,6 +2698,7 @@ select {
 }
 
 @media (max-width: 640px) {
+
   .brand-logo,
   .footer-logo {
     width: 100%;
@@ -2534,6 +2711,7 @@ select {
 }
 
 @media (max-width: 560px) {
+
   .proof-figure-secondary,
   .hero-panel-links {
     display: none;
@@ -2562,6 +2740,7 @@ select {
 
 /* ── Print ── */
 @media print {
+
   *,
   *::before,
   *::after {
@@ -2589,7 +2768,8 @@ select {
 
   a[href^="#"]::after,
   a[href^="javascript"]::after,
-  .lang-switch::after {
+  .lang-switch::after,
+  .service-link::after {
     content: "";
   }
 
@@ -2612,7 +2792,9 @@ select {
     max-width: 100% !important;
   }
 
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     page-break-after: avoid;
   }
 
