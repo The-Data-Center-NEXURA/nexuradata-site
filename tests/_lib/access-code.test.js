@@ -68,11 +68,8 @@ describe("access-code: hashAccessCode()", () => {
     expect(a).not.toBe(b);
   });
 
-  it("falls back to a deterministic key when no secret is set", async () => {
-    const a = await hashAccessCode("ABCD-1234", noSecret);
-    const b = await hashAccessCode("ABCD-1234", noSecret);
-    expect(a).toBe(b);
-    expect(a).toMatch(/^[0-9a-f]{64}$/);
+  it("throws when no secret is set", async () => {
+    await expect(hashAccessCode("ABCD-1234", noSecret)).rejects.toThrow("ACCESS_CODE_SECRET is not configured.");
   });
 });
 
