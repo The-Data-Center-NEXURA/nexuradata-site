@@ -171,6 +171,7 @@
     }
   </script>
   <script src="assets/js/site.js" defer></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -610,6 +611,8 @@
                   <input type="text" name="website" tabindex="-1" autocomplete="off">
                 </label>
               </div>
+
+              <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY" data-language="fr"></div>
 
               <div class="form-actions">
                 <button type="submit" class="button button-primary">Ouvrir un dossier</button>
