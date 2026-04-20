@@ -1,4 +1,5 @@
 import {
+  formatCurrency,
   getCaseDetail,
   getPublicOrigin,
   markAccessEmailSent,
@@ -17,12 +18,6 @@ const escapeHtml = (value) =>
     .replace(/'/g, "&#39;");
 
 const formatTextLines = (lines) => lines.filter(Boolean).join("\n");
-
-const formatCurrency = (amountCents, currency = "cad") =>
-  new Intl.NumberFormat("fr-CA", {
-    style: "currency",
-    currency: `${currency || "cad"}`.toUpperCase()
-  }).format((Number(amountCents) || 0) / 100);
 
 const sendResendEmail = async (env, payload, idempotencyKey) => {
   const apiKey = normalizeText(env?.RESEND_API_KEY, 256);

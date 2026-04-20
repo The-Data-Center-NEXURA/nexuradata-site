@@ -5,7 +5,7 @@ import { verifyStripeWebhook } from "../_lib/stripe.js";
 export const onRequestOptions = () => onOptions("POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
-  if (!context.env?.INTAKE_DB) {
+  if (!context.env?.DATABASE_URL) {
     return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
   }
 
@@ -21,7 +21,6 @@ export const onRequestPost = async (context) => {
   }
 
   try {
-
     const payment = await syncPaymentRequestFromStripe(context.env, event);
 
     return json({

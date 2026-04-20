@@ -11,7 +11,7 @@ export const onRequestPost = async (context) => {
   if (!limit.allowed) return tooManyRequests(limit.retryAfter);
 
   try {
-    if (!context.env?.INTAKE_DB) {
+    if (!context.env?.DATABASE_URL) {
       return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
     }
     const payload = await parsePayload(context.request);

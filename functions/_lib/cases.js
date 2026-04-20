@@ -1,4 +1,14 @@
+import { getDb } from "./db.js";
 import { createHostedCheckoutSession } from "./stripe.js";
+import {
+  decryptAccessCode,
+  encryptAccessCode,
+  generateAccessCode,
+  hashAccessCode,
+  normalizeAccessCode
+} from "./access-code.js";
+
+export { decryptAccessCode, encryptAccessCode, generateAccessCode, hashAccessCode, normalizeAccessCode };
 
 const allowedSupports = new Set([
   "Disque dur",
@@ -20,9 +30,7 @@ const allowedStepStates = new Set(["pending", "active", "complete"]);
 const allowedPaymentKinds = new Set(["deposit", "final", "custom"]);
 const allowedQuoteStatuses = new Set(["none", "draft", "sent", "approved", "expired", "declined"]);
 const allowedReminderTypes = new Set(["quote_follow_up", "payment_follow_up", "missing_information", "general_follow_up"]);
-const accessCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-const encoder = new TextEncoder();
 const localHostnames = new Set(["localhost", "127.0.0.1"]);
 
 export const normalizeText = (value, maxLength) => {
@@ -43,105 +51,6 @@ export const normalizeMultilineText = (value, maxLength) => {
 
 const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-const toHex = (buffer) =>
-  Array.from(new Uint8Array(buffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
-
-const toBase64 = (buffer) => {
-  let binary = "";
-
-  for (const byte of new Uint8Array(buffer)) {
-    binary += String.fromCharCode(byte);
-  }
-
-  return btoa(binary);
-};
-
-const fromBase64 = (value) => {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-
-  return bytes;
-};
-
-const getSecretBytes = async (env) => {
-  const secret = normalizeText(env?.ACCESS_CODE_SECRET, 256);
-  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(secret || "nexuradata-launch-v1"));
-  return new Uint8Array(digest);
-};
-
-const getAesKey = async (env) =>
-  crypto.subtle.importKey(
-    "raw",
-    await getSecretBytes(env),
-    { name: "AES-GCM" },
-    false,
-    ["encrypt", "decrypt"]
-  );
-
-export const hashAccessCode = async (accessCode, env) => {
-  const secretBytes = await getSecretBytes(env);
-  const payload = new Uint8Array(secretBytes.length + accessCode.length + 1);
-  payload.set(secretBytes);
-  payload.set(encoder.encode(`:${accessCode}`), secretBytes.length);
-  const digest = await crypto.subtle.digest("SHA-256", payload);
-  return toHex(digest);
-};
-
-export const encryptAccessCode = async (accessCode, env) => {
-  if (!normalizeText(env?.ACCESS_CODE_SECRET, 256)) {
-    return "";
-  }
-
-  const key = await getAesKey(env);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const cipher = await crypto.subtle.encrypt(
-    {
-      name: "AES-GCM",
-      iv
-    },
-    key,
-    encoder.encode(accessCode)
-  );
-
-  return `${toBase64(iv)}.${toBase64(cipher)}`;
-};
-
-export const decryptAccessCode = async (ciphertext, env) => {
-  const normalizedCiphertext = normalizeText(ciphertext, 4096);
-
-  if (!normalizedCiphertext || !normalizeText(env?.ACCESS_CODE_SECRET, 256)) {
-    return "";
-  }
-
-  const [ivBase64, encryptedBase64] = normalizedCiphertext.split(".");
-
-  if (!ivBase64 || !encryptedBase64) {
-    return "";
-  }
-
-  try {
-    const key = await getAesKey(env);
-    const iv = fromBase64(ivBase64);
-    const payload = fromBase64(encryptedBase64);
-    const decrypted = await crypto.subtle.decrypt(
-      {
-        name: "AES-GCM",
-        iv
-      },
-      key,
-      payload
-    );
-
-    return new TextDecoder().decode(decrypted);
-  } catch {
-    return "";
-  }
-};
-
 export const generateCaseId = () => {
   const now = new Date();
   const date = now.toISOString().slice(0, 10).replace(/-/g, "");
@@ -149,15 +58,7 @@ export const generateCaseId = () => {
   return `NX-${date}-${token}`;
 };
 
-const randomCodeSegment = (length) => {
-  const bytes = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(bytes, (byte) => accessCodeAlphabet[byte % accessCodeAlphabet.length]).join("");
-};
-
-export const generateAccessCode = () => `${randomCodeSegment(4)}-${randomCodeSegment(4)}`;
-
 export const normalizeCaseId = (value) => normalizeText(value, 40).toUpperCase().replace(/[^A-Z0-9-]/g, "");
-export const normalizeAccessCode = (value) => normalizeText(value, 24).toUpperCase().replace(/[^A-Z0-9-]/g, "");
 
 export const validateSubmission = (payload) => {
   const nom = normalizeText(payload.nom, 120);
@@ -266,6 +167,8 @@ const formatCurrency = (amountCents, currency = "cad") =>
     currency: `${currency || "cad"}`.toUpperCase()
   }).format((Number(amountCents) || 0) / 100);
 
+export { formatCurrency };
+
 const generatePaymentRequestId = () => {
   const now = new Date();
   const date = now.toISOString().slice(0, 10).replace(/-/g, "");
@@ -311,14 +214,6 @@ export const validatePaymentRequestInput = (payload) => {
   };
 };
 
-const ensureDb = (env) => {
-  if (!env?.INTAKE_DB) {
-    throw new Error("La base D1 n'est pas configurée.");
-  }
-
-  return env.INTAKE_DB;
-};
-
 const nowIso = () => new Date().toISOString();
 
 const buildInitialTimeline = () => [
@@ -359,7 +254,7 @@ export const getPublicOrigin = (env, requestUrl = "https://nexuradata.ca/") => {
 };
 
 export const createCase = async (env, submission) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const createdAt = nowIso();
   const caseId = generateCaseId();
   const accessCode = generateAccessCode();
@@ -370,67 +265,26 @@ export const createCase = async (env, submission) => {
   const nextStep = "Lecture initiale du cas et qualification technique.";
   const clientSummary = "Votre demande a été reçue. Un dossier initial a été ouvert et le laboratoire prépare maintenant l'évaluation du cas.";
 
-  await db
-    .prepare(
-      `INSERT INTO cases (
-        case_id,
-        created_at,
-        updated_at,
-        name,
-        email,
-        phone,
-        support,
-        urgency,
-        message,
-        source_path,
-        status,
-        next_step,
-        client_summary,
-        access_code_hash,
-        access_code_ciphertext,
-        access_code_last_sent_at,
-        status_email_last_sent_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(
-      caseId,
-      createdAt,
-      createdAt,
-      submission.nom,
-      submission.courriel,
-      submission.telephone,
-      submission.support,
-      submission.urgence,
-      submission.message,
-      submission.sourcePath,
-      status,
-      nextStep,
-      clientSummary,
-      accessCodeHash,
-      accessCodeCiphertext,
-      "",
-      ""
-    )
-    .run();
+  await sql`INSERT INTO cases (
+    case_id, created_at, updated_at, name, email, phone, support, urgency,
+    message, source_path, status, next_step, client_summary,
+    access_code_hash, access_code_ciphertext,
+    access_code_last_sent_at, status_email_last_sent_at
+  ) VALUES (
+    ${caseId}, ${createdAt}, ${createdAt}, ${submission.nom}, ${submission.courriel},
+    ${submission.telephone}, ${submission.support}, ${submission.urgence},
+    ${submission.message}, ${submission.sourcePath}, ${status}, ${nextStep},
+    ${clientSummary}, ${accessCodeHash}, ${accessCodeCiphertext}, '', ''
+  )`;
 
   for (const step of timeline) {
-    await db
-      .prepare(
-        `INSERT INTO case_updates (
-          case_id,
-          kind,
-          title,
-          note,
-          state,
-          sort_order,
-          is_visible,
-          created_at,
-          updated_at,
-          created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      .bind(caseId, "timeline", step.title, step.note, step.state, step.sortOrder, 1, createdAt, createdAt, "system")
-      .run();
+    await sql`INSERT INTO case_updates (
+      case_id, kind, title, note, state, sort_order, is_visible,
+      created_at, updated_at, created_by
+    ) VALUES (
+      ${caseId}, 'timeline', ${step.title}, ${step.note}, ${step.state},
+      ${step.sortOrder}, 1, ${createdAt}, ${createdAt}, 'system'
+    )`;
   }
 
   await recordCaseEvent(env, caseId, "system", "Dossier ouvert", "Demande initiale reçue via le formulaire public.");
@@ -447,46 +301,34 @@ export const createCase = async (env, submission) => {
 };
 
 export const recordCaseEvent = async (env, caseId, actor, title, note) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const timestamp = nowIso();
 
-  await db
-    .prepare(
-      `INSERT INTO case_updates (
-        case_id,
-        kind,
-        title,
-        note,
-        state,
-        sort_order,
-        is_visible,
-        created_at,
-        updated_at,
-        created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(caseId, "event", title, note, "complete", 0, 0, timestamp, timestamp, normalizeText(actor, 120) || "system")
-    .run();
+  await sql`INSERT INTO case_updates (
+    case_id, kind, title, note, state, sort_order, is_visible,
+    created_at, updated_at, created_by
+  ) VALUES (
+    ${caseId}, 'event', ${title}, ${note}, 'complete', 0, 0,
+    ${timestamp}, ${timestamp}, ${normalizeText(actor, 120) || "system"}
+  )`;
 };
 
 export const markAccessEmailSent = async (env, caseId) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const timestamp = nowIso();
 
-  await db
-    .prepare("UPDATE cases SET updated_at = ?, access_code_last_sent_at = ? WHERE case_id = ?")
-    .bind(timestamp, timestamp, caseId)
-    .run();
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp}, access_code_last_sent_at = ${timestamp}
+    WHERE case_id = ${caseId}`;
 };
 
 export const markStatusEmailSent = async (env, caseId) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const timestamp = nowIso();
 
-  await db
-    .prepare("UPDATE cases SET updated_at = ?, status_email_last_sent_at = ? WHERE case_id = ?")
-    .bind(timestamp, timestamp, caseId)
-    .run();
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp}, status_email_last_sent_at = ${timestamp}
+    WHERE case_id = ${caseId}`;
 };
 
 const mapTimelineStep = (row) => ({
@@ -496,58 +338,30 @@ const mapTimelineStep = (row) => ({
 });
 
 export const getVisibleTimeline = async (env, caseId) => {
-  const db = ensureDb(env);
-  const { results } = await db
-    .prepare(
-      `SELECT title, note, state
-       FROM case_updates
-       WHERE case_id = ? AND kind = 'timeline' AND is_visible = 1
-       ORDER BY sort_order ASC, id ASC`
-    )
-    .bind(caseId)
-    .all();
+  const sql = getDb(env);
+  const results = await sql`SELECT title, note, state
+    FROM case_updates
+    WHERE case_id = ${caseId} AND kind = 'timeline' AND is_visible = 1
+    ORDER BY sort_order ASC, id ASC`;
 
   return (results || []).map(mapTimelineStep);
 };
 
 const getCaseRow = async (env, caseId) => {
-  const db = ensureDb(env);
-  return db
-    .prepare(
-      `SELECT
-        case_id,
-        created_at,
-        updated_at,
-        name,
-        email,
-        phone,
-        support,
-        urgency,
-        message,
-        source_path,
-        status,
-        next_step,
-        client_summary,
-        access_code_hash,
-        access_code_ciphertext,
-        access_code_last_sent_at,
-        status_email_last_sent_at,
-        qualification_summary,
-        internal_notes,
-        handling_flags,
-        quote_status,
-        quote_amount_cents,
-        quote_sent_at,
-        quote_approved_at,
-        preapproval_confirmed,
-        acquisition_source,
-        last_reminder_sent_at,
-        last_client_contact_at
-      FROM cases
-      WHERE case_id = ?`
-    )
-    .bind(caseId)
-    .first();
+  const sql = getDb(env);
+  const results = await sql`SELECT
+    case_id, created_at, updated_at, name, email, phone, support, urgency,
+    message, source_path, status, next_step, client_summary,
+    access_code_hash, access_code_ciphertext,
+    access_code_last_sent_at, status_email_last_sent_at,
+    qualification_summary, internal_notes, handling_flags,
+    quote_status, quote_amount_cents, quote_sent_at, quote_approved_at,
+    preapproval_confirmed, acquisition_source,
+    last_reminder_sent_at, last_client_contact_at
+  FROM cases
+  WHERE case_id = ${caseId}`;
+
+  return results[0] || null;
 };
 
 const mapPaymentRow = (row) => ({
@@ -596,42 +410,22 @@ const mapPublicPayment = (payment) => {
 };
 
 export const listCasePayments = async (env, caseId) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const normalizedCaseId = normalizeCaseId(caseId);
 
   if (!normalizedCaseId) {
     return [];
   }
 
-  const { results } = await db
-    .prepare(
-      `SELECT
-        payment_request_id,
-        case_id,
-        payment_kind,
-        status,
-        label,
-        description,
-        amount_cents,
-        currency,
-        checkout_url,
-        stripe_checkout_session_id,
-        stripe_payment_intent_id,
-        stripe_session_status,
-        stripe_payment_status,
-        stripe_customer_email,
-        created_at,
-        updated_at,
-        sent_at,
-        paid_at,
-        expires_at,
-        created_by
-      FROM case_payments
-      WHERE case_id = ?
-      ORDER BY created_at DESC, id DESC`
-    )
-    .bind(normalizedCaseId)
-    .all();
+  const results = await sql`SELECT
+    payment_request_id, case_id, payment_kind, status, label, description,
+    amount_cents, currency, checkout_url, stripe_checkout_session_id,
+    stripe_payment_intent_id, stripe_session_status, stripe_payment_status,
+    stripe_customer_email, created_at, updated_at, sent_at, paid_at,
+    expires_at, created_by
+  FROM case_payments
+  WHERE case_id = ${normalizedCaseId}
+  ORDER BY created_at DESC, id DESC`;
 
   return (results || []).map(mapPaymentRow);
 };
@@ -664,60 +458,31 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
 };
 
 export const listCases = async (env, rawQuery = "", filters = {}) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const query = normalizeText(rawQuery, 160);
-  const conditions = [];
-  const params = [];
-
-  if (query) {
-    const like = `%${query}%`;
-    conditions.push("(case_id LIKE ? OR name LIKE ? OR email LIKE ? OR support LIKE ?)");
-    params.push(like, like, like, like);
-  }
-
   const filterStatus = normalizeText(filters.status || "", 80);
   const filterQuoteStatus = normalizeText(filters.quoteStatus || "", 40);
   const filterUrgency = normalizeText(filters.urgency || "", 40);
 
-  if (filterStatus) {
-    conditions.push("status = ?");
-    params.push(filterStatus);
-  }
+  const like = query ? `%${query}%` : null;
 
-  if (filterQuoteStatus) {
-    conditions.push("quote_status = ?");
-    params.push(filterQuoteStatus);
-  }
+  const results = await sql`SELECT
+    case_id, created_at, updated_at, name, email, support,
+    urgency, status, next_step, quote_status
+  FROM cases
+  WHERE
+    (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like} OR support LIKE ${like}))
+    AND (${filterStatus} = '' OR status = ${filterStatus})
+    AND (${filterQuoteStatus} = '' OR quote_status = ${filterQuoteStatus})
+    AND (${filterUrgency} = '' OR urgency = ${filterUrgency})
+  ORDER BY updated_at DESC
+  LIMIT 25`;
 
-  if (filterUrgency) {
-    conditions.push("urgency = ?");
-    params.push(filterUrgency);
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const sql = `SELECT
-      case_id,
-      created_at,
-      updated_at,
-      name,
-      email,
-      support,
-      urgency,
-      status,
-      next_step,
-      quote_status
-    FROM cases
-    ${whereClause}
-    ORDER BY updated_at DESC
-    LIMIT 25`;
-
-  const stmt = db.prepare(sql);
-  const { results } = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
   return results || [];
 };
 
 export const getCaseDetail = async (env, caseId) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const normalizedCaseId = normalizeCaseId(caseId);
   const row = await getCaseRow(env, normalizedCaseId);
 
@@ -727,23 +492,12 @@ export const getCaseDetail = async (env, caseId) => {
 
   const currentSteps = await getVisibleTimeline(env, normalizedCaseId);
   const payments = await listCasePayments(env, normalizedCaseId);
-  const { results: history } = await db
-    .prepare(
-      `SELECT
-        kind,
-        title,
-        note,
-        state,
-        is_visible,
-        created_at,
-        created_by
-      FROM case_updates
-      WHERE case_id = ?
-      ORDER BY created_at DESC, id DESC
-      LIMIT 20`
-    )
-    .bind(normalizedCaseId)
-    .all();
+  const history = await sql`SELECT
+    kind, title, note, state, is_visible, created_at, created_by
+  FROM case_updates
+  WHERE case_id = ${normalizedCaseId}
+  ORDER BY created_at DESC, id DESC
+  LIMIT 20`;
 
   return {
     caseId: row.case_id,
@@ -787,7 +541,7 @@ export const getCaseDetail = async (env, caseId) => {
 };
 
 export const updateCaseRecord = async (env, payload, actor) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const caseId = normalizeCaseId(payload.caseId);
   const status = normalizeText(payload.status, 80);
   const nextStep = normalizeText(payload.nextStep, 180);
@@ -814,64 +568,33 @@ export const updateCaseRecord = async (env, payload, actor) => {
 
   const timestamp = nowIso();
 
-  await db
-    .prepare(
-      `UPDATE cases
-       SET updated_at = ?,
-           status = ?,
-           next_step = ?,
-           client_summary = ?,
-           qualification_summary = ?,
-           internal_notes = ?,
-           handling_flags = ?,
-           acquisition_source = ?,
-           quote_amount_cents = ?,
-           preapproval_confirmed = ?
-       WHERE case_id = ?`
-    )
-    .bind(
-      timestamp,
-      status,
-      nextStep,
-      clientSummary,
-      qualificationSummary,
-      internalNotes,
-      handlingFlags,
-      acquisitionSource,
-      quoteAmountCents,
-      preapprovalConfirmed,
-      caseId
-    )
-    .run();
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp},
+        status = ${status},
+        next_step = ${nextStep},
+        client_summary = ${clientSummary},
+        qualification_summary = ${qualificationSummary},
+        internal_notes = ${internalNotes},
+        handling_flags = ${handlingFlags},
+        acquisition_source = ${acquisitionSource},
+        quote_amount_cents = ${quoteAmountCents},
+        preapproval_confirmed = ${preapprovalConfirmed}
+    WHERE case_id = ${caseId}`;
 
   if (steps) {
-    await db
-      .prepare(
-        `UPDATE case_updates
-         SET is_visible = 0, updated_at = ?
-         WHERE case_id = ? AND kind = 'timeline' AND is_visible = 1`
-      )
-      .bind(timestamp, caseId)
-      .run();
+    await sql`UPDATE case_updates
+      SET is_visible = 0, updated_at = ${timestamp}
+      WHERE case_id = ${caseId} AND kind = 'timeline' AND is_visible = 1`;
 
     for (const step of steps) {
-      await db
-        .prepare(
-          `INSERT INTO case_updates (
-            case_id,
-            kind,
-            title,
-            note,
-            state,
-            sort_order,
-            is_visible,
-            created_at,
-            updated_at,
-            created_by
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        )
-        .bind(caseId, "timeline", step.title, step.note, step.state, step.sortOrder, 1, timestamp, timestamp, normalizeText(actor, 120) || "ops")
-        .run();
+      await sql`INSERT INTO case_updates (
+        case_id, kind, title, note, state, sort_order, is_visible,
+        created_at, updated_at, created_by
+      ) VALUES (
+        ${caseId}, 'timeline', ${step.title}, ${step.note}, ${step.state},
+        ${step.sortOrder}, 1, ${timestamp}, ${timestamp},
+        ${normalizeText(actor, 120) || "ops"}
+      )`;
     }
   }
 
@@ -881,7 +604,7 @@ export const updateCaseRecord = async (env, payload, actor) => {
 };
 
 export const regenerateCaseAccessCode = async (env, caseId, actor) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const normalizedCaseId = normalizeCaseId(caseId);
   const row = await getCaseRow(env, normalizedCaseId);
 
@@ -894,14 +617,12 @@ export const regenerateCaseAccessCode = async (env, caseId, actor) => {
   const accessCodeCiphertext = await encryptAccessCode(accessCode, env);
   const timestamp = nowIso();
 
-  await db
-    .prepare(
-      `UPDATE cases
-       SET updated_at = ?, access_code_hash = ?, access_code_ciphertext = ?, access_code_last_sent_at = ?
-       WHERE case_id = ?`
-    )
-    .bind(timestamp, accessCodeHash, accessCodeCiphertext, "", normalizedCaseId)
-    .run();
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp},
+        access_code_hash = ${accessCodeHash},
+        access_code_ciphertext = ${accessCodeCiphertext},
+        access_code_last_sent_at = ''
+    WHERE case_id = ${normalizedCaseId}`;
 
   await recordCaseEvent(env, normalizedCaseId, actor, "Code d'accès régénéré", "Un nouveau code d'accès client a été généré.");
 
@@ -941,57 +662,33 @@ export const getResendableAccessCode = async (env, caseId) => {
 };
 
 const getPaymentRequestRow = async (env, paymentRequestId) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
+  const results = await sql`SELECT
+    payment_request_id, case_id, payment_kind, status, label, description,
+    amount_cents, currency, checkout_url, stripe_checkout_session_id,
+    stripe_payment_intent_id, stripe_session_status, stripe_payment_status,
+    stripe_customer_email, created_at, updated_at, sent_at, paid_at,
+    expires_at, created_by
+  FROM case_payments
+  WHERE payment_request_id = ${normalizeText(paymentRequestId, 60)}`;
 
-  return db
-    .prepare(
-      `SELECT
-        payment_request_id,
-        case_id,
-        payment_kind,
-        status,
-        label,
-        description,
-        amount_cents,
-        currency,
-        checkout_url,
-        stripe_checkout_session_id,
-        stripe_payment_intent_id,
-        stripe_session_status,
-        stripe_payment_status,
-        stripe_customer_email,
-        created_at,
-        updated_at,
-        sent_at,
-        paid_at,
-        expires_at,
-        created_by
-      FROM case_payments
-      WHERE payment_request_id = ?`
-    )
-    .bind(normalizeText(paymentRequestId, 60))
-    .first();
+  return results[0] || null;
 };
 
 export const markPaymentRequestSent = async (env, paymentRequestId) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const normalizedRequestId = normalizeText(paymentRequestId, 60);
   const timestamp = nowIso();
 
-  await db
-    .prepare(
-      `UPDATE case_payments
-       SET updated_at = ?, sent_at = ?
-       WHERE payment_request_id = ?`
-    )
-    .bind(timestamp, timestamp, normalizedRequestId)
-    .run();
+  await sql`UPDATE case_payments
+    SET updated_at = ${timestamp}, sent_at = ${timestamp}
+    WHERE payment_request_id = ${normalizedRequestId}`;
 
   return getPaymentRequestRow(env, normalizedRequestId);
 };
 
 export const createCasePaymentRequest = async (env, payload, actor, requestUrl) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const input = validatePaymentRequestInput(payload);
   const row = await getCaseRow(env, input.caseId);
 
@@ -1020,54 +717,25 @@ export const createCasePaymentRequest = async (env, payload, actor, requestUrl) 
     ? new Date(Number(session.expires_at) * 1000).toISOString()
     : "";
 
-  await db
-    .prepare(
-      `INSERT INTO case_payments (
-        payment_request_id,
-        case_id,
-        payment_kind,
-        status,
-        label,
-        description,
-        amount_cents,
-        currency,
-        checkout_url,
-        stripe_checkout_session_id,
-        stripe_payment_intent_id,
-        stripe_session_status,
-        stripe_payment_status,
-        stripe_customer_email,
-        created_at,
-        updated_at,
-        sent_at,
-        paid_at,
-        expires_at,
-        created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(
-      paymentRequestId,
-      input.caseId,
-      input.paymentKind,
-      localStatus,
-      input.label,
-      input.description,
-      input.amountCents,
-      input.currency,
-      normalizeText(session?.url, 2000),
-      normalizeText(session?.id, 120),
-      normalizeText(`${session?.payment_intent || ""}`, 120),
-      normalizeText(`${session?.status || ""}`, 40).toLowerCase(),
-      normalizeText(`${session?.payment_status || ""}`, 40).toLowerCase(),
-      row.email,
-      createdAt,
-      createdAt,
-      "",
-      localStatus === "paid" ? createdAt : "",
-      expiresAt,
-      normalizeText(actor, 120) || "ops"
-    )
-    .run();
+  await sql`INSERT INTO case_payments (
+    payment_request_id, case_id, payment_kind, status, label, description,
+    amount_cents, currency, checkout_url, stripe_checkout_session_id,
+    stripe_payment_intent_id, stripe_session_status, stripe_payment_status,
+    stripe_customer_email, created_at, updated_at, sent_at, paid_at,
+    expires_at, created_by
+  ) VALUES (
+    ${paymentRequestId}, ${input.caseId}, ${input.paymentKind}, ${localStatus},
+    ${input.label}, ${input.description}, ${input.amountCents}, ${input.currency},
+    ${normalizeText(session?.url, 2000)},
+    ${normalizeText(session?.id, 120)},
+    ${normalizeText(`${session?.payment_intent || ""}`, 120)},
+    ${normalizeText(`${session?.status || ""}`, 40).toLowerCase()},
+    ${normalizeText(`${session?.payment_status || ""}`, 40).toLowerCase()},
+    ${row.email}, ${createdAt}, ${createdAt}, '',
+    ${localStatus === "paid" ? createdAt : ""},
+    ${expiresAt},
+    ${normalizeText(actor, 120) || "ops"}
+  )`;
 
   await recordCaseEvent(
     env,
@@ -1082,7 +750,7 @@ export const createCasePaymentRequest = async (env, payload, actor, requestUrl) 
 };
 
 export const updateQuoteStatus = async (env, payload, actor) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const caseId = normalizeCaseId(payload.caseId);
   const targetStatus = normalizeText(payload.quoteStatus, 20).toLowerCase();
 
@@ -1101,30 +769,26 @@ export const updateQuoteStatus = async (env, payload, actor) => {
   }
 
   const timestamp = nowIso();
-  const updates = [`updated_at = ?`, `quote_status = ?`];
-  const params = [timestamp, targetStatus];
 
   if (targetStatus === "sent") {
-    updates.push(`quote_sent_at = ?`);
-    params.push(timestamp);
+    const quoteAmount = (payload.quoteAmount !== undefined && payload.quoteAmount !== null && payload.quoteAmount !== "")
+      ? parseAmountToCents(payload.quoteAmount)
+      : row.quote_amount_cents;
 
-    if (payload.quoteAmount !== undefined && payload.quoteAmount !== null && payload.quoteAmount !== "") {
-      updates.push(`quote_amount_cents = ?`);
-      params.push(parseAmountToCents(payload.quoteAmount));
-    }
+    await sql`UPDATE cases
+      SET updated_at = ${timestamp}, quote_status = ${targetStatus},
+          quote_sent_at = ${timestamp}, quote_amount_cents = ${quoteAmount}
+      WHERE case_id = ${caseId}`;
+  } else if (targetStatus === "approved") {
+    await sql`UPDATE cases
+      SET updated_at = ${timestamp}, quote_status = ${targetStatus},
+          quote_approved_at = ${timestamp}
+      WHERE case_id = ${caseId}`;
+  } else {
+    await sql`UPDATE cases
+      SET updated_at = ${timestamp}, quote_status = ${targetStatus}
+      WHERE case_id = ${caseId}`;
   }
-
-  if (targetStatus === "approved") {
-    updates.push(`quote_approved_at = ?`);
-    params.push(timestamp);
-  }
-
-  params.push(caseId);
-
-  await db
-    .prepare(`UPDATE cases SET ${updates.join(", ")} WHERE case_id = ?`)
-    .bind(...params)
-    .run();
 
   const titleMap = {
     sent: "Soumission envoyée",
@@ -1140,7 +804,7 @@ export const updateQuoteStatus = async (env, payload, actor) => {
 };
 
 export const logReminder = async (env, payload, actor) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const caseId = normalizeCaseId(payload.caseId);
   const reminderType = normalizeText(payload.reminderType, 40).toLowerCase();
   const message = normalizeMultilineText(payload.message || "", 500);
@@ -1161,12 +825,10 @@ export const logReminder = async (env, payload, actor) => {
 
   const timestamp = nowIso();
 
-  await db
-    .prepare(
-      `UPDATE cases SET updated_at = ?, last_reminder_sent_at = ?, last_client_contact_at = ? WHERE case_id = ?`
-    )
-    .bind(timestamp, timestamp, timestamp, caseId)
-    .run();
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp}, last_reminder_sent_at = ${timestamp},
+        last_client_contact_at = ${timestamp}
+    WHERE case_id = ${caseId}`;
 
   const typeLabels = {
     quote_follow_up: "Relance soumission",
@@ -1181,7 +843,7 @@ export const logReminder = async (env, payload, actor) => {
 };
 
 export const syncPaymentRequestFromStripe = async (env, event) => {
-  const db = ensureDb(env);
+  const sql = getDb(env);
   const session = event?.data?.object;
 
   if (!session || session.object !== "checkout.session") {
@@ -1217,34 +879,18 @@ export const syncPaymentRequestFromStripe = async (env, event) => {
     ? new Date(Number(session.expires_at) * 1000).toISOString()
     : existing.expires_at || "";
 
-  await db
-    .prepare(
-      `UPDATE case_payments
-       SET
-         updated_at = ?,
-         status = ?,
-         checkout_url = ?,
-         stripe_checkout_session_id = ?,
-         stripe_payment_intent_id = ?,
-         stripe_session_status = ?,
-         stripe_payment_status = ?,
-         paid_at = ?,
-         expires_at = ?
-       WHERE payment_request_id = ?`
-    )
-    .bind(
-      timestamp,
-      localStatus,
-      normalizeText(session?.url || existing.checkout_url, 2000),
-      normalizeText(session?.id || existing.stripe_checkout_session_id, 120),
-      normalizeText(`${session?.payment_intent || existing.stripe_payment_intent_id || ""}`, 120),
-      normalizeText(`${session?.status || existing.stripe_session_status || ""}`, 40).toLowerCase(),
-      normalizeText(`${session?.payment_status || existing.stripe_payment_status || ""}`, 40).toLowerCase(),
-      paidAt,
-      expiresAt,
-      paymentRequestId
-    )
-    .run();
+  await sql`UPDATE case_payments
+    SET
+      updated_at = ${timestamp},
+      status = ${localStatus},
+      checkout_url = ${normalizeText(session?.url || existing.checkout_url, 2000)},
+      stripe_checkout_session_id = ${normalizeText(session?.id || existing.stripe_checkout_session_id, 120)},
+      stripe_payment_intent_id = ${normalizeText(`${session?.payment_intent || existing.stripe_payment_intent_id || ""}`, 120)},
+      stripe_session_status = ${normalizeText(`${session?.status || existing.stripe_session_status || ""}`, 40).toLowerCase()},
+      stripe_payment_status = ${normalizeText(`${session?.payment_status || existing.stripe_payment_status || ""}`, 40).toLowerCase()},
+      paid_at = ${paidAt},
+      expires_at = ${expiresAt}
+    WHERE payment_request_id = ${paymentRequestId}`;
 
   if (localStatus !== existing.status) {
     const title =
@@ -1319,49 +965,23 @@ export const authorizeOpsRequest = (request, env) => {
 };
 
 export const listQuotes = async (env, filters = {}) => {
-  const db = ensureDb(env);
-  const conditions = [];
-  const params = [];
-
-  conditions.push("quote_status != 'none'");
-
+  const sql = getDb(env);
   const filterQuoteStatus = normalizeText(filters.quoteStatus || "", 40);
   const filterQuery = normalizeText(filters.query || "", 160);
+  const like = filterQuery ? `%${filterQuery}%` : null;
 
-  if (filterQuoteStatus) {
-    conditions.push("quote_status = ?");
-    params.push(filterQuoteStatus);
-  }
-
-  if (filterQuery) {
-    const like = `%${filterQuery}%`;
-    conditions.push("(case_id LIKE ? OR name LIKE ? OR email LIKE ?)");
-    params.push(like, like, like);
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const sql = `SELECT
-      case_id,
-      name,
-      email,
-      status,
-      next_step,
-      quote_status,
-      quote_amount_cents,
-      quote_sent_at,
-      quote_approved_at,
-      preapproval_confirmed,
-      last_reminder_sent_at,
-      updated_at
-    FROM cases
-    ${whereClause}
-    ORDER BY
-      CASE quote_status WHEN 'sent' THEN 0 WHEN 'draft' THEN 1 WHEN 'approved' THEN 2 WHEN 'expired' THEN 3 WHEN 'declined' THEN 4 ELSE 5 END,
-      updated_at DESC
-    LIMIT 50`;
-
-  const stmt = db.prepare(sql);
-  const { results } = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
+  const results = await sql`SELECT
+    case_id, name, email, status, next_step, quote_status,
+    quote_amount_cents, quote_sent_at, quote_approved_at,
+    preapproval_confirmed, last_reminder_sent_at, updated_at
+  FROM cases
+  WHERE quote_status != 'none'
+    AND (${filterQuoteStatus} = '' OR quote_status = ${filterQuoteStatus})
+    AND (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like}))
+  ORDER BY
+    CASE quote_status WHEN 'sent' THEN 0 WHEN 'draft' THEN 1 WHEN 'approved' THEN 2 WHEN 'expired' THEN 3 WHEN 'declined' THEN 4 ELSE 5 END,
+    updated_at DESC
+  LIMIT 50`;
 
   return (results || []).map((row) => {
     let reminderDue = "";
@@ -1397,55 +1017,26 @@ export const listQuotes = async (env, filters = {}) => {
 };
 
 export const listAllPayments = async (env, filters = {}) => {
-  const db = ensureDb(env);
-  const conditions = [];
-  const params = [];
-
+  const sql = getDb(env);
   const filterStatus = normalizeText(filters.status || "", 40);
   const filterKind = normalizeText(filters.kind || "", 40);
   const filterQuery = normalizeText(filters.query || "", 160);
+  const like = filterQuery ? `%${filterQuery}%` : null;
 
-  if (filterStatus) {
-    conditions.push("cp.status = ?");
-    params.push(filterStatus);
-  }
-
-  if (filterKind) {
-    conditions.push("cp.payment_kind = ?");
-    params.push(filterKind);
-  }
-
-  if (filterQuery) {
-    const like = `%${filterQuery}%`;
-    conditions.push("(cp.case_id LIKE ? OR c.name LIKE ? OR c.email LIKE ? OR cp.payment_request_id LIKE ?)");
-    params.push(like, like, like, like);
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const sql = `SELECT
-      cp.payment_request_id,
-      cp.case_id,
-      c.name,
-      c.email,
-      cp.payment_kind,
-      cp.status,
-      cp.label,
-      cp.amount_cents,
-      cp.currency,
-      cp.created_at,
-      cp.sent_at,
-      cp.paid_at,
-      cp.expires_at
-    FROM case_payments cp
-    LEFT JOIN cases c ON cp.case_id = c.case_id
-    ${whereClause}
-    ORDER BY
-      CASE cp.status WHEN 'open' THEN 0 WHEN 'paid' THEN 1 WHEN 'expired' THEN 2 WHEN 'failed' THEN 3 ELSE 4 END,
-      cp.created_at DESC
-    LIMIT 50`;
-
-  const stmt = db.prepare(sql);
-  const { results } = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
+  const results = await sql`SELECT
+    cp.payment_request_id, cp.case_id, c.name, c.email,
+    cp.payment_kind, cp.status, cp.label, cp.amount_cents, cp.currency,
+    cp.created_at, cp.sent_at, cp.paid_at, cp.expires_at
+  FROM case_payments cp
+  LEFT JOIN cases c ON cp.case_id = c.case_id
+  WHERE
+    (${filterStatus} = '' OR cp.status = ${filterStatus})
+    AND (${filterKind} = '' OR cp.payment_kind = ${filterKind})
+    AND (${like}::text IS NULL OR (cp.case_id LIKE ${like} OR c.name LIKE ${like} OR c.email LIKE ${like} OR cp.payment_request_id LIKE ${like}))
+  ORDER BY
+    CASE cp.status WHEN 'open' THEN 0 WHEN 'paid' THEN 1 WHEN 'expired' THEN 2 WHEN 'failed' THEN 3 ELSE 4 END,
+    cp.created_at DESC
+  LIMIT 50`;
 
   return (results || []).map((row) => ({
     paymentRequestId: row.payment_request_id,
@@ -1466,68 +1057,56 @@ export const listAllPayments = async (env, filters = {}) => {
 };
 
 export const listFollowUps = async (env, filters = {}) => {
-  const db = ensureDb(env);
-  const conditions = [];
-  const params = [];
-
-  conditions.push("status NOT IN ('completed', 'closed')");
-
-  const filterReason = normalizeText(filters.reason || "", 60);
+  const sql = getDb(env);
+  const knownReasons = new Set([
+    "quote_pending",
+    "payment_open",
+    "awaiting_authorization",
+    "missing_information",
+    "new_unqualified",
+    "dormant"
+  ]);
+  const rawReason = normalizeText(filters.reason || "", 60);
+  // Unknown reasons fall back to no reason filter (preserves pre-refactor behavior).
+  const filterReason = knownReasons.has(rawReason) ? rawReason : "";
   const filterQuery = normalizeText(filters.query || "", 160);
   const daysSince = Number(filters.daysSinceLastContact) || 0;
+  const like = filterQuery ? `%${filterQuery}%` : null;
 
-  if (filterReason === "quote_pending") {
-    conditions.push("quote_status = 'sent'");
-  } else if (filterReason === "payment_open") {
-    conditions.push("case_id IN (SELECT case_id FROM case_payments WHERE status = 'open')");
-  } else if (filterReason === "awaiting_authorization") {
-    conditions.push("quote_status = 'approved'");
-    conditions.push("preapproval_confirmed = 0");
-  } else if (filterReason === "missing_information") {
-    conditions.push("status IN ('awaiting_client', 'En attente du client')");
-    conditions.push("quote_status IN ('none', 'draft')");
-  } else if (filterReason === "dormant") {
-    conditions.push("status IN ('awaiting_client', 'paused', 'En attente du client', 'En pause')");
-    conditions.push("updated_at < datetime('now', '-7 days')");
-  } else if (filterReason === "new_unqualified") {
-    conditions.push("status IN ('new', 'Dossier reçu')");
-  }
+  // Single query that conditionally applies the reason-specific predicate.
+  // The ${filterReason} = '<key>' guard means each branch only contributes when
+  // its reason is selected; an empty reason matches all rows.
+  // NULLIF guards `last_client_contact_at::timestamptz` against the empty-string
+  // default — Postgres does not guarantee left-to-right short-circuit on OR,
+  // so the cast can be evaluated even when the empty-check is true.
+  const results = await sql`SELECT
+    case_id, name, email, status, next_step, quote_status,
+    last_reminder_sent_at, last_client_contact_at, updated_at,
+    (SELECT cp.status FROM case_payments cp WHERE cp.case_id = cases.case_id ORDER BY cp.created_at DESC LIMIT 1) AS latest_payment_status
+  FROM cases
+  WHERE status NOT IN ('completed', 'closed')
+    AND (
+      ${filterReason} = ''
+      OR (${filterReason} = 'quote_pending' AND quote_status = 'sent')
+      OR (${filterReason} = 'payment_open' AND case_id IN (SELECT case_id FROM case_payments WHERE status = 'open'))
+      OR (${filterReason} = 'awaiting_authorization' AND quote_status = 'approved' AND preapproval_confirmed = 0)
+      OR (${filterReason} = 'missing_information' AND status IN ('awaiting_client', 'En attente du client') AND quote_status IN ('none', 'draft'))
+      OR (${filterReason} = 'new_unqualified' AND status IN ('new', 'Dossier reçu'))
+      OR (${filterReason} = 'dormant' AND status IN ('awaiting_client', 'paused', 'En attente du client', 'En pause') AND updated_at < NOW() - INTERVAL '7 days')
+    )
+    AND (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like}))
+    AND (
+      ${daysSince} = 0
+      OR NULLIF(last_client_contact_at, '') IS NULL
+      OR NULLIF(last_client_contact_at, '')::timestamptz < NOW() - (${daysSince} || ' days')::interval
+    )
+  ORDER BY CASE WHEN last_client_contact_at = '' THEN 0 ELSE 1 END, last_client_contact_at ASC, updated_at ASC
+  LIMIT 50`;
+  return mapFollowUpResults(results);
+};
 
-  if (daysSince > 0) {
-    conditions.push("(last_client_contact_at = '' OR last_client_contact_at < datetime('now', '-' || ? || ' days'))");
-    params.push(String(daysSince));
-  }
-
-  if (filterQuery) {
-    const like = `%${filterQuery}%`;
-    conditions.push("(case_id LIKE ? OR name LIKE ? OR email LIKE ?)");
-    params.push(like, like, like);
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const sql = `SELECT
-      case_id,
-      name,
-      email,
-      status,
-      next_step,
-      quote_status,
-      last_reminder_sent_at,
-      last_client_contact_at,
-      updated_at,
-      (SELECT cp.status FROM case_payments cp WHERE cp.case_id = cases.case_id ORDER BY cp.created_at DESC LIMIT 1) AS latest_payment_status
-    FROM cases
-    ${whereClause}
-    ORDER BY
-      CASE WHEN last_client_contact_at = '' THEN 0 ELSE 1 END,
-      last_client_contact_at ASC,
-      updated_at ASC
-    LIMIT 50`;
-
-  const stmt = db.prepare(sql);
-  const { results } = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
-
-  return (results || []).map((row) => ({
+const mapFollowUpResults = (results) =>
+  (results || []).map((row) => ({
     caseId: row.case_id,
     clientName: row.name,
     clientEmail: row.email,
@@ -1539,4 +1118,3 @@ export const listFollowUps = async (env, filters = {}) => {
     lastClientContactAt: row.last_client_contact_at,
     updatedAt: row.updated_at
   }));
-};

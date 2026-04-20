@@ -1,0 +1,125 @@
+# Google services setup — olivier@nexuradata.ca
+
+Pre-launch checklist for connecting NEXURADATA to Google. All properties must be created and owned by **olivier@nexuradata.ca** (Workspace account on `nexuradata.ca`).
+
+> Verification domain: `nexuradata.ca` (apex). Add `www.nexuradata.ca` only after the apex is verified and the redirect in `_redirects` is confirmed.
+
+---
+
+## 1. Google Search Console
+
+1. Go to https://search.google.com/search-console — sign in as `olivier@nexuradata.ca`.
+2. **Add property → Domain** → enter `nexuradata.ca`.
+3. Choose **DNS verification (TXT record)**. Copy the `google-site-verification=...` value.
+4. Add the TXT record at the registrar (Cloudflare DNS):
+   - Type: `TXT`
+   - Name: `@`
+   - Value: `google-site-verification=...`
+   - TTL: Auto
+5. Wait 2–10 minutes, click **Verify**.
+6. Once verified:
+   - **Sitemaps** → submit `https://nexuradata.ca/sitemap.xml`.
+   - **Settings → Users and permissions** → confirm `olivier@nexuradata.ca` is **Owner**.
+   - **Settings → Associations** → link the Google Analytics 4 property (after step 2).
+
+> Domain verification covers both `https://nexuradata.ca/` and `https://nexuradata.ca/en/` automatically — no per-language property needed.
+
+---
+
+## 2. Google Analytics 4 (GA4)
+
+1. Go to https://analytics.google.com → sign in as `olivier@nexuradata.ca`.
+2. **Admin → Create → Account**: `NEXURADATA` (Canada, CAD, English).
+3. **Create property**: `nexuradata.ca`, time zone `America/Montreal`, currency `CAD`.
+4. Industry: `Business & Industrial Markets`. Size: `Small`.
+5. **Data stream → Web** → URL `https://nexuradata.ca`, name `NEXURADATA Web`.
+6. Copy the **Measurement ID** (`G-XXXXXXXXXX`).
+7. Send the ID to the dev workflow — it must be wired into every HTML page **and** added to the CSP in `_headers`. See §5 below.
+
+### Recommended GA4 settings
+
+- **Data Settings → Data Collection**: enable Google Signals **only** if you publish a privacy policy update (currently we collect minimal data — leave OFF for the v1 launch).
+- **Data Retention**: set to **14 months** (max under default plan).
+- **IP Anonymization**: GA4 anonymizes by default — no action.
+- **Events**: keep enhanced measurement ON (page_view, scroll, outbound clicks, file_download).
+- Mark **`form_submit`** as a conversion once the intake form starts firing it.
+
+---
+
+## 3. Google Merchant Center (already prepped)
+
+Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 with `g:` namespace).
+
+1. Go to https://merchants.google.com → sign in as `olivier@nexuradata.ca`.
+2. **Create account** → business name `NEXURADATA`, country `Canada`, time zone `America/Montreal`.
+3. **Tools → Business information → Website** → claim `https://nexuradata.ca` (use Search Console verification — auto-claims since same Google account).
+4. **Products → Feeds → Add primary feed**:
+   - Country: `Canada`
+   - Language: `French`
+   - Destination: `Free product listings` (skip Shopping ads for now)
+   - Name: `NEXURADATA services FR`
+   - Method: **Scheduled fetch**
+   - URL: `https://nexuradata.ca/merchant-feed.xml`
+   - Frequency: weekly, Monday 06:00 ET
+5. (Optional) Duplicate the feed for English — point at `https://nexuradata.ca/merchant-feed.xml` with language `English`. The current feed is FR-only; an EN feed can be added later as `merchant-feed-en.xml`.
+
+---
+
+## 4. Google Business Profile (Maps + local SEO)
+
+1. Go to https://business.google.com → sign in as `olivier@nexuradata.ca`.
+2. **Add business** → name `NEXURADATA`, category `Data recovery service`.
+3. Address: lab address in Montreal (do **not** publish if it's a residential address — choose "I deliver goods and services to my customers" and set a service area).
+4. Service area: `Montréal`, `Laval`, `Longueuil`, `Brossard`, `Boucherville`, `Saint-Léonard`, `Anjou`, `Lachine`, `LaSalle`, `Verdun` (matches `zones-desservies-montreal-quebec.html`).
+5. Phone: lab phone. Website: `https://nexuradata.ca/`.
+6. Verification: postcard or video (Google's choice). Allow 5–14 days.
+7. After verification:
+   - Add hours, services (mirror items in `tarifs-recuperation-donnees-montreal.html`).
+   - Upload logo + cover (use assets in `/assets/icons/`).
+   - Enable messaging only if someone monitors it daily.
+
+---
+
+## 5. Code wiring (after GA4 ID is known)
+
+Send the Measurement ID (`G-XXXXXXXXXX`) and any Search Console TXT will be DNS-only — no code change needed for SC.
+
+**For GA4** the dev step will:
+
+1. Inject this snippet into every HTML page just before `</head>`:
+   ```html
+   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+   <script>
+     window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+     gtag('js',new Date());gtag('config','G-XXXXXXXXXX',{anonymize_ip:true});
+   </script>
+   ```
+2. Update CSP in [_headers](../_headers) `script-src` and `connect-src`:
+   - `script-src`: add `https://www.googletagmanager.com`
+   - `connect-src`: add `https://www.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net`
+   - `img-src`: add `https://www.google-analytics.com https://*.g.doubleclick.net`
+3. Update `docs/branding-read-only.txt` only if a cookie/consent banner is added (not required for GA4 anonymized in QC under Law 25 if no advertising features are enabled).
+
+---
+
+## 6. Law 25 (Quebec) compliance note
+
+Under Law 25, GA4 with **default settings + IP anonymization + Google Signals OFF** is acceptable as analytics-only without prior consent, provided:
+
+- The privacy policy ([politique-confidentialite.html](../politique-confidentialite.html)) discloses analytics use, the data collected, the retention period, and the recipient (Google LLC, USA).
+- Users can opt out (link to https://tools.google.com/dlpage/gaoptout in the privacy policy).
+- No remarketing, advertising features, or cross-device tracking is enabled.
+
+If marketing/ads features are turned on later, a consent banner becomes mandatory.
+
+---
+
+## Quick checklist
+
+- [ ] Search Console domain property verified via DNS TXT
+- [ ] `sitemap.xml` submitted in Search Console
+- [ ] GA4 property created, Measurement ID `G-__________` recorded
+- [ ] Merchant Center account created, website claimed, feed scheduled
+- [ ] Business Profile created, verification requested
+- [ ] GA4 snippet wired into HTML + CSP updated (after ID provided)
+- [ ] Privacy policy reviewed for Law 25 compliance

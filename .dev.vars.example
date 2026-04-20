@@ -1,3 +1,4 @@
+DATABASE_URL=postgres://user:password@host.neon.tech/dbname?sslmode=require
 RESEND_API_KEY=re_xxxxxxxxx
 RESEND_FROM_EMAIL=NEXURADATA <dossiers@nexuradata.ca>
 LAB_INBOX_EMAIL=o.blanchet13@gmail.com

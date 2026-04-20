@@ -17,7 +17,7 @@ import { authorizeOrReject, json, methodNotAllowed, onOptions, parsePayload } fr
 export const onRequestOptions = () => onOptions("GET, POST, OPTIONS");
 
 export const onRequestGet = async (context) => {
-  if (!context.env?.INTAKE_DB) {
+  if (!context.env?.DATABASE_URL) {
     return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
   }
 
@@ -71,7 +71,7 @@ export const onRequestGet = async (context) => {
 };
 
 export const onRequestPost = async (context) => {
-  if (!context.env?.INTAKE_DB) {
+  if (!context.env?.DATABASE_URL) {
     return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
   }
 
