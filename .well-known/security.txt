@@ -1,4 +1,5 @@
-Contact: mailto:contact@nexuradata.ca
+Contact: mailto:privacy@nexuradata.ca
+Expires: 2027-04-20T00:00:00.000Z
 Canonical: https://nexuradata.ca/.well-known/security.txt
+Policy: https://nexuradata.ca/politique-confidentialite.html
 Preferred-Languages: fr, en
-Expires: 2027-04-04T00:00:00.000Z
