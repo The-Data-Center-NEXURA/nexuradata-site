@@ -14,6 +14,9 @@ export const onRequestPost = async (context) => {
     if (!context.env?.DATABASE_URL) {
       return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
     }
+    if (!context.env?.ACCESS_CODE_SECRET) {
+      return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
+    }
     const payload = await parsePayload(context.request);
     const { caseId, accessCode } = validateStatusLookup(payload);
     const detail = await getPublicCaseByCredentials(context.env, caseId, accessCode);
@@ -40,14 +43,11 @@ export const onRequestPost = async (context) => {
       payments: detail.payments
     });
   } catch (error) {
-    const message = error instanceof Error && error.message.includes("numéro de dossier")
-      ? error.message
-      : genericErrorMessage;
-
+    console.error("status lookup error:", error);
     return json(
       {
         ok: false,
-        message
+        message: genericErrorMessage
       },
       { status: 400 }
     );

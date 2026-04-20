@@ -60,10 +60,11 @@ export const onRequestGet = async (context) => {
       items
     });
   } catch (error) {
+    console.error("ops/cases GET error:", error);
     return json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Erreur opérateur."
+        message: "Erreur opérateur."
       },
       { status: 400 }
     );
@@ -195,6 +196,7 @@ export const onRequestPost = async (context) => {
 
     throw new Error("Action opérateur inconnue.");
   } catch (error) {
+    console.error("ops/cases POST error:", error);
     return json(
       {
         ok: false,
