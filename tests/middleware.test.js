@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { onRequest } from "../functions/_middleware.js";
+import { blockBots } from "../functions/_middleware.js";
 
 function makeContext(ua) {
     return {
@@ -33,7 +33,7 @@ describe("_middleware — user agent blocking", () => {
 
     for (const [name, ua] of blocked) {
         it(`blocks ${name}`, async () => {
-            const res = await onRequest(makeContext(ua));
+            const res = await blockBots(makeContext(ua));
             expect(res.status).toBe(403);
         });
     }
@@ -48,7 +48,7 @@ describe("_middleware — user agent blocking", () => {
 
     for (const [name, ua] of allowed) {
         it(`allows ${name}`, async () => {
-            const res = await onRequest(makeContext(ua));
+            const res = await blockBots(makeContext(ua));
             expect(res.status).toBe(200);
         });
     }

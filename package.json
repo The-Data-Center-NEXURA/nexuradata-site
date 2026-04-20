@@ -25,6 +25,7 @@
     "wrangler": "^4.84.0"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0"
+    "@neondatabase/serverless": "^1.1.0",
+    "@sentry/cloudflare": "^10.49.0"
   }
 }

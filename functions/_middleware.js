@@ -1,7 +1,12 @@
 /**
  * Cloudflare Pages Middleware — runs before every Pages Function.
- * Blocks known scanners, scrapers, and bot user agents.
+ *
+ * Order matters:
+ *   1. Sentry (must be first to capture errors from later middleware + functions)
+ *   2. UA blocker (rejects known scanners, scrapers, AI bots)
  */
+
+import * as Sentry from "@sentry/cloudflare";
 
 const BLOCKED_UA_FRAGMENTS = [
     // Attack / scanning tools
@@ -28,7 +33,7 @@ const BLOCKED_UA_FRAGMENTS = [
     "ccbot",
 ];
 
-export const onRequest = async (context) => {
+export const blockBots = async (context) => {
     const ua = (context.request.headers.get("user-agent") || "").toLowerCase();
 
     for (const fragment of BLOCKED_UA_FRAGMENTS) {
@@ -39,3 +44,14 @@ export const onRequest = async (context) => {
 
     return context.next();
 };
+
+export const onRequest = [
+    Sentry.sentryPagesPlugin((context) => ({
+        dsn: context.env.SENTRY_DSN || "https://6bfe4bfc2d7e4c22429e701f269df612@o4511254844538880.ingest.us.sentry.io/4511254867345408",
+        environment: context.env.SENTRY_ENVIRONMENT || "production",
+        release: context.env.CF_PAGES_COMMIT_SHA || undefined,
+        sendDefaultPii: false,
+        tracesSampleRate: 0.1,
+    })),
+    blockBots,
+];
