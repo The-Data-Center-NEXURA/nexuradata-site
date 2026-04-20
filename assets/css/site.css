@@ -2325,6 +2325,13 @@ select {
   color: var(--color-accent);
 }
 
+.tier-email {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  opacity: 0.75;
+}
+
 /* ── Credential / certification cards ─────────────────────────── */
 .cert-grid {
   display: grid;
