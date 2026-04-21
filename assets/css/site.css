@@ -352,6 +352,13 @@ select {
     radial-gradient(ellipse 80% 55% at 65% 30%, rgba(232, 228, 220, 0.032) 0%, transparent 68%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.012), rgba(18, 18, 16, 0));
   pointer-events: none;
+  animation: hero-shimmer 14s ease-in-out infinite;
+}
+
+@keyframes hero-shimmer {
+  0%   { opacity: 0.75; transform: scale(1); }
+  50%  { opacity: 1;    transform: scale(1.07); }
+  100% { opacity: 0.75; transform: scale(1); }
 }
 
 .hero-grid {
@@ -2210,6 +2217,25 @@ select {
   font-weight: 700;
   color: var(--color-text);
   font-family: "IBM Plex Sans", sans-serif;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.faq-item summary::after {
+  content: "+";
+  font-weight: 400;
+  font-size: 1.25rem;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: transform 260ms var(--ease-out), color 180ms;
+}
+
+.faq-item[open] summary::after {
+  transform: rotate(45deg);
+  color: var(--color-text-soft);
 }
 
 .faq-item summary::-webkit-details-marker {
@@ -2220,6 +2246,20 @@ select {
   margin: 0;
   padding: 0 1.4rem 1.4rem;
   color: var(--color-text-soft);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 320ms var(--ease-out),
+    opacity 280ms var(--ease-out),
+    padding 300ms var(--ease-out);
+  padding-bottom: 0;
+}
+
+.faq-item[open] > p {
+  max-height: 24rem;
+  opacity: 1;
+  padding-bottom: 1.4rem;
 }
 
 .faq-item[open] {
@@ -2410,6 +2450,26 @@ select {
 [data-reveal].is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Stagger: parent is instantly visible; children animate in sequence */
+[data-reveal].stagger-parent {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.stagger-parent > * {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 380ms var(--ease-out),
+    transform 380ms var(--ease-out);
+}
+
+.stagger-parent.is-visible > * {
+  opacity: 1;
+  transform: none;
 }
 
 @media (max-width: 1080px) {
@@ -2758,7 +2818,16 @@ select {
     scroll-behavior: auto !important;
   }
 
+  .hero-backdrop {
+    animation: none;
+  }
+
   [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .stagger-parent > * {
     opacity: 1;
     transform: none;
   }

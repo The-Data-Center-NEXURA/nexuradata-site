@@ -282,6 +282,14 @@ if (!("IntersectionObserver" in window) || prefersReducedMotion.matches) {
         }
 
         entry.target.classList.add("is-visible");
+
+        // Stagger direct children for grid containers
+        if (entry.target.classList.contains("stagger-parent")) {
+          Array.from(entry.target.children).forEach((child, i) => {
+            child.style.transitionDelay = `${i * 68}ms`;
+          });
+        }
+
         activeObserver.unobserve(entry.target);
       });
     },
@@ -293,6 +301,75 @@ if (!("IntersectionObserver" in window) || prefersReducedMotion.matches) {
 
   revealElements.forEach((element) => observer.observe(element));
 }
+
+// Counter animation for [data-count] elements (hero panel stats)
+const counterElements = document.querySelectorAll("[data-count]");
+if (counterElements.length > 0 && "IntersectionObserver" in window && !prefersReducedMotion.matches) {
+  const counterObserver = new IntersectionObserver(
+    (entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const target = parseInt(el.dataset.count, 10);
+        const suffix = el.dataset.countSuffix || "";
+        const locale = document.documentElement.lang?.startsWith("en") ? "en-CA" : "fr-CA";
+        const duration = 1400;
+        const startTime = performance.now();
+        const tick = (now) => {
+          const progress = Math.min((now - startTime) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.floor(eased * target).toLocaleString(locale) + suffix;
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            el.textContent = target.toLocaleString(locale) + suffix;
+          }
+        };
+        requestAnimationFrame(tick);
+        obs.unobserve(el);
+      });
+    },
+    { threshold: 0.6 }
+  );
+  counterElements.forEach((el) => counterObserver.observe(el));
+}
+
+// Smooth FAQ open/close animation via Web Animations API
+document.querySelectorAll(".faq-item").forEach((details) => {
+  const summary = details.querySelector("summary");
+  const content = details.querySelector("p");
+  if (!summary || !content) return;
+
+  summary.addEventListener("click", (e) => {
+    if (prefersReducedMotion.matches) return;
+    e.preventDefault();
+
+    if (!details.open) {
+      details.open = true;
+      const h = content.scrollHeight;
+      content.animate(
+        [
+          { maxHeight: "0", opacity: "0", paddingBottom: "0" },
+          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" }
+        ],
+        { duration: 300, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
+      );
+    } else {
+      const h = content.scrollHeight;
+      const anim = content.animate(
+        [
+          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" },
+          { maxHeight: "0", opacity: "0", paddingBottom: "0" }
+        ],
+        { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
+      );
+      anim.onfinish = () => {
+        details.open = false;
+        anim.cancel();
+      };
+    }
+  });
+});
 
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener("click", (event) => {

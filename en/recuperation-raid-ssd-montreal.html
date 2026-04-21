@@ -69,6 +69,39 @@
       ]
     }
   </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I rebuild the RAID myself?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No, unless you know the exact RAID type, disk order, stripe size and parity. An incorrect rebuild can make data permanently unrecoverable. Contact a specialist before taking any action." }
+        },
+        {
+          "@type": "Question",
+          "name": "My NAS is inaccessible after a firmware update \u2014 what should I do?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Power off the NAS immediately if possible. Do not attempt to reset the volume. The physical drives still contain the data in most cases. A professional triage evaluates your options without additional risk." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is an SSD that disappeared from the BIOS recoverable?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Sometimes yes, depending on the failure mode. SSDs behave differently from traditional hard drives. Some zero-detection cases can be resolved in the lab. A no-charge assessment determines feasibility." }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you support RAID arrays from all NAS manufacturers?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Synology, QNAP, Western Digital, Seagate, Netgear and other brands are handled. Support level depends on the RAID type and specific configuration \u2014 include the make and model in your first message." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the initial assessment free for RAID or server environments?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The initial assessment is free for all media types, including RAID, NAS and server environments. A detailed quote is provided in writing before any work begins." }
+        }
+      ]
+    }
+  </script>
 
 </head>
 <body>
@@ -138,6 +171,37 @@
       </div>
     </div>
   </main>
+
+  <section id="faq" class="page-shell section-lined" aria-labelledby="faq-raid-title">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Frequently asked questions</p>
+        <h2 id="faq-raid-title">RAID, NAS and SSD</h2>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Can I rebuild the RAID myself?</summary>
+          <p>No, unless you know the exact RAID type, disk order, stripe size and parity. An incorrect rebuild can make data permanently unrecoverable. Contact a specialist before taking any action.</p>
+        </details>
+        <details class="faq-item">
+          <summary>My NAS is inaccessible after a firmware update — what should I do?</summary>
+          <p>Power off the NAS immediately if possible. Do not attempt to reset the volume. The physical drives still contain the data in most cases. A professional triage evaluates your options without additional risk.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is an SSD that disappeared from the BIOS recoverable?</summary>
+          <p>Sometimes yes, depending on the failure mode. SSDs behave differently from traditional hard drives. Some zero-detection cases can be resolved in the lab. A no-charge assessment determines feasibility.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do you support RAID arrays from all NAS manufacturers?</summary>
+          <p>Yes. Synology, QNAP, Western Digital, Seagate, Netgear and other brands are handled. Support level depends on the RAID type and specific configuration — include the make and model in your first message.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is the initial assessment free for RAID or server environments?</summary>
+          <p>Yes. The initial assessment is free for all media types, including RAID, NAS and server environments. A detailed quote is provided in writing before any work begins.</p>
+        </details>
+      </div>
+    </div>
+  </section>
   <footer class="site-footer">
     <div class="container">
       <section class="footer-top" aria-label="Identity and information">
