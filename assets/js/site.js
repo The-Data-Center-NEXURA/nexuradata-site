@@ -182,6 +182,18 @@ if (yearTarget) {
   yearTarget.textContent = new Date().getFullYear();
 }
 
+// Copyright footer — inject on all public pages that have .footer-note
+const footerNote = document.querySelector(".footer-note");
+if (footerNote) {
+  const copyrightDiv = document.createElement("div");
+  copyrightDiv.className = "footer-bottom";
+  const year = new Date().getFullYear();
+  copyrightDiv.innerHTML = isEnglishDocument
+    ? `<p>&copy; ${year} NEXURA DATA. All rights reserved.</p>`
+    : `<p>&copy; ${year} NEXURA DATA. Tous droits r\u00e9serv\u00e9s.</p>`;
+  footerNote.insertAdjacentElement("afterend", copyrightDiv);
+}
+
 const revealElements = document.querySelectorAll("[data-reveal]");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 

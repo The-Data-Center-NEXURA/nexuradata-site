@@ -1152,7 +1152,7 @@ select {
 }
 
 .footer-note {
-  padding: 24px 0 64px;
+  padding: 24px 0 32px;
   border-top: var(--rule);
 }
 
@@ -1161,6 +1161,19 @@ select {
   font-size: 0.95rem;
   line-height: 1.85;
   opacity: 0.5;
+}
+
+.footer-bottom {
+  padding: 20px 0 40px;
+  border-top: var(--rule);
+  text-align: center;
+}
+
+.footer-bottom p {
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  opacity: 0.38;
+  margin: 0;
 }
 
 .brand-footer {
