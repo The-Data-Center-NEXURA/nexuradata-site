@@ -5,7 +5,6 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const accessCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const FALLBACK_SECRET = "nexuradata-launch-v1";
 
 const trimSlice = (value, maxLength) => {
   if (typeof value !== "string") {
@@ -41,7 +40,10 @@ const fromBase64 = (value) => {
 
 const getSecretBytes = async (env) => {
   const secret = trimSlice(env?.ACCESS_CODE_SECRET, 256);
-  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(secret || FALLBACK_SECRET));
+  if (!secret) {
+    throw new Error("ACCESS_CODE_SECRET n'est pas configurée. Configuration requise: ACCESS_CODE_SECRET dans les variables d'environnement.");
+  }
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(secret));
   return new Uint8Array(digest);
 };
 

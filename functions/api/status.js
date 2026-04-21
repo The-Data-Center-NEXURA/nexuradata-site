@@ -4,7 +4,7 @@ import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 
 const genericErrorMessage = "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour.";
 
-export const onRequestOptions = () => onOptions("POST, OPTIONS");
+export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
   const limit = checkRateLimit(context.request, 10);

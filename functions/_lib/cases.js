@@ -116,6 +116,43 @@ export const validateStatusLookup = (payload) => {
   };
 };
 
+/**
+ * Validate query parameters for case listing in ops endpoints.
+ * Returns sanitized filters or throws if invalid values provided.
+ */
+export const validateCaseFilters = (queryParams) => {
+  const filters = {};
+
+  if (queryParams.status) {
+    const status = normalizeText(queryParams.status, 40);
+    // Valid database statuses: nouveau, en-cours, complete, fermé
+    const validStatuses = ["nouveau", "en-cours", "complete", "fermé"];
+    if (status && !validStatuses.includes(status)) {
+      throw new Error(`Statut invalide: ${status}`);
+    }
+    if (status) filters.status = status;
+  }
+
+  if (queryParams.quoteStatus) {
+    const quoteStatus = normalizeText(queryParams.quoteStatus, 40);
+    // Use the exported allowedQuoteStatuses
+    if (quoteStatus && !allowedQuoteStatuses.has(quoteStatus)) {
+      throw new Error(`Statut de soumission invalide: ${quoteStatus}`);
+    }
+    if (quoteStatus) filters.quoteStatus = quoteStatus;
+  }
+
+  if (queryParams.urgency) {
+    const urgency = normalizeText(queryParams.urgency, 40);
+    if (urgency && !allowedUrgencies.has(urgency)) {
+      throw new Error(`Niveau d'urgence invalide: ${urgency}`);
+    }
+    if (urgency) filters.urgency = urgency;
+  }
+
+  return filters;
+};
+
 const normalizeStep = (step, index) => {
   const title = normalizeText(step?.title, 80);
   const note = normalizeMultilineText(step?.note, 220);
@@ -1079,28 +1116,35 @@ export const listFollowUps = async (env, filters = {}) => {
   // NULLIF guards `last_client_contact_at::timestamptz` against the empty-string
   // default — Postgres does not guarantee left-to-right short-circuit on OR,
   // so the cast can be evaluated even when the empty-check is true.
+  //
+  // Uses a LEFT JOIN LATERAL with subquery instead of scalar subquery to avoid N+1.
   const results = await sql`SELECT
-    case_id, name, email, status, next_step, quote_status,
-    last_reminder_sent_at, last_client_contact_at, updated_at,
-    (SELECT cp.status FROM case_payments cp WHERE cp.case_id = cases.case_id ORDER BY cp.created_at DESC LIMIT 1) AS latest_payment_status
-  FROM cases
-  WHERE status NOT IN ('completed', 'closed')
+    c.case_id, c.name, c.email, c.status, c.next_step, c.quote_status,
+    c.last_reminder_sent_at, c.last_client_contact_at, c.updated_at,
+    cp_latest.status AS latest_payment_status
+  FROM cases c
+  LEFT JOIN LATERAL (
+    SELECT status FROM case_payments
+    WHERE case_id = c.case_id
+    ORDER BY created_at DESC LIMIT 1
+  ) cp_latest ON TRUE
+  WHERE c.status NOT IN ('completed', 'closed')
     AND (
       ${filterReason} = ''
-      OR (${filterReason} = 'quote_pending' AND quote_status = 'sent')
-      OR (${filterReason} = 'payment_open' AND case_id IN (SELECT case_id FROM case_payments WHERE status = 'open'))
-      OR (${filterReason} = 'awaiting_authorization' AND quote_status = 'approved' AND preapproval_confirmed = 0)
-      OR (${filterReason} = 'missing_information' AND status IN ('awaiting_client', 'En attente du client') AND quote_status IN ('none', 'draft'))
-      OR (${filterReason} = 'new_unqualified' AND status IN ('new', 'Dossier reçu'))
-      OR (${filterReason} = 'dormant' AND status IN ('awaiting_client', 'paused', 'En attente du client', 'En pause') AND updated_at < NOW() - INTERVAL '7 days')
+      OR (${filterReason} = 'quote_pending' AND c.quote_status = 'sent')
+      OR (${filterReason} = 'payment_open' AND c.case_id IN (SELECT case_id FROM case_payments WHERE status = 'open'))
+      OR (${filterReason} = 'awaiting_authorization' AND c.quote_status = 'approved' AND c.preapproval_confirmed = 0)
+      OR (${filterReason} = 'missing_information' AND c.status IN ('awaiting_client', 'En attente du client') AND c.quote_status IN ('none', 'draft'))
+      OR (${filterReason} = 'new_unqualified' AND c.status IN ('new', 'Dossier reçu'))
+      OR (${filterReason} = 'dormant' AND c.status IN ('awaiting_client', 'paused', 'En attente du client', 'En pause') AND c.updated_at < NOW() - INTERVAL '7 days')
     )
-    AND (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like}))
+    AND (${like}::text IS NULL OR (c.case_id LIKE ${like} OR c.name LIKE ${like} OR c.email LIKE ${like}))
     AND (
       ${daysSince} = 0
-      OR NULLIF(last_client_contact_at, '') IS NULL
-      OR NULLIF(last_client_contact_at, '')::timestamptz < NOW() - (${daysSince} || ' days')::interval
+      OR NULLIF(c.last_client_contact_at, '') IS NULL
+      OR NULLIF(c.last_client_contact_at, '')::timestamptz < NOW() - (${daysSince} || ' days')::interval
     )
-  ORDER BY CASE WHEN last_client_contact_at = '' THEN 0 ELSE 1 END, last_client_contact_at ASC, updated_at ASC
+  ORDER BY CASE WHEN c.last_client_contact_at = '' THEN 0 ELSE 1 END, c.last_client_contact_at ASC, c.updated_at ASC
   LIMIT 50`;
   return mapFollowUpResults(results);
 };

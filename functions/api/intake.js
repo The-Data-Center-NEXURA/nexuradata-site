@@ -3,7 +3,7 @@ import { sendClientAccessEmail, sendLabNotificationEmail } from "../_lib/email.j
 import { json, methodNotAllowed, onOptions, parsePayload } from "../_lib/http.js";
 import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 
-export const onRequestOptions = () => onOptions("POST, OPTIONS");
+export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
   const limit = checkRateLimit(context.request, 5);

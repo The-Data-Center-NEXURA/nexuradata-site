@@ -1,7 +1,7 @@
 import { authorizeOpsRequest, listFollowUps } from "../../_lib/cases.js";
 import { authorizeOrReject, json, methodNotAllowed, onOptions } from "../../_lib/http.js";
 
-export const onRequestOptions = () => onOptions("GET, OPTIONS");
+export const onRequestOptions = (context) => onOptions(context.env, "GET, OPTIONS");
 
 export const onRequestGet = async (context) => {
   if (!context.env?.DATABASE_URL) {

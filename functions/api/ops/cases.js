@@ -9,12 +9,13 @@ import {
   recordCaseEvent,
   regenerateCaseAccessCode,
   updateCaseRecord,
-  updateQuoteStatus
+  updateQuoteStatus,
+  validateCaseFilters
 } from "../../_lib/cases.js";
 import { sendClientAccessEmail, sendClientPaymentLinkEmail, sendClientStatusEmail } from "../../_lib/email.js";
 import { authorizeOrReject, json, methodNotAllowed, onOptions, parsePayload } from "../../_lib/http.js";
 
-export const onRequestOptions = () => onOptions("GET, POST, OPTIONS");
+export const onRequestOptions = (context) => onOptions(context.env, "GET, POST, OPTIONS");
 
 export const onRequestGet = async (context) => {
   if (!context.env?.DATABASE_URL) {
@@ -50,11 +51,14 @@ export const onRequestGet = async (context) => {
       });
     }
 
-    const items = await listCases(context.env, url.searchParams.get("query") || "", {
-      status: url.searchParams.get("status") || "",
-      quoteStatus: url.searchParams.get("quoteStatus") || "",
-      urgency: url.searchParams.get("urgency") || ""
+    // Validate query parameters before database call
+    const filters = validateCaseFilters({
+      status: url.searchParams.get("status"),
+      quoteStatus: url.searchParams.get("quoteStatus"),
+      urgency: url.searchParams.get("urgency")
     });
+
+    const items = await listCases(context.env, url.searchParams.get("query") || "", filters);
     return json({
       ok: true,
       items
