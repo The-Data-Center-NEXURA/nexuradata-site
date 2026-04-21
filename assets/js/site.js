@@ -606,8 +606,7 @@ const createStatusPayment = (payment) => {
   article.append(head, meta, note);
 
   if (payment.checkoutUrl) {
-    const actions = document.createElement("div");
-    actions.className = "status-payment-actions";
+    (document.createElement("div")).className = "status-payment-actions";
 
     const link = document.createElement("a");
     link.className = "button button-primary button-small";
@@ -616,8 +615,8 @@ const createStatusPayment = (payment) => {
     link.rel = "noreferrer";
     link.textContent = publicI18n.paymentAction;
 
-    actions.append(link);
-    article.append(actions);
+    (document.createElement("div")).append(link);
+    article.append(document.createElement("div"));
   }
 
   article.append(details);
