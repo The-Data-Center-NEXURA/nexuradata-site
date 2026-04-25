@@ -1,9 +1,12 @@
 /**
  * In-memory sliding-window rate limiter for Cloudflare Workers.
  *
- * Workers isolates share no memory, so this is per-isolate.
- * For a single-origin site this provides reasonable spam protection.
- * For stronger guarantees, layer Cloudflare WAF rate-limiting rules.
+ * IMPORTANT: This limiter is per-isolate and can be bypassed by multiple
+ * Cloudflare isolates serving the same IP. For production deployments,
+ * you MUST enable Cloudflare WAF rate-limiting rules as the primary defense.
+ * This in-memory limiter provides additional per-isolate protection.
+ *
+ * See SECURITY.md for WAF rule configuration requirements.
  */
 
 const windows = new Map();

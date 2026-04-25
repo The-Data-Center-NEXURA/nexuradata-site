@@ -3,8 +3,6 @@ name: CI
 on:
   pull_request:
     branches: [ main ]
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -17,14 +15,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        run: |
-          git clone https://github.com/${{ github.repository }}.git .
-          git checkout ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run vitest
+      - name: Run quality gate
+        run: npm run check
+
+      - name: Run tests
         run: npm test
 
       - name: Build release output
@@ -33,7 +38,7 @@ jobs:
       - name: Verify release-cloudflare/ matches source
         run: |
           if [ -n "$(git status --porcelain release-cloudflare/)" ]; then
-            echo "::error::release-cloudflare/ is out of sync with source — run 'npm run build' locally and commit"
+            echo "::error::release-cloudflare/ is out of sync — run 'npm run build' locally and commit"
             git status --porcelain release-cloudflare/
             exit 1
           fi

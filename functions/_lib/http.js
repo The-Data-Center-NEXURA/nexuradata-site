@@ -8,12 +8,12 @@ export const json = (payload, init = {}) =>
     ...init
   });
 
-export const onOptions = (allow = "GET, POST, OPTIONS") =>
+export const onOptions = (env, allow = "GET, POST, OPTIONS") =>
   new Response(null, {
     status: 204,
     headers: {
       allow,
-      "access-control-allow-origin": "https://nexuradata.ca",
+      "access-control-allow-origin": env?.PUBLIC_SITE_ORIGIN || "https://nexuradata.ca",
       "access-control-allow-methods": allow,
       "access-control-allow-headers": "content-type",
       "cache-control": "no-store",
