@@ -44,7 +44,7 @@ describe("POST /api/intake", () => {
   });
 
   it("OPTIONS handler returns 204", () => {
-    const res = intakeOptions();
+    const res = intakeOptions({ env: {} });
     expect(res.status).toBe(204);
   });
 });
@@ -78,7 +78,7 @@ describe("POST /api/status", () => {
   });
 
   it("OPTIONS handler returns 204", () => {
-    const res = statusOptions();
+    const res = statusOptions({ env: {} });
     expect(res.status).toBe(204);
   });
 
