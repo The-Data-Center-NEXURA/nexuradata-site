@@ -51,12 +51,14 @@ You are a senior full-stack engineer who knows the NEXURADATA codebase inside an
 ## Cloudflare Functions Pattern
 
 ```js
-export const onRequestOptions = () => onOptions("POST, OPTIONS");
+// onOptions takes env as first arg — enables dynamic CORS origin via PUBLIC_SITE_ORIGIN
+export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
   try {
     if (!context.env?.DATABASE_URL) return json({ ok: false, message: "Service unavailable." }, { status: 503 });
-    await checkRateLimit(context.request, 10);
+    const limit = checkRateLimit(context.request, 10);
+    if (!limit.allowed) return tooManyRequests(limit.retryAfter);
     const payload = await parsePayload(context.request);
     // normalize → validate → query → respond
     return json({ ok: true }, { status: 200 });
