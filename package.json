@@ -2,7 +2,7 @@
   "name": "nexuradata-site",
   "private": true,
   "config": {
-    "pagesProjectName": "nexuradata"
+    "pagesProjectName": "nexuradata-site"
   },
   "scripts": {
     "build": "node ./scripts/sync-release.mjs",
@@ -17,7 +17,9 @@
     "cf:pages:deploy:staging": "npm run build && node ./scripts/pages-cli.mjs deploy-staging",
     "cf:whoami": "wrangler whoami",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check": "node ./scripts/check.mjs",
+    "prepare": "node ./scripts/setup-hooks.mjs"
   },
   "devDependencies": {
     "sharp": "^0.34.5",

@@ -42,7 +42,8 @@ describe("json()", () => {
 
 describe("onOptions()", () => {
   it("returns 204 with CORS headers", () => {
-    const res = onOptions();
+    const env = { PUBLIC_SITE_ORIGIN: "https://nexuradata.ca" };
+    const res = onOptions(env);
     expect(res.status).toBe(204);
     expect(res.headers.get("allow")).toBe("GET, POST, OPTIONS");
     expect(res.headers.get("access-control-allow-origin")).toBe("https://nexuradata.ca");
@@ -50,14 +51,27 @@ describe("onOptions()", () => {
     expect(res.headers.get("access-control-allow-headers")).toBe("content-type");
   });
 
+  it("uses custom origin from env", () => {
+    const env = { PUBLIC_SITE_ORIGIN: "https://staging.example.com" };
+    const res = onOptions(env);
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://staging.example.com");
+  });
+
+  it("falls back to default origin when env is missing", () => {
+    const res = onOptions({});
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://nexuradata.ca");
+  });
+
   it("accepts custom allow methods", () => {
-    const res = onOptions("POST, OPTIONS");
+    const env = { PUBLIC_SITE_ORIGIN: "https://nexuradata.ca" };
+    const res = onOptions(env, "POST, OPTIONS");
     expect(res.headers.get("allow")).toBe("POST, OPTIONS");
     expect(res.headers.get("access-control-allow-methods")).toBe("POST, OPTIONS");
   });
 
   it("has empty body", async () => {
-    const res = onOptions();
+    const env = { PUBLIC_SITE_ORIGIN: "https://nexuradata.ca" };
+    const res = onOptions(env);
     expect(await res.text()).toBe("");
   });
 });
