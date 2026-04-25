@@ -6,7 +6,7 @@ import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
-  const limit = checkRateLimit(context.request, 5);
+  const limit = checkRateLimit(context.request, 3);
   if (!limit.allowed) return tooManyRequests(limit.retryAfter);
 
   try {
@@ -32,6 +32,28 @@ export const onRequestPost = async (context) => {
     }
 
     const payload = await parsePayload(context.request);
+
+    if (context.env?.TURNSTILE_SECRET_KEY) {
+      const token = payload["cf-turnstile-response"] || "";
+      if (!token) {
+        return json({ ok: false, message: "Vérification de sécurité incomplète. Veuillez recharger la page et réessayer." }, { status: 400 });
+      }
+      const form = new URLSearchParams();
+      form.set("secret", context.env.TURNSTILE_SECRET_KEY);
+      form.set("response", token);
+      const cfIp = context.request.headers.get("CF-Connecting-IP") || "";
+      if (cfIp) form.set("remoteip", cfIp);
+      const verification = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      });
+      const result = await verification.json();
+      if (!result.success) {
+        return json({ ok: false, message: "Vérification de sécurité échouée. Veuillez recharger et réessayer." }, { status: 400 });
+      }
+    }
+
     const submission = validateSubmission(payload);
     const intakeRecord = await createCase(context.env, submission);
     const [labDelivery, clientDelivery] = await Promise.all([

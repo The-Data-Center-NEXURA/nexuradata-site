@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, rm } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -45,7 +45,38 @@ const shouldCopyRootEntry = (entry) => {
   return false;
 };
 
-await rm(releaseDir, { recursive: true, force: true });
+const GA4_ID = "G-TC31YSS01P";
+const GA4_SNIPPET = `  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script>
+  <script src="/assets/js/ga4-init.js" defer></script>
+</head>`;
+
+const injectGa4 = async (dir) => {
+  const entries = await readdir(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      // Skip the operator console — it is internal and not tracked
+      if (entry.name === "operations") continue;
+      await injectGa4(fullPath);
+      continue;
+    }
+
+    if (path.extname(entry.name).toLowerCase() !== ".html") continue;
+
+    const content = await readFile(fullPath, "utf8");
+    if (content.includes(GA4_ID)) continue; // already present
+
+    const updated = content.replace("</head>", GA4_SNIPPET);
+    if (updated !== content) {
+      await writeFile(fullPath, updated, "utf8");
+    }
+  }
+};
+
+
 await mkdir(releaseDir, { recursive: true });
 
 const entries = await readdir(projectRoot, { withFileTypes: true });
@@ -60,5 +91,7 @@ for (const entry of entries) {
 
   await cp(source, destination, { recursive: true });
 }
+
+await injectGa4(releaseDir);
 
 console.log("Generated release-cloudflare/ from the tracked site source.");

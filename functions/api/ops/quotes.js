@@ -26,10 +26,11 @@ export const onRequestGet = async (context) => {
       items
     });
   } catch (error) {
+    console.error("ops/quotes GET error:", error);
     return json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Erreur opérateur."
+        message: "Erreur opérateur."
       },
       { status: 400 }
     );

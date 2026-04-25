@@ -10,176 +10,188 @@ const escapeHtml = (text) => {
 
 const publicI18n = isEnglishDocument
   ? {
-      locale: "en-CA",
-      navOpen: "Open navigation",
-      navClose: "Close navigation",
-      navMenu: "Menu",
-      navCloseLabel: "Close",
-      intakeSubjectPrefix: "NEXURADATA inquiry",
-      fieldName: "Name",
-      fieldEmail: "Email",
-      fieldPhone: "Phone",
-      fieldSupport: "Support",
-      fieldUrgency: "Urgency",
-      fieldDescription: "Issue description",
-      intakeRequired: "Complete the required fields before opening a case.",
-      intakeBusy: "Opening...",
-      intakeOpening: "Opening your case...",
-      intakeOpenedSent: (caseId) => `Case ${caseId} opened. The access code was sent to the client.`,
-      intakeOpenedQueued: (caseId) => `Case ${caseId} opened. The lab can now review the request.`,
-      intakeFallback: "The backend is unavailable. Your email application is opening with a prefilled message.",
-      intakeError: "The request could not be processed.",
-      intakeOffline: "The backend is unreachable. Your email application is opening with a prefilled message.",
-      statusRequired: "Enter a valid case number and access code.",
-      statusNotFound: "No case matched this access. Check the credentials provided by NEXURADATA or request an update.",
-      statusFound: "Case found.",
-      statusBusy: "Searching...",
-      statusSearching: "Searching for your case...",
-      statusOffline: "The status portal is currently unavailable.",
-      paymentKindDeposit: "Deposit",
-      paymentKindFinal: "Balance",
-      paymentKindCustom: "Payment",
-      paymentStatusPaid: "Paid",
-      paymentStatusExpired: "Expired",
-      paymentStatusFailed: "Retry needed",
-      paymentStatusOpen: "Open",
-      paymentConfirmedOn: (timestamp) => `Payment confirmed on ${timestamp}`,
-      paymentAvailableUntil: (timestamp) => `Link available until ${timestamp}`,
-      paymentSentOn: (timestamp) => `Link sent on ${timestamp}`,
-      paymentReference: (reference) => `Reference ${reference}`,
-      paymentAction: "Pay online",
-      demoCaseOne: {
-        status: "Assessment in progress",
-        updatedAt: "April 4, 2026 11:40 AM",
-        support: "USB external drive",
-        nextStep: "Initial assessment update",
-        summary: "The support was received and logged. Initial assessment is in progress before the quote or next steps are sent.",
-        steps: [
-          { title: "Case received", note: "Support received and logged.", state: "complete" },
-          { title: "Assessment in progress", note: "Initial review and case qualification.", state: "active" },
-          { title: "Quote", note: "To be issued after assessment.", state: "pending" },
-          { title: "Recovery work", note: "Starts after authorization.", state: "pending" }
-        ],
-        payments: []
-      },
-      demoCaseTwo: {
-        status: "Quote sent",
-        updatedAt: "April 4, 2026 10:15 AM",
-        support: "RAID / NAS",
-        nextStep: "Awaiting client authorization",
-        summary: "Initial assessment is complete. The quote and intervention framework were sent to the client for approval.",
-        steps: [
-          { title: "Case received", note: "Support received and logged.", state: "complete" },
-          { title: "Assessment complete", note: "Initial technical review completed.", state: "complete" },
-          { title: "Quote sent", note: "Awaiting acceptance.", state: "active" },
-          { title: "Recovery work", note: "Begins after authorization.", state: "pending" }
-        ],
-        payments: [
-          {
-            paymentRequestId: "PAY-20260404-A1B2C3",
-            paymentKind: "deposit",
-            status: "open",
-            label: "Intervention deposit",
-            description: "Opens the recovery work once the intervention is authorized.",
-            amountCents: 65000,
-            amountFormatted: "$650.00",
-            currency: "cad",
-            checkoutUrl: "https://checkout.stripe.com/pay/demo",
-            createdAt: "2026-04-04T14:10:00.000Z",
-            sentAt: "2026-04-04T14:11:00.000Z",
-            paidAt: "",
-            expiresAt: "2026-04-11T14:10:00.000Z"
-          }
-        ]
-      }
+    locale: "en-CA",
+    navOpen: "Open navigation",
+    navClose: "Close navigation",
+    navMenu: "Menu",
+    navCloseLabel: "Close",
+    intakeSubjectPrefix: "NEXURADATA inquiry",
+    fieldName: "Name",
+    fieldEmail: "Email",
+    fieldPhone: "Phone",
+    fieldSupport: "Support",
+    fieldUrgency: "Urgency",
+    fieldDescription: "Issue description",
+    intakeRequired: "Complete the required fields before opening a case.",
+    intakeBusy: "Opening...",
+    intakeOpening: "Opening your case...",
+    intakeOpenedSent: (caseId) => `Case ${caseId} opened. The access code was sent to the client.`,
+    intakeOpenedQueued: (caseId) => `Case ${caseId} opened. The lab can now review the request.`,
+    intakeFallback: "The backend is unavailable. Your email application is opening with a prefilled message.",
+    intakeError: "The request could not be processed.",
+    intakeOffline: "The backend is unreachable. Your email application is opening with a prefilled message.",
+    statusRequired: "Enter a valid case number and access code.",
+    statusNotFound: "No case matched this access. Check the credentials provided by NEXURADATA or request an update.",
+    statusFound: "Case found.",
+    statusBusy: "Searching...",
+    statusSearching: "Searching for your case...",
+    statusOffline: "The status portal is currently unavailable.",
+    paymentKindDeposit: "Deposit",
+    paymentKindFinal: "Balance",
+    paymentKindCustom: "Payment",
+    paymentStatusPaid: "Paid",
+    paymentStatusExpired: "Expired",
+    paymentStatusFailed: "Retry needed",
+    paymentStatusOpen: "Open",
+    paymentConfirmedOn: (timestamp) => `Payment confirmed on ${timestamp}`,
+    paymentAvailableUntil: (timestamp) => `Link available until ${timestamp}`,
+    paymentSentOn: (timestamp) => `Link sent on ${timestamp}`,
+    paymentReference: (reference) => `Reference ${reference}`,
+    paymentAction: "Pay online",
+    demoCaseOne: {
+      status: "Assessment in progress",
+      updatedAt: "April 4, 2026 11:40 AM",
+      support: "USB external drive",
+      nextStep: "Initial assessment update",
+      summary: "The support was received and logged. Initial assessment is in progress before the quote or next steps are sent.",
+      steps: [
+        { title: "Case received", note: "Support received and logged.", state: "complete" },
+        { title: "Assessment in progress", note: "Initial review and case qualification.", state: "active" },
+        { title: "Quote", note: "To be issued after assessment.", state: "pending" },
+        { title: "Recovery work", note: "Starts after authorization.", state: "pending" }
+      ],
+      payments: []
+    },
+    demoCaseTwo: {
+      status: "Quote sent",
+      updatedAt: "April 4, 2026 10:15 AM",
+      support: "RAID / NAS",
+      nextStep: "Awaiting client authorization",
+      summary: "Initial assessment is complete. The quote and intervention framework were sent to the client for approval.",
+      steps: [
+        { title: "Case received", note: "Support received and logged.", state: "complete" },
+        { title: "Assessment complete", note: "Initial technical review completed.", state: "complete" },
+        { title: "Quote sent", note: "Awaiting acceptance.", state: "active" },
+        { title: "Recovery work", note: "Begins after authorization.", state: "pending" }
+      ],
+      payments: [
+        {
+          paymentRequestId: "PAY-20260404-A1B2C3",
+          paymentKind: "deposit",
+          status: "open",
+          label: "Intervention deposit",
+          description: "Opens the recovery work once the intervention is authorized.",
+          amountCents: 65000,
+          amountFormatted: "$650.00",
+          currency: "cad",
+          checkoutUrl: "https://checkout.stripe.com/pay/demo",
+          createdAt: "2026-04-04T14:10:00.000Z",
+          sentAt: "2026-04-04T14:11:00.000Z",
+          paidAt: "",
+          expiresAt: "2026-04-11T14:10:00.000Z"
+        }
+      ]
     }
+  }
   : {
-      locale: "fr-CA",
-      navOpen: "Ouvrir la navigation",
-      navClose: "Fermer la navigation",
-      navMenu: "Menu",
-      navCloseLabel: "Fermer",
-      intakeSubjectPrefix: "Demande NEXURADATA",
-      fieldName: "Nom",
-      fieldEmail: "Courriel",
-      fieldPhone: "Téléphone",
-      fieldSupport: "Support",
-      fieldUrgency: "Urgence",
-      fieldDescription: "Description du problème",
-      intakeRequired: "Complétez les champs requis avant d'ouvrir un dossier.",
-      intakeBusy: "Ouverture...",
-      intakeOpening: "Ouverture du dossier en cours...",
-      intakeOpenedSent: (caseId) => `Dossier ${caseId} ouvert. Le code d'accès a été envoyé au client.`,
-      intakeOpenedQueued: (caseId) => `Dossier ${caseId} ouvert. Le laboratoire peut maintenant qualifier le cas.`,
-      intakeFallback: "Le backend n'est pas disponible. Votre application courriel s'ouvre avec un message prérempli.",
-      intakeError: "La demande n'a pas pu être traitée.",
-      intakeOffline: "Le backend n'est pas joignable. Votre application courriel s'ouvre avec un message prérempli.",
-      statusRequired: "Entrez un numéro de dossier et un code d'accès valides.",
-      statusNotFound: "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour.",
-      statusFound: "Dossier trouvé.",
-      statusBusy: "Recherche...",
-      statusSearching: "Recherche du dossier en cours...",
-      statusOffline: "Le portail de suivi n'est pas joignable pour le moment.",
-      paymentKindDeposit: "Acompte",
-      paymentKindFinal: "Solde",
-      paymentKindCustom: "Paiement",
-      paymentStatusPaid: "Payé",
-      paymentStatusExpired: "Expiré",
-      paymentStatusFailed: "À reprendre",
-      paymentStatusOpen: "Ouvert",
-      paymentConfirmedOn: (timestamp) => `Paiement confirmé le ${timestamp}`,
-      paymentAvailableUntil: (timestamp) => `Lien disponible jusqu'au ${timestamp}`,
-      paymentSentOn: (timestamp) => `Lien transmis le ${timestamp}`,
-      paymentReference: (reference) => `Référence ${reference}`,
-      paymentAction: "Régler en ligne",
-      demoCaseOne: {
-        status: "Évaluation en cours",
-        updatedAt: "4 avril 2026 à 11 h 40",
-        support: "Disque externe USB",
-        nextStep: "Communication de l'évaluation initiale",
-        summary: "Le support a été reçu et enregistré. L'évaluation initiale est en cours avant l'envoi de la soumission ou des prochaines étapes.",
-        steps: [
-          { title: "Dossier reçu", note: "Support reçu et pris en charge.", state: "complete" },
-          { title: "Évaluation en cours", note: "Lecture initiale et qualification du cas.", state: "active" },
-          { title: "Soumission", note: "À transmettre après évaluation.", state: "pending" },
-          { title: "Traitement", note: "Commence après autorisation.", state: "pending" }
-        ],
-        payments: []
-      },
-      demoCaseTwo: {
-        status: "Soumission envoyée",
-        updatedAt: "4 avril 2026 à 10 h 15",
-        support: "RAID / NAS",
-        nextStep: "Attente de l'autorisation client",
-        summary: "L'évaluation initiale a été complétée. La soumission et le cadre d'intervention ont été transmis au client pour acceptation.",
-        steps: [
-          { title: "Dossier reçu", note: "Support reçu et enregistré.", state: "complete" },
-          { title: "Évaluation", note: "Analyse initiale terminée.", state: "complete" },
-          { title: "Soumission envoyée", note: "En attente d'acceptation.", state: "active" },
-          { title: "Traitement", note: "Débute après autorisation.", state: "pending" }
-        ],
-        payments: [
-          {
-            paymentRequestId: "PAY-20260404-A1B2C3",
-            paymentKind: "deposit",
-            status: "open",
-            label: "Acompte d'intervention",
-            description: "Ouverture du traitement après autorisation et prise en charge du dossier.",
-            amountCents: 65000,
-            amountFormatted: "650,00 $",
-            currency: "cad",
-            checkoutUrl: "https://checkout.stripe.com/pay/demo",
-            createdAt: "2026-04-04T14:10:00.000Z",
-            sentAt: "2026-04-04T14:11:00.000Z",
-            paidAt: "",
-            expiresAt: "2026-04-11T14:10:00.000Z"
-          }
-        ]
-      }
-    };
+    locale: "fr-CA",
+    navOpen: "Ouvrir la navigation",
+    navClose: "Fermer la navigation",
+    navMenu: "Menu",
+    navCloseLabel: "Fermer",
+    intakeSubjectPrefix: "Demande NEXURADATA",
+    fieldName: "Nom",
+    fieldEmail: "Courriel",
+    fieldPhone: "Téléphone",
+    fieldSupport: "Support",
+    fieldUrgency: "Urgence",
+    fieldDescription: "Description du problème",
+    intakeRequired: "Complétez les champs requis avant d'ouvrir un dossier.",
+    intakeBusy: "Ouverture...",
+    intakeOpening: "Ouverture du dossier en cours...",
+    intakeOpenedSent: (caseId) => `Dossier ${caseId} ouvert. Le code d'accès a été envoyé au client.`,
+    intakeOpenedQueued: (caseId) => `Dossier ${caseId} ouvert. Le laboratoire peut maintenant qualifier le cas.`,
+    intakeFallback: "Le backend n'est pas disponible. Votre application courriel s'ouvre avec un message prérempli.",
+    intakeError: "La demande n'a pas pu être traitée.",
+    intakeOffline: "Le backend n'est pas joignable. Votre application courriel s'ouvre avec un message prérempli.",
+    statusRequired: "Entrez un numéro de dossier et un code d'accès valides.",
+    statusNotFound: "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour.",
+    statusFound: "Dossier trouvé.",
+    statusBusy: "Recherche...",
+    statusSearching: "Recherche du dossier en cours...",
+    statusOffline: "Le portail de suivi n'est pas joignable pour le moment.",
+    paymentKindDeposit: "Acompte",
+    paymentKindFinal: "Solde",
+    paymentKindCustom: "Paiement",
+    paymentStatusPaid: "Payé",
+    paymentStatusExpired: "Expiré",
+    paymentStatusFailed: "À reprendre",
+    paymentStatusOpen: "Ouvert",
+    paymentConfirmedOn: (timestamp) => `Paiement confirmé le ${timestamp}`,
+    paymentAvailableUntil: (timestamp) => `Lien disponible jusqu'au ${timestamp}`,
+    paymentSentOn: (timestamp) => `Lien transmis le ${timestamp}`,
+    paymentReference: (reference) => `Référence ${reference}`,
+    paymentAction: "Régler en ligne",
+    demoCaseOne: {
+      status: "Évaluation en cours",
+      updatedAt: "4 avril 2026 à 11 h 40",
+      support: "Disque externe USB",
+      nextStep: "Communication de l'évaluation initiale",
+      summary: "Le support a été reçu et enregistré. L'évaluation initiale est en cours avant l'envoi de la soumission ou des prochaines étapes.",
+      steps: [
+        { title: "Dossier reçu", note: "Support reçu et pris en charge.", state: "complete" },
+        { title: "Évaluation en cours", note: "Lecture initiale et qualification du cas.", state: "active" },
+        { title: "Soumission", note: "À transmettre après évaluation.", state: "pending" },
+        { title: "Traitement", note: "Commence après autorisation.", state: "pending" }
+      ],
+      payments: []
+    },
+    demoCaseTwo: {
+      status: "Soumission envoyée",
+      updatedAt: "4 avril 2026 à 10 h 15",
+      support: "RAID / NAS",
+      nextStep: "Attente de l'autorisation client",
+      summary: "L'évaluation initiale a été complétée. La soumission et le cadre d'intervention ont été transmis au client pour acceptation.",
+      steps: [
+        { title: "Dossier reçu", note: "Support reçu et enregistré.", state: "complete" },
+        { title: "Évaluation", note: "Analyse initiale terminée.", state: "complete" },
+        { title: "Soumission envoyée", note: "En attente d'acceptation.", state: "active" },
+        { title: "Traitement", note: "Débute après autorisation.", state: "pending" }
+      ],
+      payments: [
+        {
+          paymentRequestId: "PAY-20260404-A1B2C3",
+          paymentKind: "deposit",
+          status: "open",
+          label: "Acompte d'intervention",
+          description: "Ouverture du traitement après autorisation et prise en charge du dossier.",
+          amountCents: 65000,
+          amountFormatted: "650,00 $",
+          currency: "cad",
+          checkoutUrl: "https://checkout.stripe.com/pay/demo",
+          createdAt: "2026-04-04T14:10:00.000Z",
+          sentAt: "2026-04-04T14:11:00.000Z",
+          paidAt: "",
+          expiresAt: "2026-04-11T14:10:00.000Z"
+        }
+      ]
+    }
+  };
 
 if (yearTarget) {
   yearTarget.textContent = new Date().getFullYear();
+}
+
+// Copyright footer — inject on all public pages that have .footer-note
+const footerNote = document.querySelector(".footer-note");
+if (footerNote) {
+  const copyrightDiv = document.createElement("div");
+  copyrightDiv.className = "footer-bottom";
+  const year = new Date().getFullYear();
+  copyrightDiv.innerHTML = isEnglishDocument
+    ? `<p>&copy; ${year} NEXURA DATA. All rights reserved.</p>`
+    : `<p>&copy; ${year} NEXURA DATA. Tous droits r\u00e9serv\u00e9s.</p>`;
+  footerNote.insertAdjacentElement("afterend", copyrightDiv);
 }
 
 const revealElements = document.querySelectorAll("[data-reveal]");
@@ -282,6 +294,14 @@ if (!("IntersectionObserver" in window) || prefersReducedMotion.matches) {
         }
 
         entry.target.classList.add("is-visible");
+
+        // Stagger direct children for grid containers
+        if (entry.target.classList.contains("stagger-parent")) {
+          Array.from(entry.target.children).forEach((child, i) => {
+            child.style.transitionDelay = `${i * 68}ms`;
+          });
+        }
+
         activeObserver.unobserve(entry.target);
       });
     },
@@ -293,6 +313,75 @@ if (!("IntersectionObserver" in window) || prefersReducedMotion.matches) {
 
   revealElements.forEach((element) => observer.observe(element));
 }
+
+// Counter animation for [data-count] elements (hero panel stats)
+const counterElements = document.querySelectorAll("[data-count]");
+if (counterElements.length > 0 && "IntersectionObserver" in window && !prefersReducedMotion.matches) {
+  const counterObserver = new IntersectionObserver(
+    (entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const target = parseInt(el.dataset.count, 10);
+        const suffix = el.dataset.countSuffix || "";
+        const locale = document.documentElement.lang?.startsWith("en") ? "en-CA" : "fr-CA";
+        const duration = 1400;
+        const startTime = performance.now();
+        const tick = (now) => {
+          const progress = Math.min((now - startTime) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.floor(eased * target).toLocaleString(locale) + suffix;
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            el.textContent = target.toLocaleString(locale) + suffix;
+          }
+        };
+        requestAnimationFrame(tick);
+        obs.unobserve(el);
+      });
+    },
+    { threshold: 0.6 }
+  );
+  counterElements.forEach((el) => counterObserver.observe(el));
+}
+
+// Smooth FAQ open/close animation via Web Animations API
+document.querySelectorAll(".faq-item").forEach((details) => {
+  const summary = details.querySelector("summary");
+  const content = details.querySelector("p");
+  if (!summary || !content) return;
+
+  summary.addEventListener("click", (e) => {
+    if (prefersReducedMotion.matches) return;
+    e.preventDefault();
+
+    if (!details.open) {
+      details.open = true;
+      const h = content.scrollHeight;
+      content.animate(
+        [
+          { maxHeight: "0", opacity: "0", paddingBottom: "0" },
+          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" }
+        ],
+        { duration: 300, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
+      );
+    } else {
+      const h = content.scrollHeight;
+      const anim = content.animate(
+        [
+          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" },
+          { maxHeight: "0", opacity: "0", paddingBottom: "0" }
+        ],
+        { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
+      );
+      anim.onfinish = () => {
+        details.open = false;
+        anim.cancel();
+      };
+    }
+  });
+});
 
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener("click", (event) => {
@@ -517,8 +606,7 @@ const createStatusPayment = (payment) => {
   article.append(head, meta, note);
 
   if (payment.checkoutUrl) {
-    const actions = document.createElement("div");
-    actions.className = "status-payment-actions";
+    (document.createElement("div")).className = "status-payment-actions";
 
     const link = document.createElement("a");
     link.className = "button button-primary button-small";
@@ -527,8 +615,8 @@ const createStatusPayment = (payment) => {
     link.rel = "noreferrer";
     link.textContent = publicI18n.paymentAction;
 
-    actions.append(link);
-    article.append(actions);
+    (document.createElement("div")).append(link);
+    article.append(document.createElement("div"));
   }
 
   article.append(details);
@@ -601,6 +689,7 @@ if (intakeForm) {
       message: `${formData.get("message") || ""}`.trim(),
       consentement: formData.get("consentement") === "on",
       website: `${formData.get("website") || ""}`.trim(),
+      "cf-turnstile-response": formData.get("cf-turnstile-response") || "",
       sourcePath: window.location.pathname
     };
 

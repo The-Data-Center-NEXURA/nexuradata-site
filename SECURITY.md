@@ -1,21 +1,44 @@
 # Security Policy
 
-## Supported Versions
+## Scope
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+This policy applies to the NEXURADATA website and operational platform hosted at `nexuradata.ca`.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+In scope:
+
+- Public intake form (`/api/intake`)
+- Case status lookup (`/api/status`)
+- Stripe webhook handler (`/api/stripe-webhook`)
+- Operator console (`/operations/`, `/api/ops/*`)
+- Cloudflare Pages configuration (`_headers`, `_redirects`)
+
+Out of scope:
+
+- Third-party services (Stripe, Resend, Neon, Cloudflare)
+- Social engineering or phishing
+- Physical infrastructure
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Please report security vulnerabilities **privately** by email:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+**<privacy@nexuradata.ca>**
+
+Include:
+
+1. A clear description of the vulnerability
+2. Steps to reproduce
+3. Potential impact
+4. Your contact information (optional)
+
+Do **not** open a public GitHub issue for security vulnerabilities.
+
+## Response Commitment
+
+| Timeline | Action |
+| --- | --- |
+| Within 48 h | Acknowledgment of your report |
+| Within 7 days | Initial assessment and severity classification |
+| Within 30 days | Resolution or documented remediation plan |
+
+We will not pursue legal action against researchers who report vulnerabilities in good faith and follow responsible disclosure.

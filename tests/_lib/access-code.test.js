@@ -69,7 +69,7 @@ describe("access-code: hashAccessCode()", () => {
   });
 
   it("throws when no secret is set", async () => {
-    await expect(hashAccessCode("ABCD-1234", noSecret)).rejects.toThrow("ACCESS_CODE_SECRET");
+    await expect(hashAccessCode("ABCD-1234", noSecret)).rejects.toThrow("ACCESS_CODE_SECRET is not configured.");
   });
 });
 

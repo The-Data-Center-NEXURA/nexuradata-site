@@ -63,7 +63,7 @@ describe("POST /api/status", () => {
     expect(res.status).toBe(503);
   });
 
-  it("returns 400 for missing credentials", async () => {
+  it("returns 503 for missing credentials", async () => {
     const env = { DATABASE_URL: "postgresql://test" };
     const ctx = makeContext({}, env);
     ctx.request = new Request("https://nexuradata.ca/api/status", {
@@ -72,7 +72,7 @@ describe("POST /api/status", () => {
       body: JSON.stringify({})
     });
     const res = await statusHandler(ctx);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.ok).toBe(false);
   });

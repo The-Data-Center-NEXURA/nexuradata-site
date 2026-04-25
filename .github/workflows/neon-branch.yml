@@ -8,54 +8,48 @@ on:
       - synchronize
       - closed
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-
 jobs:
-  setup:
-    name: Setup
-    outputs:
-      branch: ${{ steps.branch_name.outputs.current_branch }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get branch name
-        id: branch_name
-        uses: tj-actions/branch-names@v8
-
   create_neon_branch:
     name: Create Neon Branch
-    outputs:
-      db_url: ${{ steps.create_neon_branch_encode.outputs.db_url }}
-      db_url_with_pooler: ${{ steps.create_neon_branch_encode.outputs.db_url_with_pooler }}
-    needs: setup
+    concurrency:
+      group: ${{ github.workflow }}-create-${{ github.ref }}
+      cancel-in-progress: true
     if: |
-      github.event_name == 'pull_request' && (
       github.event.action == 'synchronize'
       || github.event.action == 'opened'
-      || github.event.action == 'reopened')
+      || github.event.action == 'reopened'
     runs-on: ubuntu-latest
     steps:
-      - name: Get branch expiration date as an env variable (2 weeks from now)
-        id: get_expiration_date
-        run: echo "EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
       - name: Create Neon Branch
-        id: create_neon_branch
-        uses: neondatabase/create-branch-action@v6
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          expires_at: ${{ env.EXPIRES_AT }}
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          BRANCH_NAME="preview/pr-${{ github.event.number }}-${{ github.head_ref }}"
+          EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')
+          curl -s -X POST \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\": {\"name\": \"$BRANCH_NAME\"}, \"expires_at\": \"$EXPIRES_AT\"}"
 
   delete_neon_branch:
     name: Delete Neon Branch
-    needs: setup
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Delete Neon Branch
-        uses: neondatabase/delete-branch-action@v3
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          BRANCH_NAME="preview/pr-${{ github.event.number }}-${{ github.head_ref }}"
+          BRANCH_ID=$(curl -s \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            | python3 -c 'import sys, json; branches = json.load(sys.stdin).get("branches", []); match = [b["id"] for b in branches if b["name"] == "'"$BRANCH_NAME"'"]; print(match[0] if match else "")')
+          if [ -n "$BRANCH_ID" ]; then
+            curl -s -X DELETE \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID" \
+              -H "Authorization: Bearer $NEON_API_KEY"
+          fi

@@ -12,11 +12,10 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-
       - name: Open pull request if one does not exist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           BRANCH="${GITHUB_REF_NAME}"
           BASE="main"

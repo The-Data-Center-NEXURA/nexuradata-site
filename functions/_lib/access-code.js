@@ -41,7 +41,7 @@ const fromBase64 = (value) => {
 const getSecretBytes = async (env) => {
   const secret = trimSlice(env?.ACCESS_CODE_SECRET, 256);
   if (!secret) {
-    throw new Error("ACCESS_CODE_SECRET n'est pas configurée. Configuration requise: ACCESS_CODE_SECRET dans les variables d'environnement.");
+    throw new Error("ACCESS_CODE_SECRET is not configured.");
   }
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(secret));
   return new Uint8Array(digest);
