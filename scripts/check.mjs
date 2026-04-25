@@ -14,8 +14,7 @@
 
 import { execSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
-import { resolve, join } from "node:path";
-import { globSync } from "node:fs";
+import { join } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const errors = [];
