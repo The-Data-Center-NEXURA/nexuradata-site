@@ -15,7 +15,9 @@ export const onOptions = (env, allow = "GET, POST, OPTIONS") =>
       allow,
       "access-control-allow-origin": env?.PUBLIC_SITE_ORIGIN || "https://nexuradata.ca",
       "access-control-allow-methods": allow,
-      "access-control-allow-headers": "content-type"
+      "access-control-allow-headers": "content-type",
+      "cache-control": "no-store",
+      "vary": "Origin"
     }
   });
 
