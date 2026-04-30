@@ -2655,6 +2655,8 @@ select {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     margin-top: 1.9rem;
+  }
+
   .footer-grid {
     grid-template-columns: repeat(2, minmax(12rem, 1fr));
   }
