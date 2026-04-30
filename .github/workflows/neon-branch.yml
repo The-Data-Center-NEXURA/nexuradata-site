@@ -47,7 +47,7 @@ jobs:
           BRANCH_ID=$(curl -s \
             "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
             -H "Authorization: Bearer $NEON_API_KEY" \
-            | python3 -c 'import sys, json; branches = json.load(sys.stdin).get("branches", []); match = [b["id"] for b in branches if b["name"] == "'"$BRANCH_NAME"'"]; print(match[0] if match else "")')
+            | jq -r --arg name "$BRANCH_NAME" '.branches[] | select(.name == $name) | .id // empty')
           if [ -n "$BRANCH_ID" ]; then
             curl -s -X DELETE \
               "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID" \
