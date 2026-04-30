@@ -178,7 +178,31 @@ async function generateSocialBanner() {
   console.log('  ✓ social-banner.png (1500×500)');
 }
 
-// ─── 8. Google Business Profile photo (720×720) ───
+// ─── 8. Facebook cover photo (1640×624) ───
+async function generateFacebookCover() {
+  const w = 1640, h = 624;
+  const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${w}" height="${h}" fill="${NOIR}"/>
+  <line x1="80" y1="56" x2="${w - 80}" y2="56" stroke="${OS}" stroke-width="0.5" opacity="0.12"/>
+  <!-- N mark left -->
+  <g transform="translate(120, ${h / 2 - 70})">
+    ${nMark(140, 0)}
+  </g>
+  <!-- NEXURADATA logotype -->
+  <text x="290" y="${h / 2 + 28}" font-family="Georgia, 'Times New Roman', serif" font-size="86" font-weight="400" letter-spacing="8" fill="${OS}">NEXURA</text>
+  <text x="914" y="${h / 2 + 28}" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="400" letter-spacing="12" fill="${OS}" opacity="0.35">DATA</text>
+  <!-- Tagline -->
+  <text x="290" y="${h / 2 + 68}" font-family="Georgia, 'Times New Roman', serif" font-size="16" letter-spacing="5" fill="${OS}" opacity="0.38">Récupération de données · Forensique numérique · Montréal</text>
+  <!-- Right accent: URL -->
+  <text x="${w - 80}" y="${h / 2 + 28}" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="3" fill="${OS}" opacity="0.22" text-anchor="end">nexuradata.ca</text>
+  <line x1="80" y1="${h - 56}" x2="${w - 80}" y2="${h - 56}" stroke="${OS}" stroke-width="0.5" opacity="0.12"/>
+</svg>`;
+
+  await sharp(Buffer.from(svg)).png().toFile(resolve(ROOT, 'assets/icons/facebook-cover.png'));
+  console.log('  ✓ facebook-cover.png (1640×624)');
+}
+
+// ─── 9. Google Business Profile photo (720×720) ───
 async function generateGbpPhoto() {
   const s = 720;
   const svg = `<svg width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">
@@ -205,6 +229,7 @@ try {
   await generateSignature();
   await generateSocialProfile();
   await generateSocialBanner();
+  await generateFacebookCover();
   await generateGbpPhoto();
   console.log('\nDone — all brand assets generated.');
 } catch (err) {
