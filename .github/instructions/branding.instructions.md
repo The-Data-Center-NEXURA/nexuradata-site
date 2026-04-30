@@ -1,7 +1,5 @@
----
 description: "Use when modifying branding elements: logo, header, footer, visual tokens, nav structure, or email signatures. Enforces locked branding policy. Triggers on: logo, header, footer, branding, nav, signature, brand, identity."
-applyTo: ["**/*.html", "assets/**/*.css"]
----
+applyTo: "**/*.{html,css}"
 # NEXURA DATA — Locked Branding Policy
 
 All branding elements below are **LOCKED**. Technical and structural changes are allowed if faithful. Creative changes (logo, typography, colors, spacing, composition) are **forbidden** without explicit validation.
