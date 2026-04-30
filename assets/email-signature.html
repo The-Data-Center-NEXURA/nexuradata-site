@@ -1,59 +1,134 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><title>Signature NEXURADATA</title></head>
-<body style="margin:0;padding:0;background:#fff;">
+<body style="margin:0;padding:0;background:#f4f1eb;">
 <!--
   NEXURADATA — Email Signature Template
   ─────────────────────────────────────
-  Edit ONLY the name, title, and email below.
-  Logo image, layout, confidentiality text, and order are LOCKED.
+  Self-contained dark block — no external image dependency.
+  Works in Gmail, Outlook, Apple Mail.
 
   To install in Gmail:
-  1. Open Gmail → Settings → See all settings → General → Signature
-  2. Click "Create new" → paste this HTML (use "Insert signature" or copy from browser preview)
-  3. Upload the signature image from assets/nexuradata-signature.png if the hosted URL is not yet live
+  1. Open this file in a browser (File → Open)
+  2. Select all (Ctrl+A / Cmd+A), copy (Ctrl+C / Cmd+C)
+  3. Gmail → Settings → See all settings → General → Signature → Create new
+  4. Paste (Ctrl+V / Cmd+V) into the signature editor
+  5. Gmail preserves the table HTML — do NOT use "plain text" mode
+
+  To customize: edit only the EDITABLE sections below.
+  Layout, colours, logo mark, and legal text are LOCKED.
 -->
 
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Georgia,'Times New Roman',serif;color:#0d0d0b;font-size:14px;line-height:1.5;max-width:480px;">
+<!-- Outer wrapper — sets white space around the card in browser preview -->
+<div style="padding:24px;background:#f4f1eb;">
+
+<table cellpadding="0" cellspacing="0" border="0" role="presentation"
+       style="width:100%;max-width:480px;border-collapse:collapse;">
   <tr>
-    <td style="padding-bottom:12px;">
-      <!-- EDITABLE: Name and title -->
-      <strong style="font-size:15px;letter-spacing:0.5px;">Prénom Nom</strong><br>
-      <span style="font-size:13px;color:#555;">Titre / Fonction</span>
-    </td>
-  </tr>
-  <tr>
-    <td style="padding-bottom:12px;">
-      <img src="https://nexuradata.ca/assets/nexuradata-signature.png"
-           alt="NEXURADATA"
-           width="500" height="100"
-           style="display:block;width:500px;max-width:100%;height:auto;border:0;">
-    </td>
-  </tr>
-  <tr>
-    <td style="padding-bottom:10px;border-top:1px solid #e0ddd6;padding-top:10px;">
-      <!-- EDITABLE: Email only -->
-      <a href="mailto:contact@nexuradata.ca" style="color:#0d0d0b;text-decoration:none;font-size:13px;letter-spacing:0.3px;">contact@nexuradata.ca</a>
-      <span style="color:#999;font-size:13px;"> · </span>
-      <a href="https://nexuradata.ca" style="color:#0d0d0b;text-decoration:none;font-size:13px;">nexuradata.ca</a>
-    </td>
-  </tr>
-  <tr>
-    <td style="padding-top:8px;border-top:1px solid #f0ede8;">
-      <!-- LOCKED: Confidentiality notice -->
-      <p style="font-size:10px;color:#999;line-height:1.4;margin:0;">
-        Ce message et ses pièces jointes sont confidentiels et destinés exclusivement à leur destinataire.
-        Si vous avez reçu ce courriel par erreur, veuillez le supprimer et en aviser l'expéditeur.
-        Toute reproduction, diffusion ou utilisation non autorisée est interdite.
-      </p>
-      <p style="font-size:10px;color:#bbb;line-height:1.4;margin:6px 0 0 0;">
-        This message and its attachments are confidential and intended solely for the addressee.
-        If you received this email in error, please delete it and notify the sender.
-        Any unauthorized reproduction, distribution, or use is prohibited.
-      </p>
+    <td style="background:#0d0d0b;border-radius:6px;padding:20px 24px 16px 24px;">
+
+      <!-- ── Logo wordmark (inline text, no image) ── -->
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-bottom:14px;">
+        <tr>
+          <td>
+            <span style="font-family:'IBM Plex Mono',Menlo,'Courier New',monospace;
+                         font-size:18px;font-weight:700;letter-spacing:0.12em;
+                         color:#e8e4dc;text-transform:uppercase;display:inline-block;">
+              NEXURA<span style="color:#a09a90;">&#8202;</span>DATA
+            </span>
+            <br>
+            <span style="font-family:'IBM Plex Sans',Arial,sans-serif;
+                         font-size:10px;font-weight:400;letter-spacing:0.22em;
+                         color:#7a756d;text-transform:uppercase;display:inline-block;margin-top:2px;">
+              Récupération de données · Forensique numérique
+            </span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ── Divider ── -->
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-bottom:14px;">
+        <tr><td style="border-top:1px solid #2a2a28;font-size:0;line-height:0;">&nbsp;</td></tr>
+      </table>
+
+      <!-- ── Name + Title (EDITABLE) ── -->
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-bottom:12px;">
+        <tr>
+          <td>
+            <!-- EDITABLE: Change name and title below -->
+            <span style="font-family:Georgia,'Times New Roman',serif;
+                         font-size:15px;font-weight:700;color:#e8e4dc;
+                         letter-spacing:0.02em;display:block;">Olivier</span>
+            <span style="font-family:'IBM Plex Sans',Arial,sans-serif;
+                         font-size:12px;color:#a09a90;letter-spacing:0.08em;
+                         text-transform:uppercase;display:block;margin-top:3px;">
+              Examinateur forensique certifié (CFE)
+            </span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ── Contact links ── -->
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-bottom:14px;">
+        <tr>
+          <td style="padding-bottom:4px;">
+            <!-- EDITABLE: Change email if needed -->
+            <a href="mailto:contact@nexuradata.ca"
+               style="font-family:'IBM Plex Sans',Arial,sans-serif;
+                      font-size:13px;color:#e8e4dc;text-decoration:none;
+                      letter-spacing:0.01em;">contact@nexuradata.ca</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-bottom:4px;">
+            <a href="https://wa.me/14388130592?text=Bonjour%2C%20j%E2%80%99ai%20une%20question%20pour%20NEXURA%20DATA."
+               style="font-family:'IBM Plex Sans',Arial,sans-serif;
+                      font-size:13px;color:#25d366;text-decoration:none;
+                      letter-spacing:0.01em;">WhatsApp · +1 438 813-0592</a>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="https://nexuradata.ca"
+               style="font-family:'IBM Plex Sans',Arial,sans-serif;
+                      font-size:13px;color:#a09a90;text-decoration:none;
+                      letter-spacing:0.01em;">nexuradata.ca</a>
+            <span style="color:#2a2a28;font-size:13px;"> · </span>
+            <span style="font-family:'IBM Plex Sans',Arial,sans-serif;
+                         font-size:12px;color:#5a5550;">Montréal, Québec, Canada</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ── Divider ── -->
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-bottom:10px;">
+        <tr><td style="border-top:1px solid #2a2a28;font-size:0;line-height:0;">&nbsp;</td></tr>
+      </table>
+
+      <!-- ── Confidentiality notice (LOCKED) ── -->
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;">
+        <tr>
+          <td>
+            <p style="font-family:'IBM Plex Sans',Arial,sans-serif;font-size:9px;
+                      color:#4a4540;line-height:1.5;margin:0 0 4px 0;">
+              Ce message et ses pièces jointes sont confidentiels et destinés exclusivement à leur destinataire.
+              Si vous avez reçu ce courriel par erreur, veuillez le supprimer et en aviser l'expéditeur.
+              Toute reproduction, diffusion ou utilisation non autorisée est interdite.
+            </p>
+            <p style="font-family:'IBM Plex Sans',Arial,sans-serif;font-size:9px;
+                      color:#3a3530;line-height:1.5;margin:0;">
+              This message and its attachments are confidential and intended solely for the addressee.
+              If received in error, please delete it and notify the sender.
+              Unauthorized use or distribution is prohibited.
+            </p>
+          </td>
+        </tr>
+      </table>
+
     </td>
   </tr>
 </table>
 
+</div>
 </body>
 </html>

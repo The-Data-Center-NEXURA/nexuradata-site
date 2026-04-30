@@ -19,6 +19,44 @@ const escapeHtml = (value) =>
 
 const formatTextLines = (lines) => lines.filter(Boolean).join("\n");
 
+/** Wrap email content in the NEXURADATA branded shell. */
+const buildEmailHtml = (content) => `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NEXURADATA</title></head>
+<body style="margin:0;padding:0;background:#f0ede8;">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;background:#f0ede8;">
+<tr><td align="center" style="padding:28px 16px;">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;max-width:560px;background:#0d0d0b;border-radius:6px;">
+  <tr><td style="padding:22px 28px 0;">
+    <p style="margin:0 0 3px;font-family:'Courier New',Courier,monospace;font-size:18px;font-weight:700;letter-spacing:0.14em;color:#e8e4dc;text-transform:uppercase;">NEXURA&#8202;DATA</p>
+    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.22em;color:#6a655e;text-transform:uppercase;">Récupération de données · Forensique numérique</p>
+    <div style="height:1px;background:rgba(232,228,220,0.1);"></div>
+  </td></tr>
+  <tr><td style="padding:24px 28px;">${content}</td></tr>
+  <tr><td style="padding:0 28px 22px;">
+    <div style="height:1px;background:rgba(232,228,220,0.1);margin-bottom:16px;"></div>
+    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#4a4540;line-height:1.7;">Ce message est confidentiel et destiné uniquement à son destinataire. Toute diffusion ou utilisation non autorisée est interdite.<br>NEXURADATA · Longueuil, QC, Canada · <a href="https://nexuradata.ca" style="color:#6a655e;text-decoration:none;">nexuradata.ca</a></p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+
+/** Labelled data row for branded emails. */
+const emailRow = (label, value) =>
+  `<p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#e8e4dc;line-height:1.5;"><span style="display:block;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;color:#6a655e;text-transform:uppercase;margin-bottom:3px;">${label}</span>${escapeHtml(value)}</p>`;
+
+/** Highlighted badge for case IDs, codes, etc. */
+const emailBadge = (label, value) =>
+  `<div style="background:rgba(232,228,220,0.06);border:1px solid rgba(232,228,220,0.12);border-radius:4px;padding:13px 16px;margin:0 0 18px;"><span style="display:block;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;color:#6a655e;text-transform:uppercase;margin-bottom:6px;">${label}</span><span style="font-family:'Courier New',Courier,monospace;font-size:21px;font-weight:700;color:#e8e4dc;letter-spacing:0.06em;">${escapeHtml(value)}</span></div>`;
+
+/** Primary CTA button. */
+const emailCta = (label, url) =>
+  `<p style="margin:22px 0 0;"><a href="${escapeHtml(url)}" style="display:inline-block;background:#e8e4dc;color:#0d0d0b;font-family:'Courier New',Courier,monospace;font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;text-decoration:none;padding:11px 22px;border-radius:3px;">${label} →</a></p>`;
+
+/** Quoted text block (descriptions, summaries). */
+const emailBlock = (text) =>
+  `<div style="background:rgba(232,228,220,0.05);border-left:2px solid rgba(232,228,220,0.18);padding:12px 16px;border-radius:0 3px 3px 0;margin:0 0 4px;"><p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#c8c4bc;line-height:1.65;">${escapeHtml(text).replace(/\n/g, "<br>")}</p></div>`;
+
 const sendResendEmail = async (env, payload, idempotencyKey) => {
   const apiKey = normalizeText(env?.RESEND_API_KEY, 256);
   const from = normalizeText(env?.RESEND_FROM_EMAIL, 200);
@@ -92,19 +130,20 @@ export const sendLabNotificationEmail = async (env, intakeRecord, requestUrl) =>
     "",
     `Console interne: ${portalUrl}`
   ]);
-  const html = `
-    <h1>Nouveau dossier ${escapeHtml(intakeRecord.caseId)}</h1>
-    <p><strong>Nom:</strong> ${escapeHtml(intakeRecord.nom)}</p>
-    <p><strong>Courriel:</strong> ${escapeHtml(intakeRecord.courriel)}</p>
-    <p><strong>Téléphone:</strong> ${escapeHtml(intakeRecord.telephone || "Non fourni")}</p>
-    <p><strong>Support:</strong> ${escapeHtml(intakeRecord.support)}</p>
-    <p><strong>Urgence:</strong> ${escapeHtml(intakeRecord.urgence)}</p>
-    <p><strong>Code d'accès initial:</strong> ${escapeHtml(intakeRecord.accessCode)}</p>
-    <p><strong>Source:</strong> ${escapeHtml(intakeRecord.sourcePath)}</p>
-    <h2>Description</h2>
-    <p>${escapeHtml(intakeRecord.message).replace(/\n/g, "<br>")}</p>
-    <p><a href="${escapeHtml(portalUrl)}">Ouvrir la console interne</a></p>
-  `;
+  const html = buildEmailHtml(
+    `<p style="margin:0 0 18px;font-family:'Courier New',Courier,monospace;font-size:13px;letter-spacing:0.1em;color:#a09a90;text-transform:uppercase;">Nouveau dossier entrant</p>` +
+    emailBadge("Référence", intakeRecord.caseId) +
+    emailRow("Nom", intakeRecord.nom) +
+    emailRow("Courriel", intakeRecord.courriel) +
+    emailRow("Téléphone", intakeRecord.telephone || "Non fourni") +
+    emailRow("Support", intakeRecord.support) +
+    emailRow("Urgence", intakeRecord.urgence) +
+    emailRow("Code d'accès initial", intakeRecord.accessCode) +
+    emailRow("Source", intakeRecord.sourcePath) +
+    `<p style="margin:18px 0 8px;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;color:#6a655e;text-transform:uppercase;">Description du problème</p>` +
+    emailBlock(intakeRecord.message) +
+    emailCta("Ouvrir la console", portalUrl)
+  );
 
   return sendResendEmail(
     env,
@@ -147,17 +186,16 @@ export const sendClientAccessEmail = async (env, record, requestUrl, reason = "i
     "",
     "NEXURADATA"
   ]);
-  const html = `
-    <p>Bonjour ${escapeHtml(record.name || "")},</p>
-    <p>${escapeHtml(intro)}</p>
-    <p><strong>Numéro de dossier:</strong> ${escapeHtml(record.caseId)}</p>
-    <p><strong>Code d'accès:</strong> ${escapeHtml(record.accessCode)}</p>
-    <p><strong>Statut actuel:</strong> ${escapeHtml(record.status)}</p>
-    <p><strong>Prochaine étape:</strong> ${escapeHtml(record.nextStep)}</p>
-    <p><a href="${escapeHtml(statusUrl)}">Ouvrir le portail client</a></p>
-    <p>Conservez ce courriel. Ce code permet d'afficher l'état utile du dossier sans exposer de détails sensibles.</p>
-    <p>NEXURADATA</p>
-  `;
+  const html = buildEmailHtml(
+    `<p style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#e8e4dc;line-height:1.6;">Bonjour ${escapeHtml(record.name || "")},</p>` +
+    `<p style="margin:0 0 22px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#a09a90;line-height:1.6;">${escapeHtml(intro)}</p>` +
+    emailBadge("Numéro de dossier", record.caseId) +
+    emailBadge("Code d'accès", record.accessCode) +
+    emailRow("Statut actuel", record.status) +
+    emailRow("Prochaine étape", record.nextStep) +
+    `<p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6a655e;line-height:1.65;">Conservez ce courriel. Ce code vous permet de consulter l'état de votre dossier sans exposer de détails sensibles.</p>` +
+    emailCta("Accéder au suivi", statusUrl)
+  );
 
   const delivery = await sendResendEmail(
     env,
@@ -205,15 +243,15 @@ export const sendClientStatusEmail = async (env, caseId, requestUrl, actor = "op
     "",
     "NEXURADATA"
   ]);
-  const html = `
-    <p>Bonjour ${escapeHtml(detail.name)},</p>
-    <p>Le dossier <strong>${escapeHtml(detail.caseId)}</strong> a été mis à jour.</p>
-    <p><strong>Statut:</strong> ${escapeHtml(detail.status)}</p>
-    <p><strong>Prochaine étape:</strong> ${escapeHtml(detail.nextStep)}</p>
-    <p>${escapeHtml(detail.clientSummary).replace(/\n/g, "<br>")}</p>
-    <p><a href="${escapeHtml(statusUrl)}">Ouvrir le portail client</a></p>
-    <p>NEXURADATA</p>
-  `;
+  const html = buildEmailHtml(
+    `<p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#e8e4dc;line-height:1.6;">Bonjour ${escapeHtml(detail.name)},</p>` +
+    emailBadge("Dossier mis à jour", detail.caseId) +
+    emailRow("Statut", detail.status) +
+    emailRow("Prochaine étape", detail.nextStep) +
+    `<p style="margin:18px 0 8px;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;color:#6a655e;text-transform:uppercase;">Résumé</p>` +
+    emailBlock(detail.clientSummary) +
+    emailCta("Voir le suivi", statusUrl)
+  );
 
   const delivery = await sendResendEmail(
     env,
@@ -259,16 +297,17 @@ export const sendClientPaymentLinkEmail = async (env, payment, requestUrl, actor
     "",
     "NEXURADATA"
   ]);
-  const html = `
-    <p>Bonjour,</p>
-    <p>Un lien de paiement a été préparé pour le dossier <strong>${escapeHtml(payment.caseId)}</strong>.</p>
-    <p><strong>Libellé:</strong> ${escapeHtml(payment.label)}</p>
-    <p><strong>Montant:</strong> ${escapeHtml(amount)}</p>
-    <p>${escapeHtml(payment.description).replace(/\n/g, "<br>")}</p>
-    <p><a href="${escapeHtml(payment.checkoutUrl)}">Ouvrir le paiement sécurisé</a></p>
-    <p><a href="${escapeHtml(statusUrl)}">Accéder au suivi du dossier</a></p>
-    <p>NEXURADATA</p>
-  `;
+  const html = buildEmailHtml(
+    `<p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#e8e4dc;line-height:1.6;">Bonjour,</p>` +
+    `<p style="margin:0 0 22px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#a09a90;line-height:1.6;">Un lien de paiement a été préparé pour votre dossier.</p>` +
+    emailBadge("Dossier", payment.caseId) +
+    emailRow("Libellé", payment.label) +
+    emailRow("Montant", amount) +
+    `<p style="margin:18px 0 8px;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;color:#6a655e;text-transform:uppercase;">Détails</p>` +
+    emailBlock(payment.description) +
+    emailCta("Payer maintenant", payment.checkoutUrl) +
+    `<p style="margin:14px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6a655e;">Vous pouvez aussi <a href="${escapeHtml(statusUrl)}" style="color:#a09a90;">consulter votre dossier</a> à tout moment.</p>`
+  );
 
   const delivery = await sendResendEmail(
     env,
