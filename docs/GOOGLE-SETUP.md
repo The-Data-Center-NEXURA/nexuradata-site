@@ -205,7 +205,7 @@ Search Console TXT verification is DNS-only — no code change needed for SC.
 2. CSP in [_headers](../_headers):
    - `script-src` and `script-src-elem` allow `https://www.googletagmanager.com`
    - `connect-src` allows `https://www.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.g.doubleclick.net`
-   - `img-src` allows `https://www.google-analytics.com https://*.g.doubleclick.net`
+   - `img-src` allows `https://www.googletagmanager.com https://www.google-analytics.com https://*.g.doubleclick.net`
 3. Update `docs/branding-read-only.txt` only if a cookie/consent banner is added (not required for GA4 anonymized in QC under Law 25 if no advertising features are enabled).
 
 ---
