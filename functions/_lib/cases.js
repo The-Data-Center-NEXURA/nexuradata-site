@@ -15,6 +15,8 @@ const allowedSupports = new Set([
   "SSD",
   "RAID / NAS / serveur",
   "Téléphone / mobile",
+  "Forensique / preuve numérique",
+  "Mandat entreprise / juridique",
   "USB / carte mémoire",
   "Je ne sais pas"
 ]);
@@ -24,6 +26,28 @@ const allowedUrgencies = new Set([
   "Rapide",
   "Urgent",
   "Très sensible"
+]);
+
+const allowedProfiles = new Set([
+  "Particulier",
+  "Entreprise / TI",
+  "Cabinet juridique",
+  "Assureur / partenaire",
+  "Je ne sais pas"
+]);
+
+const allowedImpacts = new Set([
+  "Planifié / non urgent",
+  "Données importantes",
+  "Opérations bloquées",
+  "Client, juridique ou assurance impliqué"
+]);
+
+const allowedSensitivities = new Set([
+  "Standard",
+  "Confidentiel",
+  "Données sensibles",
+  "Preuve / chaîne de possession"
 ]);
 
 const allowedStepStates = new Set(["pending", "active", "complete"]);
@@ -66,6 +90,9 @@ export const validateSubmission = (payload) => {
   const telephone = normalizeText(payload.telephone, 40);
   const support = normalizeText(payload.support, 60);
   const urgence = normalizeText(payload.urgence, 40);
+  const profil = normalizeText(payload.profil, 60);
+  const impact = normalizeText(payload.impact, 80);
+  const sensibilite = normalizeText(payload.sensibilite, 80);
   const message = normalizeMultilineText(payload.message, 3000);
   const sourcePath = normalizeText(payload.sourcePath, 160) || "/";
   const honeypot = normalizeText(payload.website, 120);
@@ -91,13 +118,38 @@ export const validateSubmission = (payload) => {
     throw new Error("Niveau d'urgence invalide.");
   }
 
+  if (profil && !allowedProfiles.has(profil)) {
+    throw new Error("Profil du demandeur invalide.");
+  }
+
+  if (impact && !allowedImpacts.has(impact)) {
+    throw new Error("Impact d'affaires invalide.");
+  }
+
+  if (sensibilite && !allowedSensitivities.has(sensibilite)) {
+    throw new Error("Sensibilité du dossier invalide.");
+  }
+
+  const qualification = [
+    profil ? `Profil du demandeur: ${profil}` : "",
+    impact ? `Impact d'affaires: ${impact}` : "",
+    sensibilite ? `Sensibilité du dossier: ${sensibilite}` : ""
+  ].filter(Boolean);
+
+  const qualifiedMessage = qualification.length > 0
+    ? normalizeMultilineText(`${qualification.join("\n")}\n\nDescription:\n${message}`, 3000)
+    : message;
+
   return {
     nom,
     courriel,
     telephone,
     support,
     urgence,
-    message,
+    profil,
+    impact,
+    sensibilite,
+    message: qualifiedMessage,
     sourcePath
   };
 };

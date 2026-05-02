@@ -11,6 +11,8 @@
   --tracking-xwide: 0.55em;
 
   /* ── Layout & functional tokens (not locked) ─────────────── */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   --color-bg: #0d0d0b;
   --color-bg-soft: #151513;
   --color-surface: rgba(20, 20, 18, 0.94);
@@ -53,14 +55,14 @@ html {
 
 body {
   margin: 0;
-  font-family: var(--serif);
-  font-size: 1.03rem;
+  font-family: var(--font-sans);
+    font-size: 1rem;
   color: var(--os);
   background:
     radial-gradient(circle at 12% 10%, rgba(232, 228, 220, 0.048) 0, transparent 24rem),
     radial-gradient(circle at 88% 14%, rgba(232, 228, 220, 0.032) 0, transparent 21rem),
     linear-gradient(180deg, #0d0d0b 0%, #11110f 46%, #0d0d0b 100%);
-  line-height: 1.68;
+  line-height: 1.62;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
@@ -70,24 +72,30 @@ body::before,
 body::after {
   content: "";
   position: fixed;
-  width: min(34rem, 58vw);
-  aspect-ratio: 1;
-  border-radius: 50%;
+  width: min(38rem, 62vw);
+    aspect-ratio: 1.75;
+    border-radius: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.75;
-  border: 1px solid rgba(232, 228, 220, 0.06);
-  background: radial-gradient(circle at 50% 50%, rgba(232, 228, 220, 0.042) 0, rgba(232, 228, 220, 0.016) 34%, transparent 72%);
+  opacity: 0.42;
+    border: 1px solid rgba(232, 228, 220, 0.075);
+    clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+    background:
+      linear-gradient(135deg, transparent 0 42%, rgba(232, 228, 220, 0.075) 42% 42.4%, transparent 42.4% 100%),
+      repeating-linear-gradient(90deg, rgba(232, 228, 220, 0.035) 0 1px, transparent 1px 5.5rem),
+      linear-gradient(180deg, rgba(232, 228, 220, 0.03), rgba(232, 228, 220, 0.006));
 }
 
 body::before {
   top: 5.5rem;
   left: -10rem;
+  transform: rotate(-8deg) skewX(-6deg);
 }
 
 body::after {
   right: -12rem;
   bottom: 12vh;
+  transform: rotate(11deg) skewX(7deg);
 }
 
 img,
@@ -352,10 +360,13 @@ select {
   content: "";
   position: absolute;
   width: min(24rem, 42vw);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 1px solid rgba(232, 228, 220, 0.06);
-  background: radial-gradient(circle at 50% 50%, rgba(232, 228, 220, 0.03) 0, transparent 72%);
+  aspect-ratio: 1.6;
+    border-radius: 0;
+    border: 1px solid rgba(232, 228, 220, 0.065);
+    clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+    background:
+      linear-gradient(135deg, transparent 0 48%, rgba(232, 228, 220, 0.06) 48% 48.5%, transparent 48.5% 100%),
+      repeating-linear-gradient(90deg, rgba(232, 228, 220, 0.026) 0 1px, transparent 1px 4.5rem);
   pointer-events: none;
 }
 
@@ -388,7 +399,7 @@ select {
   letter-spacing: 0.28em;
   font-size: 0.78rem;
   font-weight: 600;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   opacity: 0.88;
 }
 
@@ -398,7 +409,7 @@ select {
   margin: 0;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   overflow-wrap: break-word;
   text-wrap: balance;
@@ -612,7 +623,7 @@ select {
   font-size: 0.86rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .hero-panel .panel-label {
@@ -653,7 +664,7 @@ select {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .panel-ledger strong {
@@ -710,7 +721,7 @@ select {
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .proof-chip-live {
@@ -745,7 +756,7 @@ select {
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .proof-meter span {
@@ -814,7 +825,7 @@ select {
   color: var(--color-text);
   font-size: 1rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .proof-caption p {
@@ -874,7 +885,7 @@ select {
   font-size: 0.82rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .triage-card h3,
@@ -883,7 +894,7 @@ select {
 .authority-item h3 {
   margin: 0 0 0.75rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .triage-card p,
@@ -933,7 +944,7 @@ select {
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.22em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .service-card>p:not(.service-index),
@@ -942,6 +953,21 @@ select {
   color: var(--color-text-soft);
 }
 
+.offer-points {
+  display: grid;
+  gap: 0.6rem;
+  padding-left: 1.1rem;
+  margin: 1rem 0 0;
+  color: var(--color-text-soft);
+}
+
+.offer-points li::marker {
+  color: var(--color-accent);
+}
+
+.offer-meta {
+  margin-top: 1rem;
+}
 .service-card h3,
 .contact-card h3,
 .page-card h2,
@@ -951,7 +977,7 @@ select {
   margin: 0 0 0.8rem;
   font-size: 1.2rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .service-link {
@@ -996,7 +1022,7 @@ select {
   font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .stat-card dd {
@@ -1005,7 +1031,7 @@ select {
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.05em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .stat-card p {
@@ -1056,7 +1082,7 @@ select {
   margin: 0 0 0.7rem;
   font-size: 1.08rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .metro-card p {
@@ -1318,7 +1344,7 @@ select {
   margin: 0 0 1rem;
   color: var(--os);
   font-size: 0.96rem;
-  font-family: var(--serif);
+  font-family: var(--font-sans);
 }
 
 .site-footer p {
@@ -1344,7 +1370,9 @@ select {
 }
 
 .page-shell {
+  position: relative;
   padding: clamp(4rem, 6vw, 5.25rem) 0 clamp(4.5rem, 7vw, 6rem);
+  overflow-x: clip;
 }
 
 .page-hero {
@@ -1386,7 +1414,7 @@ select {
 .page-content strong {
   color: rgba(232, 228, 220, 0.92);
   font-weight: 700;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .page-links {
@@ -1479,7 +1507,7 @@ select {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .lane-summary {
@@ -1585,7 +1613,7 @@ select {
 .guide-card h3 {
   margin: 0 0 0.75rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .guide-card p:last-of-type {
@@ -1599,7 +1627,7 @@ select {
   font-size: 0.8rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .pricing-grid {
@@ -1619,14 +1647,14 @@ select {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .pricing-card h2 {
   margin: 0 0 0.9rem;
   font-size: 1.25rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .price-tag {
@@ -1635,7 +1663,7 @@ select {
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.05em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .pricing-card p:last-child {
@@ -1672,7 +1700,7 @@ select {
 
 .status-gate h2 {
   margin: 0 0 1rem;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.03em;
 }
 
@@ -1695,7 +1723,7 @@ select {
 
 .status-panel-head h2 {
   margin: 0;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.03em;
 }
 
@@ -1746,7 +1774,7 @@ select {
   margin: 0;
   font-size: 1.05rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .status-section-note {
@@ -1955,7 +1983,7 @@ select {
 
 .ops-panel-head h2 {
   margin: 0;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.03em;
 }
 
@@ -2227,7 +2255,7 @@ select {
 }
 
 .ops-view-mono {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.84rem;
 }
 
@@ -2373,7 +2401,7 @@ select {
   padding: 1.25rem 1.4rem;
   font-weight: 700;
   color: var(--color-text);
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2389,7 +2417,7 @@ select {
   content: "+";
   font-weight: 400;
   font-size: 1.25rem;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   color: var(--color-text-muted);
   flex-shrink: 0;
   transition: transform 260ms var(--ease-out), color 180ms;
@@ -2462,13 +2490,13 @@ select {
   font-size: 0.8rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .process-step h3 {
   margin: 0 0 0.7rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .process-step p {
@@ -2506,7 +2534,7 @@ select {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .tier-delay {
@@ -2515,14 +2543,14 @@ select {
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
 
 .tier-card h3 {
   margin: 0;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .tier-card p:not(.tier-label):not(.tier-delay) {
@@ -2579,13 +2607,13 @@ select {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .cert-card h3 {
   margin: 0 0 0.6rem;
   letter-spacing: -0.03em;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.05rem;
 }
 
