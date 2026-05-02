@@ -6,13 +6,14 @@
   --os-dim: rgba(232, 228, 220, 0.22);
   --os-ghost: rgba(232, 228, 220, 0.08);
   --rule: 0.5px solid rgba(232, 228, 220, 0.1);
-  --serif: 'Georgia', 'Times New Roman', serif;
+  --serif: "Cormorant Garamond", "Times New Roman", serif;
   --tracking-wide: 0.35em;
   --tracking-xwide: 0.55em;
 
   /* ── Layout & functional tokens (not locked) ─────────────── */
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  --font-display: "Cormorant Garamond", "Times New Roman", serif;
+    --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
   --color-bg: #0d0d0b;
   --color-bg-soft: #151513;
   --color-surface: rgba(20, 20, 18, 0.94);
@@ -34,9 +35,9 @@
   --color-info: #c4b8a8;
   --shadow-soft: 0 14px 32px -28px rgba(0, 0, 0, 0.48);
   --shadow-strong: 0 24px 56px -40px rgba(0, 0, 0, 0.62);
-  --radius-sm: 1rem;
-  --radius-md: 1.5rem;
-  --radius-lg: 2rem;
+  --radius-sm: 0;
+    --radius-md: 0;
+    --radius-lg: 0;
   --width-content: min(1160px, calc(100% - 3rem));
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -68,6 +69,41 @@ body {
   overflow-x: hidden;
 }
 
+.button,
+.nav-toggle,
+.skip-link,
+.panel-card,
+.stat-card,
+.service-card,
+.contact-card,
+.page-card,
+.faq-item,
+.triage-card,
+.metro-card,
+.authority-item,
+.warning-card,
+.guide-card,
+.lane-card,
+.pricing-card,
+.paid-path-result,
+.status-gate,
+.ops-sidebar,
+.ops-panel,
+.contact-shell,
+.field input,
+.field select,
+.field textarea,
+.consent-check,
+.pill-list li,
+.trust-tags span,
+.proof-chip,
+.proof-meter span,
+.proof-flow span,
+.proof-timeline span,
+.trust-flow span,
+.whatsapp-fab {
+  border-radius: 0 !important;
+}
 body::before,
 body::after {
   content: "";
@@ -232,7 +268,7 @@ select {
   min-height: 2.75rem;
   padding: 0.72rem 1rem;
   border: 1px solid rgba(232, 228, 220, 0.18);
-  border-radius: 1rem 1rem 1rem 0.35rem;
+  border-radius: 0;
   background: rgba(26, 26, 22, 0.94);
   color: var(--color-accent);
   font-family: inherit;
@@ -263,7 +299,7 @@ select {
   min-height: 3.25rem;
   padding: 0.9rem 1.4rem;
   border: 1px solid transparent;
-  border-radius: 1rem 1rem 1rem 0.35rem;
+  border-radius: 0;
   text-decoration: none;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -407,23 +443,23 @@ select {
 .hero-copy h1,
 .page-hero h1 {
   margin: 0;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-family: var(--font-sans);
-  font-weight: 700;
+  line-height: 0.98;
+    letter-spacing: 0.01em;
+    font-family: var(--font-display);
+    font-weight: 600;
   overflow-wrap: break-word;
   text-wrap: balance;
 }
 
 .hero-copy h1 {
-  max-width: 13ch;
-  font-size: clamp(2.55rem, 5vw, 4.1rem);
-  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  max-width: 15ch;
+    font-size: clamp(2.2rem, 4.8vw, 3.9rem);
+    text-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
 .section-heading h2,
 .page-hero h1 {
-  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-size: clamp(2.05rem, 4.6vw, 3.35rem);
 }
 
 .hero {
@@ -540,7 +576,7 @@ select {
   min-height: 2.75rem;
   padding: 0.65rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(24, 24, 21, 0.9);
   color: var(--color-text-soft);
 }
@@ -714,7 +750,7 @@ select {
   align-items: center;
   min-height: 2rem;
   padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid rgba(232, 228, 220, 0.12);
   background: rgba(14, 14, 12, 0.88);
   color: rgba(232, 228, 220, 0.92);
@@ -1466,7 +1502,7 @@ select {
   align-items: center;
   min-height: 2rem;
   padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: linear-gradient(180deg, rgba(18, 18, 16, 0.94), rgba(12, 12, 10, 0.92));
   border: 1px solid rgba(232, 228, 220, 0.11);
   color: var(--color-text-soft);
@@ -1835,7 +1871,7 @@ select {
   margin-bottom: 1rem;
   padding: 0.45rem 0.8rem;
   border: 1px solid rgba(232, 228, 220, 0.16);
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(232, 228, 220, 0.07);
   color: var(--color-text);
   font-weight: 800;
@@ -1932,7 +1968,7 @@ select {
   align-items: center;
   min-height: 2.5rem;
   padding: 0.5rem 0.9rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(232, 228, 220, 0.08);
   color: var(--color-accent);
   font-weight: 700;
@@ -2037,7 +2073,7 @@ select {
   align-items: center;
   min-height: 2rem;
   padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--color-text-soft);
   font-size: 0.8rem;
@@ -2081,7 +2117,7 @@ select {
   top: 1.15rem;
   width: 0.95rem;
   height: 0.95rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(232, 228, 220, 0.12);
   border: 2px solid rgba(232, 228, 220, 0.2);
 }
@@ -2338,7 +2374,7 @@ select {
   align-items: center;
   min-height: 2rem;
   padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--color-text-soft);
   font-size: 0.8rem;
@@ -2474,7 +2510,7 @@ select {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.6rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.78rem;
   font-weight: 700;
@@ -2797,7 +2833,7 @@ select {
   inset-inline: 0;
   top: 0;
   height: 2px;
-  border-radius: 2px 2px 0 0;
+  border-radius: 0;
   background: linear-gradient(90deg, rgba(232, 228, 220, 0.32), rgba(232, 228, 220, 0.04));
 }
 
@@ -2983,12 +3019,13 @@ select {
   }
 
     .site-nav .brand {
-    width: min(58vw, 230px);
+    width: min(64vw, 270px);
     }
 
     .site-nav .nav-links {
     grid-template-columns: 1fr;
     min-width: 0;
+  
   
     
     .site-nav .nav-links a {
@@ -3124,8 +3161,14 @@ select {
   }
 
   .hero {
-    padding-top: 4.6rem;
-    padding-bottom: 3rem;
+    padding-top: 1.4rem;
+      padding-bottom: 2.6rem;
+    }
+    
+    .hero .eyebrow {
+      margin-bottom: 0.75rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
   }
 
   body::before,
@@ -3148,8 +3191,10 @@ select {
   }
 
   .hero-copy h1 {
-    max-width: 12ch;
-    font-size: clamp(2.3rem, 11vw, 3.25rem);
+    max-width: min(100%, 18ch);
+      font-size: 1.78rem;
+      letter-spacing: 0;
+      hyphens: auto;
   }
 
   .hero-lead {
@@ -3321,6 +3366,51 @@ select {
     gap: 0.75rem 1.1rem;
   }
 
+    .trust-grid,
+    .cert-grid {
+      gap: 0.7rem;
+    }
+  
+    .trust-card,
+    .cert-card {
+      min-height: 0;
+      padding: 0.95rem 1rem;
+      border-radius: 0.8rem;
+      background: rgba(18, 18, 16, 0.72);
+      box-shadow: none;
+    }
+  
+    .cert-card::before {
+      inset-inline: 1rem;
+      height: 1px;
+      opacity: 0.55;
+    }
+  
+    .trust-card h3,
+    .cert-card h3 {
+      margin-bottom: 0.35rem;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+  
+    .cert-kicker {
+      margin-bottom: 0.4rem;
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+    }
+  
+    .trust-card p,
+    .cert-card p:not(.cert-kicker) {
+      margin-bottom: 0.55rem;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+  
+    .trust-card .service-link,
+    .cert-card .service-link {
+      margin-top: 0.35rem;
+    }
+    }
 @media (max-width: 560px) {
   body::before,
   body::after,
@@ -3352,6 +3442,12 @@ select {
 }
 
 @media (max-width: 420px) {
+  .hero-copy h1 {
+      max-width: 100%;
+      font-size: 1.68rem;
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
 
   .site-nav .nav-links a,
   .nav-links a,
@@ -3387,7 +3483,14 @@ select {
 
   .brand-logo {
     width: auto;
-    max-width: 180px;
+    max-width: 260px;
+      height: 34px;
+    }
+    
+    .site-nav .brand .brand-logo {
+      width: auto !important;
+      max-width: min(64vw, 260px);
+      height: 42px !important;
   }
 
   .footer-logo {
@@ -3401,6 +3504,21 @@ select {
 }
 
 @media (max-width: 560px) {
+  .nav-toggle {
+      min-height: 2.25rem;
+      padding: 0.5rem 0.68rem;
+      font-size: 0.82rem;
+    }
+  
+    .brand-logo {
+      max-width: 250px;
+      height: 34px;
+    }
+  
+    .site-nav .brand .brand-logo {
+      max-width: min(60vw, 260px);
+      height: 42px !important;
+    }
 
   .proof-figure-secondary,
   .hero-panel-links {
@@ -3515,9 +3633,9 @@ select {
   padding: 0.75rem 1.25rem 0.75rem 0.9rem;
   background: #25d366;
   color: #fff;
-  border-radius: 3rem;
+  border-radius: 0;
   text-decoration: none;
-  font-family: var(--sans, 'IBM Plex Sans', sans-serif);
+  font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -3538,7 +3656,7 @@ select {
   flex-shrink: 0;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 720px) {
   .whatsapp-fab span { display: none; }
     .whatsapp-fab {
       right: 0.85rem;
@@ -3561,7 +3679,7 @@ select {
 .whatsapp-inline-link {
   display: inline-block;
   margin-top: 0.5rem;
-  font-family: var(--font-ui, 'IBM Plex Sans', sans-serif);
+  font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 600;
   color: #25d366;
