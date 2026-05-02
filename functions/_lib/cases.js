@@ -1,5 +1,6 @@
 import { getDb } from "./db.js";
 import { createHostedCheckoutSession } from "./stripe.js";
+import { buildCaseAutomationDraft } from "./automation.js";
 import {
   decryptAccessCode,
   encryptAccessCode,
@@ -15,6 +16,8 @@ const allowedSupports = new Set([
   "SSD",
   "RAID / NAS / serveur",
   "Téléphone / mobile",
+  "Forensique / preuve numérique",
+  "Mandat entreprise / juridique",
   "USB / carte mémoire",
   "Je ne sais pas"
 ]);
@@ -26,10 +29,47 @@ const allowedUrgencies = new Set([
   "Très sensible"
 ]);
 
+const allowedProfiles = new Set([
+  "Particulier",
+  "Entreprise / TI",
+  "Cabinet juridique",
+  "Assureur / partenaire",
+  "Je ne sais pas"
+]);
+
+const allowedImpacts = new Set([
+  "Planifié / non urgent",
+  "Données importantes",
+  "Opérations bloquées",
+  "Client, juridique ou assurance impliqué"
+]);
+
+const allowedSensitivities = new Set([
+  "Standard",
+  "Confidentiel",
+  "Données sensibles",
+  "Preuve / chaîne de possession"
+]);
+
 const allowedStepStates = new Set(["pending", "active", "complete"]);
 const allowedPaymentKinds = new Set(["deposit", "final", "custom"]);
 const allowedQuoteStatuses = new Set(["none", "draft", "sent", "approved", "expired", "declined"]);
 const allowedReminderTypes = new Set(["quote_follow_up", "payment_follow_up", "missing_information", "general_follow_up"]);
+const allowedCaseFilterStatuses = new Set([
+  "Dossier reçu",
+  "Évaluation en cours",
+  "Soumission envoyée",
+  "En attente du client",
+  "En cours",
+  "En pause",
+  "Terminé",
+  "Fermé",
+  "Intervention autorisée",
+  "nouveau",
+  "en-cours",
+  "complete",
+  "fermé"
+]);
 
 const localHostnames = new Set(["localhost", "127.0.0.1"]);
 
@@ -66,6 +106,9 @@ export const validateSubmission = (payload) => {
   const telephone = normalizeText(payload.telephone, 40);
   const support = normalizeText(payload.support, 60);
   const urgence = normalizeText(payload.urgence, 40);
+  const profil = normalizeText(payload.profil, 60);
+  const impact = normalizeText(payload.impact, 80);
+  const sensibilite = normalizeText(payload.sensibilite, 80);
   const message = normalizeMultilineText(payload.message, 3000);
   const sourcePath = normalizeText(payload.sourcePath, 160) || "/";
   const honeypot = normalizeText(payload.website, 120);
@@ -91,13 +134,38 @@ export const validateSubmission = (payload) => {
     throw new Error("Niveau d'urgence invalide.");
   }
 
+  if (profil && !allowedProfiles.has(profil)) {
+    throw new Error("Profil du demandeur invalide.");
+  }
+
+  if (impact && !allowedImpacts.has(impact)) {
+    throw new Error("Impact d'affaires invalide.");
+  }
+
+  if (sensibilite && !allowedSensitivities.has(sensibilite)) {
+    throw new Error("Sensibilité du dossier invalide.");
+  }
+
+  const qualification = [
+    profil ? `Profil du demandeur: ${profil}` : "",
+    impact ? `Impact d'affaires: ${impact}` : "",
+    sensibilite ? `Sensibilité du dossier: ${sensibilite}` : ""
+  ].filter(Boolean);
+
+  const qualifiedMessage = qualification.length > 0
+    ? normalizeMultilineText(`${qualification.join("\n")}\n\nDescription:\n${message}`, 3000)
+    : message;
+
   return {
     nom,
     courriel,
     telephone,
     support,
     urgence,
-    message,
+    profil,
+    impact,
+    sensibilite,
+    message: qualifiedMessage,
     sourcePath
   };
 };
@@ -116,6 +184,31 @@ export const validateStatusLookup = (payload) => {
   };
 };
 
+export const validateAuthorizationApproval = (payload) => {
+  const caseId = normalizeCaseId(payload.caseId || payload.dossier);
+  const accessCode = normalizeAccessCode(payload.accessCode || payload.code);
+  const signerName = normalizeText(payload.signerName || payload.nom || payload.name, 120);
+  const consent = payload.consent === true || payload.consent === "true" || payload.consent === "on";
+
+  if (!caseId || !accessCode) {
+    throw new Error("Entrez un numéro de dossier et un code d'accès valides.");
+  }
+
+  if (!signerName) {
+    throw new Error("Inscrivez le nom de la personne qui autorise l'intervention.");
+  }
+
+  if (!consent) {
+    throw new Error("Confirmez l'autorisation avant de continuer.");
+  }
+
+  return {
+    caseId,
+    accessCode,
+    signerName
+  };
+};
+
 /**
  * Validate query parameters for case listing in ops endpoints.
  * Returns sanitized filters or throws if invalid values provided.
@@ -124,10 +217,8 @@ export const validateCaseFilters = (queryParams) => {
   const filters = {};
 
   if (queryParams.status) {
-    const status = normalizeText(queryParams.status, 40);
-    // Valid database statuses: nouveau, en-cours, complete, fermé
-    const validStatuses = ["nouveau", "en-cours", "complete", "fermé"];
-    if (status && !validStatuses.includes(status)) {
+    const status = normalizeText(queryParams.status, 80);
+    if (status && !allowedCaseFilterStatuses.has(status)) {
       throw new Error(`Statut invalide: ${status}`);
     }
     if (status) filters.status = status;
@@ -298,20 +389,23 @@ export const createCase = async (env, submission) => {
   const accessCodeHash = await hashAccessCode(accessCode, env);
   const accessCodeCiphertext = await encryptAccessCode(accessCode, env);
   const timeline = buildInitialTimeline();
+  const automationDraft = buildCaseAutomationDraft(submission);
   const status = "Dossier reçu";
-  const nextStep = "Lecture initiale du cas et qualification technique.";
-  const clientSummary = "Votre demande a été reçue. Un dossier initial a été ouvert et le laboratoire prépare maintenant l'évaluation du cas.";
+  const nextStep = automationDraft.nextStep;
+  const clientSummary = automationDraft.clientSummary;
 
   await sql`INSERT INTO cases (
     case_id, created_at, updated_at, name, email, phone, support, urgency,
     message, source_path, status, next_step, client_summary,
     access_code_hash, access_code_ciphertext,
-    access_code_last_sent_at, status_email_last_sent_at
+    access_code_last_sent_at, status_email_last_sent_at,
+    qualification_summary, handling_flags
   ) VALUES (
     ${caseId}, ${createdAt}, ${createdAt}, ${submission.nom}, ${submission.courriel},
     ${submission.telephone}, ${submission.support}, ${submission.urgence},
     ${submission.message}, ${submission.sourcePath}, ${status}, ${nextStep},
-    ${clientSummary}, ${accessCodeHash}, ${accessCodeCiphertext}, '', ''
+    ${clientSummary}, ${accessCodeHash}, ${accessCodeCiphertext}, '', '',
+    ${automationDraft.qualificationSummary}, ${automationDraft.handlingFlags}
   )`;
 
   for (const step of timeline) {
@@ -446,6 +540,22 @@ const mapPublicPayment = (payment) => {
   };
 };
 
+const mapPublicAuthorization = (row) => {
+  const quoteStatus = normalizeText(row.quote_status, 20).toLowerCase() || "none";
+  const isApproved = quoteStatus === "approved" || Boolean(row.preapproval_confirmed);
+  const isAvailable = quoteStatus === "sent" || isApproved;
+
+  return {
+    available: isAvailable,
+    approved: isApproved,
+    quoteStatus,
+    quoteAmountCents: row.quote_amount_cents,
+    quoteAmountFormatted: row.quote_amount_cents ? formatCurrency(row.quote_amount_cents) : "",
+    quoteSentAt: row.quote_sent_at,
+    quoteApprovedAt: row.quote_approved_at
+  };
+};
+
 export const listCasePayments = async (env, caseId) => {
   const sql = getDb(env);
   const normalizedCaseId = normalizeCaseId(caseId);
@@ -490,8 +600,102 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
     nextStep: row.next_step,
     summary: row.client_summary,
     steps: await getVisibleTimeline(env, row.case_id),
-    payments: payments.map(mapPublicPayment)
+    payments: payments.map(mapPublicPayment),
+    authorization: mapPublicAuthorization(row)
   };
+};
+
+export const approveCaseAuthorization = async (env, payload) => {
+  const sql = getDb(env);
+  const input = validateAuthorizationApproval(payload);
+  const row = await getCaseRow(env, input.caseId);
+
+  if (!row) {
+    throw new Error("Dossier introuvable.");
+  }
+
+  const hashed = await hashAccessCode(input.accessCode, env);
+
+  if (hashed !== row.access_code_hash) {
+    throw new Error("Dossier introuvable.");
+  }
+
+  const quoteStatus = normalizeText(row.quote_status, 20).toLowerCase();
+
+  if (quoteStatus === "approved" || row.preapproval_confirmed) {
+    return getPublicCaseByCredentials(env, input.caseId, input.accessCode);
+  }
+
+  if (quoteStatus !== "sent") {
+    throw new Error("Aucune autorisation active n'est prête pour ce dossier.");
+  }
+
+  const timestamp = nowIso();
+  const status = "Intervention autorisée";
+  const nextStep = "NEXURADATA prépare les consignes et la séquence de traitement confirmées.";
+  const clientSummary = "Votre autorisation a été reçue. Le laboratoire peut maintenant poursuivre selon le cadre transmis et préparer les prochaines actions nécessaires.";
+
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp},
+        status = ${status},
+        next_step = ${nextStep},
+        client_summary = ${clientSummary},
+        quote_status = 'approved',
+        quote_approved_at = ${timestamp},
+        preapproval_confirmed = 1,
+        last_client_contact_at = ${timestamp}
+    WHERE case_id = ${input.caseId}`;
+
+  await sql`UPDATE case_updates
+    SET is_visible = 0, updated_at = ${timestamp}
+    WHERE case_id = ${input.caseId} AND kind = 'timeline' AND is_visible = 1`;
+
+  const approvedTimeline = [
+    {
+      title: "Dossier reçu",
+      note: "La demande a été enregistrée et qualifiée.",
+      state: "complete",
+      sortOrder: 0
+    },
+    {
+      title: "Soumission transmise",
+      note: "Le cadre d'intervention a été présenté au client.",
+      state: "complete",
+      sortOrder: 1
+    },
+    {
+      title: "Autorisation reçue",
+      note: `Autorisation confirmée par ${input.signerName}.`,
+      state: "complete",
+      sortOrder: 2
+    },
+    {
+      title: "Préparation du traitement",
+      note: "Le laboratoire prépare les consignes, outils ou manipulations applicables au dossier.",
+      state: "active",
+      sortOrder: 3
+    }
+  ];
+
+  for (const step of approvedTimeline) {
+    await sql`INSERT INTO case_updates (
+      case_id, kind, title, note, state, sort_order, is_visible,
+      created_at, updated_at, created_by
+    ) VALUES (
+      ${input.caseId}, 'timeline', ${step.title}, ${step.note}, ${step.state},
+      ${step.sortOrder}, 1, ${timestamp}, ${timestamp}, 'client-portal'
+    )`;
+  }
+
+  await recordCaseEvent(
+    env,
+    input.caseId,
+    "client-portal",
+    "Autorisation client reçue",
+    `Autorisation confirmée par ${input.signerName}.`
+  );
+
+  return getPublicCaseByCredentials(env, input.caseId, input.accessCode);
 };
 
 export const listCases = async (env, rawQuery = "", filters = {}) => {
@@ -1016,7 +1220,7 @@ export const listQuotes = async (env, filters = {}) => {
     AND (${filterQuoteStatus} = '' OR quote_status = ${filterQuoteStatus})
     AND (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like}))
   ORDER BY
-    CASE quote_status WHEN 'sent' THEN 0 WHEN 'draft' THEN 1 WHEN 'approved' THEN 2 WHEN 'expired' THEN 3 WHEN 'declined' THEN 4 ELSE 5 END,
+    CASE quote_status WHEN 'approved' THEN 0 WHEN 'sent' THEN 1 WHEN 'draft' THEN 2 WHEN 'expired' THEN 3 WHEN 'declined' THEN 4 ELSE 5 END,
     updated_at DESC
   LIMIT 50`;
 

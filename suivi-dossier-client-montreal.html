@@ -140,6 +140,39 @@
 
         <p class="status-summary" data-status-summary></p>
 
+        <section class="status-section authorization-request" data-authorization-section hidden>
+          <div class="status-section-head">
+            <div>
+              <p class="guide-meta">Autorisation</p>
+              <h3>Approuver la demande d'intervention</h3>
+            </div>
+            <p class="status-section-note" data-authorization-note>Une autorisation est requise avant de poursuivre le traitement.</p>
+          </div>
+
+          <div class="authorization-summary">
+            <p><strong>Montant autorisé:</strong> <span data-authorization-amount></span></p>
+            <p><strong>État:</strong> <span data-authorization-state></span></p>
+          </div>
+
+          <form class="authorization-form" data-authorization-form data-authorization-endpoint="/api/authorization" novalidate>
+            <label class="field">
+              <span>Nom de la personne qui autorise</span>
+              <input type="text" name="signerName" autocomplete="name" required>
+            </label>
+
+            <label class="consent-check">
+              <input type="checkbox" name="consent" required>
+              <span>J'autorise NEXURADATA à poursuivre l'intervention selon le cadre transmis, incluant les consignes, manipulations ou étapes de traitement nécessaires au dossier.</span>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit" class="button button-primary">Approuver l'autorisation</button>
+            </div>
+
+            <p class="form-status" data-authorization-message aria-live="polite"></p>
+          </form>
+        </section>
+
         <section class="status-section" data-status-payments-section hidden>
           <div class="status-section-head">
             <div>
@@ -150,6 +183,33 @@
           </div>
 
           <div class="status-payment-list" data-status-payments></div>
+        </section>
+
+        <section class="status-section client-workroom" data-workroom-section hidden>
+          <div class="status-section-head">
+            <div>
+              <p class="guide-meta">Espace de travail</p>
+              <h3 data-workroom-title>Prochaines actions guidées</h3>
+            </div>
+            <p class="status-section-note" data-workroom-note>NEXURADATA affiche ici le parcours utile une fois le dossier qualifié.</p>
+          </div>
+
+          <div class="workroom-status" data-workroom-status></div>
+          <div class="workroom-grid">
+            <article class="workroom-card">
+              <h4>À préparer</h4>
+              <ul data-workroom-prepare></ul>
+            </article>
+            <article class="workroom-card">
+              <h4>À éviter</h4>
+              <ul data-workroom-avoid></ul>
+            </article>
+            <article class="workroom-card workroom-card-wide">
+              <h4>Transmission</h4>
+              <p data-workroom-transfer></p>
+              <a class="button button-secondary button-small" data-workroom-mail href="mailto:contact@nexuradata.ca">Écrire au laboratoire</a>
+            </article>
+          </div>
         </section>
 
         <div class="status-timeline" data-status-timeline></div>

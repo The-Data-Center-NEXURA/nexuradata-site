@@ -62,6 +62,9 @@ const publicI18n = isEnglishDocument
     fieldPhone: "Phone",
     fieldSupport: "Support",
     fieldUrgency: "Urgency",
+    fieldProfile: "Requester profile",
+    fieldImpact: "Business impact",
+    fieldSensitivity: "Case sensitivity",
     fieldDescription: "Issue description",
     intakeRequired: "Complete the required fields before opening a case.",
     intakeBusy: "Opening...",
@@ -89,6 +92,19 @@ const publicI18n = isEnglishDocument
     paymentSentOn: (timestamp) => `Link sent on ${timestamp}`,
     paymentReference: (reference) => `Reference ${reference}`,
     paymentAction: "Pay online",
+    authorizationReady: "Awaiting client approval",
+    authorizationApproved: "Approved",
+    authorizationNoAmount: "Amount shown in the transmitted scope",
+    authorizationRequired: "Enter the authorizing name and confirm consent.",
+    authorizationBusy: "Approving...",
+    authorizationSending: "Approving the intervention request...",
+    authorizationSuccess: "Authorization approved. The case has been updated.",
+    authorizationError: "The authorization could not be confirmed.",
+    authorizationOffline: "The authorization service is currently unavailable.",
+    workroomLocked: "The lab is still qualifying the case. The guided workroom opens after payment or authorization.",
+    workroomOpen: "Workroom open",
+    workroomAwaiting: "Awaiting payment or authorization",
+    workroomMailSubject: (caseId) => `NEXURADATA workroom - ${caseId}`,
     demoCaseOne: {
       status: "Assessment in progress",
       updatedAt: "April 4, 2026 11:40 AM",
@@ -101,7 +117,15 @@ const publicI18n = isEnglishDocument
         { title: "Quote", note: "To be issued after assessment.", state: "pending" },
         { title: "Recovery work", note: "Starts after authorization.", state: "pending" }
       ],
-      payments: []
+      payments: [],
+      authorization: {
+        available: false,
+        approved: false,
+        quoteStatus: "none",
+        quoteAmountFormatted: "",
+        quoteSentAt: "",
+        quoteApprovedAt: ""
+      }
     },
     demoCaseTwo: {
       status: "Quote sent",
@@ -131,7 +155,15 @@ const publicI18n = isEnglishDocument
           paidAt: "",
           expiresAt: "2026-04-11T14:10:00.000Z"
         }
-      ]
+      ],
+      authorization: {
+        available: true,
+        approved: false,
+        quoteStatus: "sent",
+        quoteAmountFormatted: "$650.00",
+        quoteSentAt: "2026-04-04T14:10:00.000Z",
+        quoteApprovedAt: ""
+      }
     }
   }
   : {
@@ -146,6 +178,9 @@ const publicI18n = isEnglishDocument
     fieldPhone: "Téléphone",
     fieldSupport: "Support",
     fieldUrgency: "Urgence",
+    fieldProfile: "Profil du demandeur",
+    fieldImpact: "Impact d'affaires",
+    fieldSensitivity: "Sensibilité du dossier",
     fieldDescription: "Description du problème",
     intakeRequired: "Complétez les champs requis avant d'ouvrir un dossier.",
     intakeBusy: "Ouverture...",
@@ -173,6 +208,19 @@ const publicI18n = isEnglishDocument
     paymentSentOn: (timestamp) => `Lien transmis le ${timestamp}`,
     paymentReference: (reference) => `Référence ${reference}`,
     paymentAction: "Régler en ligne",
+    authorizationReady: "En attente d'autorisation client",
+    authorizationApproved: "Approuvée",
+    authorizationNoAmount: "Montant indiqué dans le cadre transmis",
+    authorizationRequired: "Inscrivez le nom de la personne qui autorise et confirmez le consentement.",
+    authorizationBusy: "Approbation...",
+    authorizationSending: "Approbation de la demande d'intervention...",
+    authorizationSuccess: "Autorisation approuvée. Le dossier a été mis à jour.",
+    authorizationError: "L'autorisation n'a pas pu être confirmée.",
+    authorizationOffline: "Le service d'autorisation n'est pas joignable pour le moment.",
+    workroomLocked: "Le laboratoire qualifie encore le dossier. L'espace guidé s'ouvre après paiement ou autorisation.",
+    workroomOpen: "Espace de travail ouvert",
+    workroomAwaiting: "En attente du paiement ou de l'autorisation",
+    workroomMailSubject: (caseId) => `Espace de travail NEXURADATA - ${caseId}`,
     demoCaseOne: {
       status: "Évaluation en cours",
       updatedAt: "4 avril 2026 à 11 h 40",
@@ -185,7 +233,15 @@ const publicI18n = isEnglishDocument
         { title: "Soumission", note: "À transmettre après évaluation.", state: "pending" },
         { title: "Traitement", note: "Commence après autorisation.", state: "pending" }
       ],
-      payments: []
+      payments: [],
+      authorization: {
+        available: false,
+        approved: false,
+        quoteStatus: "none",
+        quoteAmountFormatted: "",
+        quoteSentAt: "",
+        quoteApprovedAt: ""
+      }
     },
     demoCaseTwo: {
       status: "Soumission envoyée",
@@ -215,7 +271,15 @@ const publicI18n = isEnglishDocument
           paidAt: "",
           expiresAt: "2026-04-11T14:10:00.000Z"
         }
-      ]
+      ],
+      authorization: {
+        available: true,
+        approved: false,
+        quoteStatus: "sent",
+        quoteAmountFormatted: "650,00 $",
+        quoteSentAt: "2026-04-04T14:10:00.000Z",
+        quoteApprovedAt: ""
+      }
     }
   };
 
@@ -235,11 +299,18 @@ if (footerNote) {
   footerNote.insertAdjacentElement("afterend", copyrightDiv);
 }
 
+// Public header logo — normalize to the locked master asset on public pages.
+document.querySelectorAll(".site-nav .brand-logo").forEach((logo) => {
+  if (logo.getAttribute("src")?.includes("logo-petit.svg")) {
+    logo.setAttribute("src", "/assets/nexuradata-master.svg");
+  }
+});
+
 const revealElements = document.querySelectorAll("[data-reveal]");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const initializeMobileNav = () => {
-  const navbars = document.querySelectorAll(".navbar");
+  const navbars = document.querySelectorAll(".navbar, .site-nav");
 
   if (navbars.length === 0) {
     return;
@@ -459,6 +530,99 @@ if (paymentFeedback) {
   const mailLink = paymentFeedback.querySelector("[data-payment-feedback-mail]");
 
   if (caseTarget) {
+
+document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
+  const form = app.querySelector("[data-paid-path-form]");
+  const titleTarget = app.querySelector("[data-paid-path-title]");
+  const priceTarget = app.querySelector("[data-paid-path-price]");
+  const summaryTarget = app.querySelector("[data-paid-path-summary]");
+  const stepsTarget = app.querySelector("[data-paid-path-steps]");
+  const startLink = app.querySelector("[data-paid-path-start]");
+
+  if (!form || !titleTarget || !priceTarget || !summaryTarget || !stepsTarget) {
+    return;
+  }
+
+  const copy = isEnglishDocument
+    ? {
+      guided: {
+        title: "Paid guided review",
+        price: "From $149",
+        summary: "A lab-guided sequence for software issues, clean restores, account-side recovery steps or safe preparation before a deeper intervention.",
+        steps: ["Pay for the guided review.", "Send screenshots, symptoms, logs or file lists.", "Receive the validated steps and limits to follow."]
+      },
+      recovery: {
+        title: "Media intervention deposit",
+        price: "From $350",
+        summary: "For physical media, NEXURADATA confirms the safest handling path before work begins and tells you exactly what to send or avoid doing.",
+        steps: ["Open the case and confirm the deposit.", "Prepare the media using the reception instructions.", "Receive the next handling or lab treatment step."]
+      },
+      forensic: {
+        title: "Sensitive case authorization",
+        price: "Quoted",
+        summary: "For evidence, incidents or disputes, the authorization confirms scope, confidentiality expectations and the next controlled action.",
+        steps: ["Open the request with the relevant context.", "Review the transmitted scope.", "Authorize the controlled intervention through the client portal."]
+      },
+      enterprise: {
+        title: "Operational intervention path",
+        price: "Priority quote",
+        summary: "For RAID, NAS, servers or blocked operations, the first decision is about risk, continuity and the cleanest route to restore activity.",
+        steps: ["Share the system context and business impact.", "Receive the intervention frame.", "Approve the request before production-facing work begins."]
+      }
+    }
+    : {
+      guided: {
+        title: "Revue guidée payante",
+        price: "À partir de 149 $",
+        summary: "Une séquence guidée par le laboratoire pour les problèmes logiciels, restaurations propres, accès ou préparation sécurisée avant une intervention plus lourde.",
+        steps: ["Payer la revue guidée.", "Envoyer les captures, symptômes, journaux ou listes de fichiers.", "Recevoir les étapes validées et les limites à respecter."]
+      },
+      recovery: {
+        title: "Acompte d'intervention support",
+        price: "À partir de 350 $",
+        summary: "Pour un support physique, NEXURADATA confirme la voie de manipulation la plus sûre avant le traitement et indique exactement quoi transmettre ou éviter.",
+        steps: ["Ouvrir le dossier et confirmer l'acompte.", "Préparer le support selon les consignes de réception.", "Recevoir la prochaine étape de manipulation ou de traitement."]
+      },
+      forensic: {
+        title: "Autorisation de dossier sensible",
+        price: "Sur soumission",
+        summary: "Pour une preuve, un incident ou un litige, l'autorisation confirme le périmètre, la confidentialité et la prochaine action contrôlée.",
+        steps: ["Ouvrir la demande avec le contexte pertinent.", "Réviser le cadre transmis.", "Autoriser l'intervention contrôlée dans le portail client."]
+      },
+      enterprise: {
+        title: "Parcours d'intervention opérationnelle",
+        price: "Soumission prioritaire",
+        summary: "Pour RAID, NAS, serveurs ou opérations bloquées, la première décision porte sur le risque, la continuité et la voie de reprise la plus propre.",
+        steps: ["Partager le contexte système et l'impact d'affaires.", "Recevoir le cadre d'intervention.", "Approuver la demande avant le travail touchant la production."]
+      }
+    };
+
+  const updateRecommendation = () => {
+    const formData = new FormData(form);
+    const objective = `${formData.get("objective") || "guided"}`;
+    const urgency = `${formData.get("urgency") || "standard"}`;
+    const recommendation = copy[objective] || copy.guided;
+
+    titleTarget.textContent = recommendation.title;
+    priceTarget.textContent = urgency === "critical" && objective !== "guided"
+      ? (isEnglishDocument ? "Priority quote" : "Soumission prioritaire")
+      : recommendation.price;
+    summaryTarget.textContent = recommendation.summary;
+    stepsTarget.replaceChildren(...recommendation.steps.map((step) => {
+      const item = document.createElement("li");
+      item.textContent = step;
+      return item;
+    }));
+
+    if (startLink) {
+      const label = encodeURIComponent(recommendation.title);
+      startLink.href = isEnglishDocument ? `/en/?path=${label}#contact` : `index.html?path=${label}#contact`;
+    }
+  };
+
+  form.addEventListener("change", updateRecommendation);
+  updateRecommendation();
+});
     caseTarget.textContent = caseId || "Non précisé";
   }
 
@@ -556,6 +720,9 @@ const buildIntakeMailto = (formData) => {
     `${publicI18n.fieldPhone}: ${formData.get("telephone") || ""}`,
     `${publicI18n.fieldSupport}: ${formData.get("support") || ""}`,
     `${publicI18n.fieldUrgency}: ${formData.get("urgence") || ""}`,
+    `${publicI18n.fieldProfile}: ${formData.get("profil") || ""}`,
+    `${publicI18n.fieldImpact}: ${formData.get("impact") || ""}`,
+    `${publicI18n.fieldSensitivity}: ${formData.get("sensibilite") || ""}`,
     "",
     `${publicI18n.fieldDescription}:`,
     `${formData.get("message") || ""}`
@@ -647,7 +814,8 @@ const createStatusPayment = (payment) => {
   article.append(head, meta, note);
 
   if (payment.checkoutUrl) {
-    (document.createElement("div")).className = "status-payment-actions";
+    const actions = document.createElement("div");
+    actions.className = "status-payment-actions";
 
     const link = document.createElement("a");
     link.className = "button button-primary button-small";
@@ -656,12 +824,211 @@ const createStatusPayment = (payment) => {
     link.rel = "noreferrer";
     link.textContent = publicI18n.paymentAction;
 
-    (document.createElement("div")).append(link);
-    article.append(document.createElement("div"));
+    actions.append(link);
+    article.append(actions);
   }
 
   article.append(details);
   return article;
+};
+
+let currentStatusCredentials = null;
+
+const renderAuthorizationState = (record, statusPanel) => {
+  const section = statusPanel?.querySelector("[data-authorization-section]");
+
+  if (!section) {
+    return;
+  }
+
+  const authorization = record.authorization || {};
+  const isAvailable = Boolean(authorization.available);
+  section.hidden = !isAvailable;
+
+  if (!isAvailable) {
+    return;
+  }
+
+  const amountTarget = section.querySelector("[data-authorization-amount]");
+  const stateTarget = section.querySelector("[data-authorization-state]");
+  const form = section.querySelector("[data-authorization-form]");
+  const submitButton = form?.querySelector('button[type="submit"]');
+
+  if (amountTarget) {
+    amountTarget.textContent = authorization.quoteAmountFormatted || publicI18n.authorizationNoAmount;
+  }
+
+  if (stateTarget) {
+    stateTarget.textContent = authorization.approved ? publicI18n.authorizationApproved : publicI18n.authorizationReady;
+  }
+
+  if (form) {
+    form.hidden = Boolean(authorization.approved);
+  }
+
+  if (submitButton) {
+    submitButton.disabled = Boolean(authorization.approved);
+  }
+};
+
+const workroomCopy = isEnglishDocument
+  ? {
+    guided: {
+      title: "Guided repair workroom",
+      note: "Use this path when the lab can safely guide actions before deeper handling.",
+      prepare: ["Keep the device powered as-is unless the lab asks otherwise.", "Prepare screenshots, error messages, account notices or file names.", "Write down what changed just before the issue appeared."],
+      avoid: ["Do not install random recovery utilities.", "Do not reset, reinstall or overwrite the affected data.", "Do not send passwords through chat or email."],
+      transfer: "Send the symptoms and screenshots first. If remote assistance is useful, NEXURADATA will confirm a supervised session with your consent."
+    },
+    media: {
+      title: "Media intervention workroom",
+      note: "Use this path for drives, SSDs, USB keys and memory cards.",
+      prepare: ["Stop using the media immediately.", "Label the device with the case number.", "Prepare the cable, enclosure or adapter if it is part of the issue."],
+      avoid: ["Do not run repair, format or disk-check tools.", "Do not open the device casing.", "Do not keep reconnecting media that clicks, disconnects or overheats."],
+      transfer: "Send a short note with the device model and symptoms. The lab will confirm drop-off, shipping or remote preparation instructions."
+    },
+    raid: {
+      title: "Business continuity workroom",
+      note: "Use this path for RAID, NAS, server and operations-blocking incidents.",
+      prepare: ["List the number of disks and any disk labels or slot positions.", "Export screenshots of the storage dashboard if accessible.", "Identify the last known healthy state and any rebuild attempt."],
+      avoid: ["Do not rebuild, initialize or replace disks blindly.", "Do not force-mount affected volumes in write mode.", "Do not change disk order."],
+      transfer: "Send architecture details and business impact. NEXURADATA will confirm whether the next step is remote review, image capture or lab handling."
+    },
+    forensic: {
+      title: "Evidence and incident workroom",
+      note: "Use this path when traceability, dispute, insurer, HR or legal context matters.",
+      prepare: ["Preserve the original device or account state.", "Write a timeline of events and involved parties.", "Collect reference numbers, insurer notes or mandate context."],
+      avoid: ["Do not modify, clean or reorganize evidence.", "Do not share sensitive material through informal channels.", "Do not let multiple people handle the same device without tracking."],
+      transfer: "Send only the context first. NEXURADATA will confirm the controlled transfer method and the evidence-handling boundary."
+    },
+    mobile: {
+      title: "Mobile case workroom",
+      note: "Use this path for phones, tablets and app/account recovery contexts.",
+      prepare: ["Keep the device charged and available.", "Note the model, passcode availability and cloud/account status.", "Prepare screenshots of error messages if the device still opens."],
+      avoid: ["Do not factory reset the device.", "Do not keep guessing passcodes.", "Do not update or erase the phone before the lab confirms the path."],
+      transfer: "Send the device model and access situation. The lab will confirm if guidance, remote support or physical handling is appropriate."
+    }
+  }
+  : {
+    guided: {
+      title: "Espace de correction guidée",
+      note: "Utilisez ce parcours lorsque le laboratoire peut guider des actions sécuritaires avant une prise en charge plus lourde.",
+      prepare: ["Gardez l'appareil dans son état actuel sauf consigne contraire.", "Préparez captures, messages d'erreur, avis de compte ou noms de fichiers.", "Notez ce qui a changé juste avant l'apparition du problème."],
+      avoid: ["N'installez pas d'utilitaires de récupération au hasard.", "Ne réinitialisez pas, ne réinstallez pas et n'écrasez pas les données touchées.", "N'envoyez pas de mots de passe par clavardage ou courriel."],
+      transfer: "Envoyez d'abord les symptômes et captures. Si une assistance à distance est utile, NEXURADATA confirme une session supervisée avec votre consentement."
+    },
+    media: {
+      title: "Espace d'intervention support",
+      note: "Utilisez ce parcours pour disques, SSD, clés USB et cartes mémoire.",
+      prepare: ["Cessez immédiatement d'utiliser le support.", "Identifiez le support avec le numéro de dossier.", "Préparez le câble, boîtier ou adaptateur si cela fait partie du problème."],
+      avoid: ["Ne lancez pas d'outil de réparation, formatage ou vérification disque.", "N'ouvrez pas le boîtier du support.", "Ne rebranchez pas en boucle un média qui clique, décroche ou chauffe."],
+      transfer: "Envoyez une note courte avec le modèle et les symptômes. Le laboratoire confirme dépôt, expédition ou préparation à distance."
+    },
+    raid: {
+      title: "Espace continuité d'activité",
+      note: "Utilisez ce parcours pour RAID, NAS, serveurs et incidents qui bloquent les opérations.",
+      prepare: ["Listez le nombre de disques et les positions ou étiquettes visibles.", "Exportez des captures de la console de stockage si elle est accessible.", "Indiquez le dernier état sain connu et toute tentative de reconstruction."],
+      avoid: ["Ne reconstruisez pas, n'initialisez pas et ne remplacez pas des disques à l'aveugle.", "Ne forcez pas le montage en écriture.", "Ne changez pas l'ordre des disques."],
+      transfer: "Envoyez l'architecture et l'impact d'affaires. NEXURADATA confirme si la suite passe par revue distante, image disque ou laboratoire."
+    },
+    forensic: {
+      title: "Espace preuve et incident",
+      note: "Utilisez ce parcours lorsque la traçabilité, un litige, un assureur, RH ou un contexte juridique compte.",
+      prepare: ["Préservez l'appareil ou le compte dans son état original.", "Rédigez une chronologie des événements et parties impliquées.", "Rassemblez numéros de référence, notes d'assureur ou contexte de mandat."],
+      avoid: ["Ne modifiez pas, ne nettoyez pas et ne réorganisez pas la preuve.", "Ne partagez pas de matériel sensible par des canaux informels.", "Ne laissez pas plusieurs personnes manipuler le même support sans suivi."],
+      transfer: "Envoyez d'abord le contexte. NEXURADATA confirme la méthode de transmission contrôlée et la limite de traitement probatoire."
+    },
+    mobile: {
+      title: "Espace dossier mobile",
+      note: "Utilisez ce parcours pour téléphones, tablettes et récupération liée aux apps ou comptes.",
+      prepare: ["Gardez l'appareil chargé et disponible.", "Notez le modèle, l'accès au code et l'état des comptes infonuagiques.", "Préparez les captures d'erreur si l'appareil s'ouvre encore."],
+      avoid: ["Ne réinitialisez pas l'appareil.", "Ne multipliez pas les essais de code.", "Ne mettez pas à jour et n'effacez pas le téléphone avant validation."],
+      transfer: "Envoyez le modèle et la situation d'accès. Le laboratoire confirme si la suite passe par guidage, assistance distante ou manipulation physique."
+    }
+  };
+
+const getWorkroomType = (support = "") => {
+  const normalized = `${support}`.toLowerCase();
+
+  if (normalized.includes("raid") || normalized.includes("nas") || normalized.includes("serveur") || normalized.includes("server")) {
+    return "raid";
+  }
+
+  if (normalized.includes("forensique") || normalized.includes("preuve") || normalized.includes("juridique") || normalized.includes("forensic") || normalized.includes("evidence") || normalized.includes("legal")) {
+    return "forensic";
+  }
+
+  if (normalized.includes("téléphone") || normalized.includes("telephone") || normalized.includes("mobile") || normalized.includes("phone")) {
+    return "mobile";
+  }
+
+  if (normalized.includes("disque") || normalized.includes("drive") || normalized.includes("ssd") || normalized.includes("usb") || normalized.includes("carte") || normalized.includes("memory")) {
+    return "media";
+  }
+
+  return "guided";
+};
+
+const hasWorkroomAccess = (record) => {
+  const authorization = record.authorization || {};
+  const payments = Array.isArray(record.payments) ? record.payments : [];
+  return Boolean(authorization.approved) || payments.some((payment) => payment.status === "paid");
+};
+
+const renderListItems = (target, items) => {
+  if (!target) return;
+  target.replaceChildren(...items.map((text) => {
+    const item = document.createElement("li");
+    item.textContent = text;
+    return item;
+  }));
+};
+
+const renderWorkroom = (record, statusPanel) => {
+  const section = statusPanel?.querySelector("[data-workroom-section]");
+
+  if (!section) return;
+
+  const type = getWorkroomType(record.support);
+  const copy = workroomCopy[type] || workroomCopy.guided;
+  const unlocked = hasWorkroomAccess(record);
+  const titleTarget = section.querySelector("[data-workroom-title]");
+  const noteTarget = section.querySelector("[data-workroom-note]");
+  const statusTarget = section.querySelector("[data-workroom-status]");
+  const prepareTarget = section.querySelector("[data-workroom-prepare]");
+  const avoidTarget = section.querySelector("[data-workroom-avoid]");
+  const transferTarget = section.querySelector("[data-workroom-transfer]");
+  const mailLink = section.querySelector("[data-workroom-mail]");
+
+  section.hidden = false;
+  section.classList.toggle("is-locked", !unlocked);
+
+  if (titleTarget) titleTarget.textContent = copy.title;
+  if (noteTarget) noteTarget.textContent = copy.note;
+  if (statusTarget) {
+    statusTarget.textContent = unlocked ? publicI18n.workroomOpen : publicI18n.workroomAwaiting;
+  }
+
+  renderListItems(prepareTarget, copy.prepare);
+  renderListItems(avoidTarget, unlocked ? copy.avoid : [publicI18n.workroomLocked, ...copy.avoid]);
+
+  if (transferTarget) transferTarget.textContent = copy.transfer;
+
+  if (mailLink) {
+    const subject = publicI18n.workroomMailSubject(record.caseId || "");
+    const body = [
+      record.caseId ? `Case / dossier: ${record.caseId}` : "",
+      record.support ? `Support: ${record.support}` : "",
+      "",
+      isEnglishDocument
+        ? "I am ready for the next guided action. Please confirm the safest path, including remote assistance if appropriate."
+        : "Je suis prêt pour la prochaine action guidée. Merci de confirmer le parcours le plus sûr, incluant l'assistance distante si appropriée."
+    ].filter(Boolean).join("\n");
+    mailLink.href = `mailto:contact@nexuradata.ca?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    mailLink.textContent = isEnglishDocument
+      ? (unlocked ? "Request guided or remote assistance" : "Ask what is needed next")
+      : (unlocked ? "Demander guidage ou assistance distante" : "Demander la suite requise");
+  }
 };
 
 const renderStatusRecord = (record, statusPanel) => {
@@ -686,6 +1053,9 @@ const renderStatusRecord = (record, statusPanel) => {
   if (supportTarget) supportTarget.textContent = record.support;
   if (nextTarget) nextTarget.textContent = record.nextStep;
   if (summaryTarget) summaryTarget.textContent = record.summary;
+
+  renderAuthorizationState(record, statusPanel);
+  renderWorkroom(record, statusPanel);
 
   if (paymentsSection && paymentsTarget) {
     const payments = Array.isArray(record.payments) ? record.payments : [];
@@ -727,6 +1097,9 @@ if (intakeForm) {
       telephone: `${formData.get("telephone") || ""}`.trim(),
       support: `${formData.get("support") || ""}`.trim(),
       urgence: `${formData.get("urgence") || ""}`.trim(),
+      profil: `${formData.get("profil") || ""}`.trim(),
+      impact: `${formData.get("impact") || ""}`.trim(),
+      sensibilite: `${formData.get("sensibilite") || ""}`.trim(),
       message: `${formData.get("message") || ""}`.trim(),
       consentement: formData.get("consentement") === "on",
       website: `${formData.get("website") || ""}`.trim(),
@@ -791,9 +1164,14 @@ const statusForm = document.querySelector("[data-status-form]");
 if (statusForm) {
   const messageTarget = statusForm.querySelector("[data-status-form-message]");
   const statusPanel = document.querySelector("[data-status-panel]");
+  const authorizationForm = document.querySelector("[data-authorization-form]");
+  const authorizationMessage = authorizationForm?.querySelector("[data-authorization-message]");
+  const authorizationEndpoint = authorizationForm?.getAttribute("data-authorization-endpoint") || "/api/authorization";
+  const authorizationSubmitButton = authorizationForm?.querySelector('button[type="submit"]');
   const endpoint = statusForm.getAttribute("data-status-endpoint") || "/api/status";
   const submitButton = statusForm.querySelector('button[type="submit"]');
   const isLocalPreview = window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  let currentStatusRecord = null;
 
   const demoCases = {
     "NX-2026-0412|MONTREAL24": {
@@ -819,6 +1197,92 @@ if (statusForm) {
     accessCodeField.focus();
   }
 
+  if (authorizationForm) {
+    authorizationForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (!authorizationForm.checkValidity() || !currentStatusCredentials) {
+        authorizationForm.reportValidity();
+        setMessage(authorizationMessage, "error", publicI18n.authorizationRequired);
+        return;
+      }
+
+      const formData = new FormData(authorizationForm);
+      const signerName = `${formData.get("signerName") || ""}`.trim();
+      const consent = formData.get("consent") === "on";
+
+      if (isLocalPreview && currentStatusRecord) {
+        const timestamp = new Date().toISOString();
+        const updatedRecord = {
+          ...currentStatusRecord,
+          status: isEnglishDocument ? "Intervention authorized" : "Intervention autorisée",
+          updatedAt: timestamp,
+          nextStep: isEnglishDocument
+            ? "NEXURADATA prepares the confirmed instructions and treatment sequence."
+            : "NEXURADATA prépare les consignes et la séquence de traitement confirmées.",
+          summary: isEnglishDocument
+            ? "Authorization has been received. The lab can continue according to the transmitted scope."
+            : "Votre autorisation a été reçue. Le laboratoire peut poursuivre selon le cadre transmis.",
+          authorization: {
+            ...(currentStatusRecord.authorization || {}),
+            available: true,
+            approved: true,
+            quoteStatus: "approved",
+            quoteApprovedAt: timestamp
+          },
+          steps: [
+            ...(currentStatusRecord.steps || []).map((step) => ({ ...step, state: step.state === "active" ? "complete" : step.state })),
+            {
+              title: isEnglishDocument ? "Authorization received" : "Autorisation reçue",
+              note: isEnglishDocument ? `Confirmed by ${signerName}.` : `Confirmée par ${signerName}.`,
+              state: "active"
+            }
+          ]
+        };
+
+        currentStatusRecord = updatedRecord;
+        renderStatusRecord(updatedRecord, statusPanel);
+        authorizationForm.reset();
+        setMessage(authorizationMessage, "success", publicI18n.authorizationSuccess);
+        return;
+      }
+
+      setButtonBusy(authorizationSubmitButton, true, publicI18n.authorizationBusy);
+      setMessage(authorizationMessage, "success", publicI18n.authorizationSending);
+
+      try {
+        const response = await fetch(authorizationEndpoint, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            accept: "application/json"
+          },
+          body: JSON.stringify({
+            caseId: currentStatusCredentials.caseId,
+            accessCode: currentStatusCredentials.accessCode,
+            signerName,
+            consent
+          })
+        });
+        const data = await parseJsonResponse(response);
+
+        if (response.ok && data?.ok) {
+          currentStatusRecord = data;
+          renderStatusRecord(data, statusPanel);
+          authorizationForm.reset();
+          setMessage(authorizationMessage, "success", publicI18n.authorizationSuccess);
+          return;
+        }
+
+        setMessage(authorizationMessage, "error", data?.message || publicI18n.authorizationError);
+      } catch {
+        setMessage(authorizationMessage, "error", publicI18n.authorizationOffline);
+      } finally {
+        setButtonBusy(authorizationSubmitButton, false);
+      }
+    });
+  }
+
   statusForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -841,6 +1305,9 @@ if (statusForm) {
           statusPanel.hidden = true;
         }
 
+        currentStatusCredentials = null;
+        currentStatusRecord = null;
+
         setMessage(
           messageTarget,
           "error",
@@ -849,6 +1316,8 @@ if (statusForm) {
         return;
       }
 
+      currentStatusCredentials = { caseId: dossier, accessCode: code };
+      currentStatusRecord = record;
       renderStatusRecord(record, statusPanel);
       setMessage(messageTarget, "success", publicI18n.statusFound);
       return;
@@ -872,6 +1341,8 @@ if (statusForm) {
       const data = await parseJsonResponse(response);
 
       if (response.ok && data?.ok) {
+        currentStatusCredentials = { caseId: dossier, accessCode: code };
+        currentStatusRecord = data;
         renderStatusRecord(data, statusPanel);
         setMessage(messageTarget, "success", publicI18n.statusFound);
         return;
@@ -880,6 +1351,9 @@ if (statusForm) {
       if (statusPanel) {
         statusPanel.hidden = true;
       }
+
+      currentStatusCredentials = null;
+      currentStatusRecord = null;
 
       setMessage(
         messageTarget,
@@ -890,6 +1364,9 @@ if (statusForm) {
       if (statusPanel) {
         statusPanel.hidden = true;
       }
+
+      currentStatusCredentials = null;
+      currentStatusRecord = null;
 
       setMessage(messageTarget, "error", publicI18n.statusOffline);
     } finally {
@@ -1718,7 +2195,7 @@ if (opsViewRoot) {
     if (!viewTbody) return;
 
     if (!items || items.length === 0) {
-      viewTbody.innerHTML = '<tr><td colspan="8" class="ops-view-empty">Aucune soumission correspondante.</td></tr>';
+      viewTbody.innerHTML = '<tr><td colspan="9" class="ops-view-empty">Aucun travail demandé ou approuvé.</td></tr>';
       return;
     }
 
@@ -1741,6 +2218,7 @@ if (opsViewRoot) {
           <td>${reminderLabel}</td>
           <td class="ops-view-muted">${escapeHtml(item.nextStep || "")}</td>
         `;
+        tr.insertAdjacentHTML("beforeend", `<td><a href="${caseLink(item.caseId)}" class="button button-secondary button-small">Ouvrir</a></td>`);
         return tr;
       })
     );

@@ -46,7 +46,7 @@
           <img src="/assets/icons/logo-petit.svg" alt="NEXURA DATA" class="brand-logo" width="200" height="24" translate="no">
         </a>
         <div class="nav-links">
-          <a href="/en/forensique-numerique-montreal.html">Services</a>
+          <a href="/en/services-recuperation-forensique-montreal.html">Services</a>
           <a href="/en/tarifs-recuperation-donnees-montreal.html">Pricing</a>
           <a href="/en/politique-confidentialite.html">Privacy</a>
           <a href="/en/conditions-intervention-paiement.html">Terms</a>
@@ -126,6 +126,33 @@
           <p><strong>Next step:</strong> <span data-status-next></span></p>
         </div>
         <p class="status-summary" data-status-summary></p>
+        <section class="status-section authorization-request" data-authorization-section hidden>
+          <div class="status-section-head">
+            <div>
+              <p class="guide-meta">Authorization</p>
+              <h3>Approve the intervention request</h3>
+            </div>
+            <p class="status-section-note" data-authorization-note>Authorization is required before the work continues.</p>
+          </div>
+          <div class="authorization-summary">
+            <p><strong>Authorized amount:</strong> <span data-authorization-amount></span></p>
+            <p><strong>Status:</strong> <span data-authorization-state></span></p>
+          </div>
+          <form class="authorization-form" data-authorization-form data-authorization-endpoint="/api/authorization" novalidate>
+            <label class="field">
+              <span>Name of the person authorizing</span>
+              <input type="text" name="signerName" autocomplete="name" required>
+            </label>
+            <label class="consent-check">
+              <input type="checkbox" name="consent" required>
+              <span>I authorize NEXURADATA to continue the intervention according to the provided scope, including the instructions, handling steps or treatment actions required for the case.</span>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="button button-primary">Approve authorization</button>
+            </div>
+            <p class="form-status" data-authorization-message aria-live="polite"></p>
+          </form>
+        </section>
         <section class="status-section" data-status-payments-section hidden>
           <div class="status-section-head">
             <div>
@@ -135,6 +162,31 @@
             <p class="status-section-note">When a deposit or balance is open for this case, it appears here with its status.</p>
           </div>
           <div class="status-payment-list" data-status-payments></div>
+        </section>
+        <section class="status-section client-workroom" data-workroom-section hidden>
+          <div class="status-section-head">
+            <div>
+              <p class="guide-meta">Workroom</p>
+              <h3 data-workroom-title>Guided next actions</h3>
+            </div>
+            <p class="status-section-note" data-workroom-note>NEXURADATA shows the useful path here once the case has been qualified.</p>
+          </div>
+          <div class="workroom-status" data-workroom-status></div>
+          <div class="workroom-grid">
+            <article class="workroom-card">
+              <h4>Prepare</h4>
+              <ul data-workroom-prepare></ul>
+            </article>
+            <article class="workroom-card">
+              <h4>Avoid</h4>
+              <ul data-workroom-avoid></ul>
+            </article>
+            <article class="workroom-card workroom-card-wide">
+              <h4>Transfer</h4>
+              <p data-workroom-transfer></p>
+              <a class="button button-secondary button-small" data-workroom-mail href="mailto:contact@nexuradata.ca">Write to the lab</a>
+            </article>
+          </div>
         </section>
         <div class="status-timeline" data-status-timeline></div>
       </section>

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { onRequestPost as intakeHandler, onRequestOptions as intakeOptions } from "../../functions/api/intake.js";
 import { onRequestPost as statusHandler, onRequestOptions as statusOptions, onRequest as statusFallback } from "../../functions/api/status.js";
+import { onRequestPost as authorizationHandler, onRequestOptions as authorizationOptions, onRequest as authorizationFallback } from "../../functions/api/authorization.js";
 import { onRequestPost as webhookHandler } from "../../functions/api/stripe-webhook.js";
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -84,6 +85,42 @@ describe("POST /api/status", () => {
 
   it("fallback handler returns 405", async () => {
     const res = statusFallback();
+    expect(res.status).toBe(405);
+  });
+});
+
+// ─── authorization endpoint ────────────────────────────────
+
+describe("POST /api/authorization", () => {
+  it("returns 503 when DATABASE_URL is not configured", async () => {
+    const ctx = makeContext({}, {});
+    ctx.request = new Request("https://nexuradata.ca/api/authorization", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({})
+    });
+    const res = await authorizationHandler(ctx);
+    expect(res.status).toBe(503);
+  });
+
+  it("returns 503 when ACCESS_CODE_SECRET is missing", async () => {
+    const ctx = makeContext({}, { DATABASE_URL: "postgresql://test" });
+    ctx.request = new Request("https://nexuradata.ca/api/authorization", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({})
+    });
+    const res = await authorizationHandler(ctx);
+    expect(res.status).toBe(503);
+  });
+
+  it("OPTIONS handler returns 204", () => {
+    const res = authorizationOptions({ env: {} });
+    expect(res.status).toBe(204);
+  });
+
+  it("fallback handler returns 405", async () => {
+    const res = authorizationFallback();
     expect(res.status).toBe(405);
   });
 });

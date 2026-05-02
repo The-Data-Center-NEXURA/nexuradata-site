@@ -102,28 +102,87 @@
     </div>
   </header>
 
-  <main id="contenu" class="page-shell">
+  <main id="contenu" class="page-shell pricing-shell">
     <div class="container">
       <header class="page-hero">
         <p class="eyebrow">Tarifs indicatifs</p>
-        <h1>Prix de départ pour les cas simples</h1>
+        <h1>Choisir un parcours d'intervention</h1>
         <p class="page-intro">
-          Cette grille sert à donner un ordre de grandeur clair pour les demandes simples et fréquentes.
-          Les cas techniques, les supports gravement endommagés, les environnements RAID ou serveurs et
-          les dossiers sensibles sont toujours traités sur soumission.
+          Le prix dépend du niveau de risque. Commencez par le parcours, puis NEXURADATA confirme le cadre,
+          le paiement et les actions assistées à transmettre.
         </p>
       </header>
+
+      <section class="paid-path-app page-card" data-paid-path-app data-locale="fr" aria-labelledby="paid-path-title">
+        <div class="paid-path-copy">
+          <p class="eyebrow">Intervention payante</p>
+          <h2 id="paid-path-title">Vous payez pour gagner du temps, pas pour deviner le problème.</h2>
+          <p>
+            Le principe est clair: vous envoyez le contexte utile, NEXURADATA qualifie le dossier, puis vous recevez
+            après paiement le bon parcours: instructions assistées par IA, liste de fichiers à transmettre,
+            vérifications à faire, ou prise en charge laboratoire quand l'action à distance serait risquée.
+          </p>
+        </div>
+
+        <form class="paid-path-controls" data-paid-path-form>
+          <label>
+            <span>Besoin principal</span>
+            <select name="objective">
+              <option value="guided">Aide guidée pour corriger un problème logiciel ou restaurer proprement</option>
+              <option value="recovery">Récupération de données avec support à analyser</option>
+              <option value="forensic">Incident, preuve, litige ou dossier sensible</option>
+              <option value="enterprise">Entreprise, RAID, serveur, NAS ou interruption d'activité</option>
+            </select>
+          </label>
+          <label>
+            <span>Ce que vous pouvez envoyer</span>
+            <select name="material">
+              <option value="screens">Captures, symptômes, journaux, liste de fichiers ou contexte</option>
+              <option value="device">Support physique, disque, SSD, USB, téléphone ou carte mémoire</option>
+              <option value="system">Informations système, RAID/NAS/serveur, sauvegardes ou architecture</option>
+              <option value="evidence">Éléments de preuve, chronologie, parties impliquées ou mandat</option>
+            </select>
+          </label>
+          <label>
+            <span>Temps visé</span>
+            <select name="urgency">
+              <option value="standard">Standard: réponse structurée</option>
+              <option value="priority">Prioritaire: décision rapide</option>
+              <option value="critical">Critique: opérations, client ou dossier juridique bloqué</option>
+            </select>
+          </label>
+        </form>
+
+        <aside class="paid-path-result" data-paid-path-result aria-live="polite">
+          <p class="pricing-kicker" data-paid-path-label>Parcours recommandé</p>
+          <h3 data-paid-path-title>Revue guidée payante</h3>
+          <p class="price-tag" data-paid-path-price>À partir de 149 $</p>
+          <p data-paid-path-summary>
+            Après paiement, NEXURADATA vous envoie une séquence d'actions assistées, les éléments à transmettre
+            et les limites à respecter pour éviter d'aggraver la perte.
+          </p>
+          <ul class="paid-path-steps" data-paid-path-steps>
+            <li>Payer la revue initiale.</li>
+            <li>Envoyer les captures, symptômes ou fichiers demandés.</li>
+            <li>Recevoir les outils, consignes et prochaines actions validées.</li>
+          </ul>
+          <div class="page-links paid-path-actions">
+            <a class="button button-primary" href="index.html#contact" data-paid-path-start>Ouvrir une demande payante</a>
+            <a class="button button-secondary" href="suivi-dossier-client-montreal.html">J'ai déjà un dossier</a>
+          </div>
+        </aside>
+      </section>
 
       <div class="pricing-grid">
         <section class="page-card pricing-card">
           <p class="pricing-kicker">Cas courant</p>
           <h2>Fichiers supprimés</h2>
           <p class="price-tag">À partir de 79 $</p>
-          <p>Suppression accidentelle, corbeille vidée, dossier disparu, récupération simple sans dommage physique apparent.</p>
+          <p>Suppression accidentelle, corbeille vidée, dossier disparu, récupération ciblée sans dommage physique apparent.</p>
         </section>
 
         <section class="page-card pricing-card">
-          <p class="pricing-kicker">Support simple</p>
+          <p class="pricing-kicker">Support lisible</p>
           <h2>Disque externe, USB, carte mémoire</h2>
           <p class="price-tag">À partir de 129 $</p>
           <p>Support encore détecté ou accessible partiellement, lecture instable, récupération de photos, vidéos ou documents usuels.</p>

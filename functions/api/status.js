@@ -40,7 +40,8 @@ export const onRequestPost = async (context) => {
       nextStep: detail.nextStep,
       summary: detail.summary,
       steps: detail.steps,
-      payments: detail.payments
+      payments: detail.payments,
+      authorization: detail.authorization
     });
   } catch (error) {
     console.error("status lookup error:", error);

@@ -14,6 +14,7 @@ const rootFiles = new Set([
   ".nojekyll",
   "robots.txt",
   "site.webmanifest",
+  "merchant-feed.xml",
   "sitemap.xml"
 ]);
 

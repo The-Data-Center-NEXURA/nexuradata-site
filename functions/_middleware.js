@@ -11,11 +11,6 @@ const BLOCKED_UA_FRAGMENTS = [
     "nikto",
     "masscan",
     "zgrab",
-    // Raw scripted clients (no real browser sends these bare)
-    "python-requests",
-    "curl/",
-    "go-http-client",
-    "libwww-perl",
     // Scraping frameworks
     "scrapy",
     // Aggressive SEO crawlers

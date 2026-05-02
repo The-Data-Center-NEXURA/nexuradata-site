@@ -90,7 +90,7 @@
           <img src="/assets/icons/logo-petit.svg" alt="NEXURA DATA" class="brand-logo" width="200" height="24" translate="no">
         </a>
         <div class="nav-links">
-          <a href="/en/forensique-numerique-montreal.html">Services</a>
+          <a href="/en/services-recuperation-forensique-montreal.html">Services</a>
           <a href="/en/tarifs-recuperation-donnees-montreal.html">Pricing</a>
           <a href="/en/politique-confidentialite.html">Privacy</a>
           <a href="/en/conditions-intervention-paiement.html">Terms</a>
@@ -100,25 +100,86 @@
       </nav>
     </div>
   </header>
-  <main id="content" class="page-shell">
+  <main id="content" class="page-shell pricing-shell">
     <div class="container">
       <header class="page-hero">
         <p class="eyebrow">Indicative pricing</p>
-        <h1>Starting prices for common cases</h1>
+        <h1>Choose an intervention path</h1>
         <p class="page-intro">
-          This grid gives a public baseline for simple and frequent requests. Technical cases, heavily
-          damaged media, RAID or server environments and sensitive matters are always quoted individually.
+          Pricing depends on risk. Start with the path, then NEXURADATA confirms the scope, payment and
+          assisted actions to send.
         </p>
       </header>
+
+      <section class="paid-path-app page-card" data-paid-path-app data-locale="en" aria-labelledby="paid-path-title">
+        <div class="paid-path-copy">
+          <p class="eyebrow">Paid intervention</p>
+          <h2 id="paid-path-title">You pay to save time, not to guess the problem.</h2>
+          <p>
+            The principle is clear: you send the useful context, NEXURADATA qualifies the case, then after payment
+            you receive the right path: AI-assisted instructions, the file list to send, checks to perform, or
+            lab handling when remote action would create more risk.
+          </p>
+        </div>
+
+        <form class="paid-path-controls" data-paid-path-form>
+          <label>
+            <span>Main need</span>
+            <select name="objective">
+              <option value="guided">Guided help to fix a software issue or restore cleanly</option>
+              <option value="recovery">Data recovery with media to assess</option>
+              <option value="forensic">Incident, evidence, litigation or sensitive matter</option>
+              <option value="enterprise">Business, RAID, server, NAS or operational interruption</option>
+            </select>
+          </label>
+          <label>
+            <span>What you can send</span>
+            <select name="material">
+              <option value="screens">Screenshots, symptoms, logs, file list or context</option>
+              <option value="device">Physical media, drive, SSD, USB, phone or memory card</option>
+              <option value="system">System details, RAID/NAS/server, backups or architecture</option>
+              <option value="evidence">Evidence, timeline, involved parties or mandate context</option>
+            </select>
+          </label>
+          <label>
+            <span>Target timing</span>
+            <select name="urgency">
+              <option value="standard">Standard: structured response</option>
+              <option value="priority">Priority: fast decision</option>
+              <option value="critical">Critical: operations, client or legal matter blocked</option>
+            </select>
+          </label>
+        </form>
+
+        <aside class="paid-path-result" data-paid-path-result aria-live="polite">
+          <p class="pricing-kicker" data-paid-path-label>Recommended path</p>
+          <h3 data-paid-path-title>Paid guided review</h3>
+          <p class="price-tag" data-paid-path-price>From $149</p>
+          <p data-paid-path-summary>
+            After payment, NEXURADATA sends the assisted action sequence, the items to provide and the limits
+            to respect so the situation is not made worse.
+          </p>
+          <ul class="paid-path-steps" data-paid-path-steps>
+            <li>Pay for the initial review.</li>
+            <li>Send the requested screenshots, symptoms or files.</li>
+            <li>Receive validated tools, instructions and next actions.</li>
+          </ul>
+          <div class="page-links paid-path-actions">
+            <a class="button button-primary" href="/en/#contact" data-paid-path-start>Open a paid request</a>
+            <a class="button button-secondary" href="/en/suivi-dossier-client-montreal.html">I already have a case</a>
+          </div>
+        </aside>
+      </section>
+
       <div class="pricing-grid">
         <section class="page-card pricing-card">
           <p class="pricing-kicker">Common case</p>
           <h2>Deleted files</h2>
           <p class="price-tag">From $79</p>
-          <p>Accidental deletion, emptied recycle bin, missing folder, simple recovery with no apparent physical damage.</p>
+          <p>Accidental deletion, emptied recycle bin, missing folder, standard recovery with no apparent physical damage.</p>
         </section>
         <section class="page-card pricing-card">
-          <p class="pricing-kicker">Simple media</p>
+          <p class="pricing-kicker">Readable media</p>
           <h2>External drive, USB, memory card</h2>
           <p class="price-tag">From $129</p>
           <p>Media still detected or partly readable, unstable access, recovery of photos, videos or common documents.</p>
@@ -172,7 +233,7 @@
             <li>They may vary based on actual media condition, urgency and prior attempts.</li>
           </ul>
           <p>
-            The prices shown on this page are provided as indicative figures for common cases and do not
+            The prices shown on this page are provided as indicative figures for priority case types and do not
             replace a technical assessment of the device or actual situation. The final price, applicable
             taxes, delivery or courier fees where relevant, any required deposits and the payment terms
             are confirmed in writing before any final authorization or payment.
