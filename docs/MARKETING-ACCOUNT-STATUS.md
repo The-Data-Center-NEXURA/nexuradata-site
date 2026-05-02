@@ -29,6 +29,12 @@ This file is the single-page tracker for Google and Facebook/Meta launch readine
 
 These cannot be verified from the repository. They must be completed in Google, Meta and Cloudflare dashboards.
 
+## Production follow-up
+
+- [ ] Push and deploy the latest local commits so production CSP matches `_headers`.
+- [ ] Recheck production CSP for `https://connect.facebook.net`, `https://www.facebook.com` and `https://www.googletagmanager.com` image beacon allowance after deployment.
+- [ ] Confirm Meta Events Manager receives Pixel `751859640106935` PageView, Contact and Lead events after deployment.
+
 ### Google
 
 - [ ] Search Console domain property for `nexuradata.ca` verified via DNS TXT
