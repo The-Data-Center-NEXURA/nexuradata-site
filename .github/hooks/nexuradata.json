@@ -1,0 +1,55 @@
+{
+    "hooks": {
+        "SessionStart": [
+            {
+                "type": "command",
+                "command": "./scripts/hooks/session-briefing.sh",
+                "timeout": 5
+            },
+            {
+                "type": "command",
+                "command": "./scripts/hooks/google-daily-sync.sh",
+                "timeout": 5
+            }
+        ],
+        "PreToolUse": [
+            {
+                "type": "command",
+                "command": "./scripts/hooks/block-build-output.sh",
+                "timeout": 5
+            },
+            {
+                "type": "command",
+                "command": "./scripts/hooks/secret-leak-guard.sh",
+                "timeout": 5
+            },
+            {
+                "type": "command",
+                "command": "./scripts/hooks/gate-destructive-commands.sh",
+                "timeout": 5
+            },
+            {
+                "type": "command",
+                "command": "./scripts/hooks/push-confirmation-gate.sh",
+                "timeout": 5
+            },
+            {
+                "type": "command",
+                "command": "./scripts/hooks/build-before-commit.sh",
+                "timeout": 5
+            },
+            {
+                "type": "command",
+                "command": "./scripts/hooks/bilingual-parity-warn.sh",
+                "timeout": 5
+            }
+        ],
+        "PostToolUse": [
+            {
+                "type": "command",
+                "command": "./scripts/hooks/auto-build.sh",
+                "timeout": 60
+            }
+        ]
+    }
+}

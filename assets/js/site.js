@@ -235,6 +235,13 @@ if (footerNote) {
   footerNote.insertAdjacentElement("afterend", copyrightDiv);
 }
 
+// Public header logo — normalize to the locked master asset on public pages.
+document.querySelectorAll(".site-nav .brand-logo").forEach((logo) => {
+  if (logo.getAttribute("src")?.includes("logo-petit.svg")) {
+    logo.setAttribute("src", "/assets/nexuradata-master.svg");
+  }
+});
+
 const revealElements = document.querySelectorAll("[data-reveal]");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
