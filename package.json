@@ -2,7 +2,7 @@
   "name": "nexuradata-site",
   "private": true,
   "config": {
-    "pagesProjectName": "nexuradata-site"
+    "pagesProjectName": "nexuradata"
   },
   "scripts": {
     "build": "node ./scripts/sync-release.mjs",

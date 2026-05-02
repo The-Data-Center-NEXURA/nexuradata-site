@@ -15,6 +15,9 @@ This file is the single-page tracker for Google and Facebook/Meta launch readine
 - [x] Email signature template uses locked `assets/nexuradata-signature.png`
 - [x] Facebook/Meta setup runbook exists at `docs/FACEBOOK-META-SETUP.md`
 - [x] Google setup runbook exists at `docs/GOOGLE-SETUP.md`
+- [x] Production deploy target confirmed as Cloudflare Pages project `nexuradata`
+- [x] `https://nexuradata.ca/merchant-feed.xml` returns 200 in production
+- [x] `https://nexuradata.ca/assets/icons/facebook-cover.png` returns 200 in production
 
 ## Account-side blockers
 

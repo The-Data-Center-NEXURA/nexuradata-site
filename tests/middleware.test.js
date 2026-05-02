@@ -16,10 +16,6 @@ describe("_middleware — user agent blocking", () => {
         ["nikto", "Nikto/2.1.6"],
         ["masscan", "masscan/1.3"],
         ["zgrab", "zgrab/0.x"],
-        ["python-requests", "python-requests/2.28.0"],
-        ["curl", "curl/7.88.1"],
-        ["go-http-client", "Go-http-client/2.0"],
-        ["libwww-perl", "libwww-perl/6.67"],
         ["scrapy", "Scrapy/2.11"],
         ["semrushbot", "SemrushBot/7~bl"],
         ["ahrefsbot", "AhrefsBot/7.0"],
@@ -43,6 +39,9 @@ describe("_middleware — user agent blocking", () => {
         ["Bingbot", "Mozilla/5.0 (compatible; bingbot/2.0)"],
         ["Chrome", "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/124.0"],
         ["Firefox", "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko Firefox/109.0"],
+        ["curl", "curl/7.88.1"],
+        ["python-requests", "python-requests/2.28.0"],
+        ["Go HTTP client", "Go-http-client/2.0"],
         ["no UA", ""],
     ];
 

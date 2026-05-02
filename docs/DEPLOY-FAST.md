@@ -1,6 +1,29 @@
 # Mise en ligne rapide
 
-## Recommandation pour ce depot: GitHub + Cloudflare Pages
+## Production actuelle: Cloudflare Pages Direct Upload
+
+Le domaine `nexuradata.ca` pointe vers le projet Cloudflare Pages **`nexuradata`** (`nexuradata.pages.dev`). Ce projet est actuellement publie par deploiement ad hoc / Direct Upload, pas par le workflow GitHub.
+
+Commande verifiee pour publier la production depuis ce depot:
+
+```bash
+npm run check
+npm run build
+npm test
+npx wrangler pages deploy ./release-cloudflare --project-name nexuradata --branch main
+```
+
+Apres un deploiement, verifier au minimum:
+
+```bash
+curl -I https://nexuradata.ca/
+curl -I https://nexuradata.ca/merchant-feed.xml
+curl -I https://nexuradata.ca/assets/icons/facebook-cover.png
+```
+
+Le workflow GitHub `deploy.yml` execute les controles, mais ne publie pas Cloudflare. Il ne remplace pas la commande Wrangler ci-dessus tant que le projet Cloudflare Pages n'est pas reconnecte a Git.
+
+## Option future recommandee: GitHub + Cloudflare Pages
 
 Le site est purement statique. La voie la plus stable est un repo GitHub prive connecte a Cloudflare Pages, avec `main` en production et `staging` en preview si vous voulez une branche de previsualisation.
 
