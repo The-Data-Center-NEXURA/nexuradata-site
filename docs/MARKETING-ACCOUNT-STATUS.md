@@ -31,9 +31,20 @@ These cannot be verified from the repository. They must be completed in Google, 
 
 ## Production follow-up
 
-- [ ] Push and deploy the latest local commits so production CSP matches `_headers`.
-- [ ] Recheck production CSP for `https://connect.facebook.net`, `https://www.facebook.com` and `https://www.googletagmanager.com` image beacon allowance after deployment.
+- [x] Push and deploy the latest local commits so production CSP matches `_headers`.
+- [x] Purge stale apex Cloudflare cache for `https://nexuradata.ca/`.
+- [x] Recheck production CSP for `https://connect.facebook.net`, `https://www.facebook.com` and `https://www.googletagmanager.com` image beacon allowance after deployment.
 - [ ] Confirm Meta Events Manager receives Pixel `751859640106935` PageView, Contact and Lead events after deployment.
+
+## Immediate revenue push
+
+- [x] Add direct phone CTAs to the French and English homepage hero and intake sections.
+- [x] Track phone, email and WhatsApp clicks as lead/contact intent for GA4 and Meta Pixel.
+- [ ] Publish the Facebook launch post with `assets/icons/contact-qr.png` and pin it.
+- [ ] Set the Facebook CTA button to the monitored contact path.
+- [ ] Submit `https://nexuradata.ca/sitemap.xml` in Search Console.
+- [ ] Create or verify Google Business Profile, then publish the first qualification post.
+- [ ] Confirm the phone line and `contact@nexuradata.ca` are monitored before turning on ads.
 
 ### Google
 
