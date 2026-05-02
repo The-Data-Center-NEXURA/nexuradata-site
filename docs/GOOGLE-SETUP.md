@@ -66,7 +66,7 @@ Pre-launch checklist for connecting NEXURADATA to Google. All properties must be
 
 ## 3. Google Merchant Center (already prepped)
 
-Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 with `g:` namespace).
+Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 with `g:` namespace). The current feed is French-first and points to the French public pages.
 
 1. Go to https://merchants.google.com → sign in as `olivier@nexuradata.ca`.
 2. **Create account** → business name `NEXURADATA`, country `Canada`, time zone `America/Montreal`.
@@ -79,7 +79,7 @@ Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 wit
    - Method: **Scheduled fetch**
    - URL: `https://nexuradata.ca/merchant-feed.xml`
    - Frequency: weekly, Monday 06:00 ET
-5. (Optional) Duplicate the feed for English — point at `https://nexuradata.ca/merchant-feed.xml` with language `English`. The current feed is FR-only; an EN feed can be added later as `merchant-feed-en.xml`.
+5. (Optional) Add a separate English feed later as `merchant-feed-en.xml` with English titles, descriptions and `/en/` links.
 
 ---
 
@@ -93,8 +93,31 @@ Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 wit
 6. Verification: postcard or video (Google's choice). Allow 5–14 days.
 7. After verification:
    - Add hours, services (mirror items in `tarifs-recuperation-donnees-montreal.html`).
-   - Upload logo + cover (use assets in `/assets/icons/`).
+   - Upload profile/logo image: `assets/icons/gbp-profile.png` (720 × 720).
+   - Upload cover/brand image: `assets/icons/social-banner.png` (1500 × 500).
    - Enable messaging only if someone monitors it daily.
+
+### Google profile branding fields
+
+Use these fields exactly unless operations have changed:
+
+- Public name: `NEXURADATA`
+- Primary category: `Data recovery service`
+- Website button / main landing page: `https://nexuradata.ca/`
+- Quote/contact landing page: `https://nexuradata.ca/#contact`
+- Services landing page: `https://nexuradata.ca/services-recuperation-forensique-montreal.html`
+- Pricing/intervention landing page: `https://nexuradata.ca/tarifs-recuperation-donnees-montreal.html`
+- Public email: `contact@nexuradata.ca`
+- Privacy email: `privacy@nexuradata.ca`
+- Phone: use only the confirmed public lab phone.
+
+Short description:
+
+```text
+NEXURADATA accompagne les dossiers de récupération de données, RAID, SSD, mobile et forensique numérique pour Montréal et le Grand Montréal. Les demandes sont qualifiées avant intervention, avec confidentialité, suivi par dossier et cadre de paiement ou d'autorisation clair.
+```
+
+Do not add a Facebook profile to structured data or Google public links until the Facebook Page is created, secured and controlled by NEXURADATA.
 
 ---
 

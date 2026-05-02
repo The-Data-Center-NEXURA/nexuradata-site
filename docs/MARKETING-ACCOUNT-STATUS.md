@@ -6,10 +6,13 @@ This file is the single-page tracker for Google and Facebook/Meta launch readine
 
 - [x] GA4 installed on public pages with Measurement ID `G-TC31YSS01P`
 - [x] CSP allows Google Tag Manager and Google Analytics
-- [x] Merchant Center feed exists at `merchant-feed.xml`
+- [x] Privacy policy discloses GA4 analytics use and Google opt-out
+- [x] Merchant Center feed exists at `merchant-feed.xml` with French-first service listings
 - [x] Google Business Profile asset exists at `assets/icons/gbp-profile.png`
+- [x] Google Business Profile landing pages and brand fields documented
 - [x] Facebook cover exists at `assets/icons/facebook-cover.png`
 - [x] Facebook/social profile assets exist at `assets/icons/social-profile.png` and `assets/icons/social-banner.png`
+- [x] Email signature template uses locked `assets/nexuradata-signature.png`
 - [x] Facebook/Meta setup runbook exists at `docs/FACEBOOK-META-SETUP.md`
 - [x] Google setup runbook exists at `docs/GOOGLE-SETUP.md`
 
@@ -31,7 +34,9 @@ These cannot be verified from the repository. They must be completed in Google, 
 
 ### Facebook / Meta
 
-- [ ] Facebook Page created or claimed as `NEXURADATA`
+- [x] Facebook Page exists as `NEXURADATA` at `https://www.facebook.com/nexuradata`
+- [x] Facebook URL restored to homepage structured data `sameAs`
+- [ ] Public unauthenticated Facebook Page visibility confirmed
 - [ ] Page category set to `Data Recovery Service`
 - [ ] Website, email and phone added
 - [ ] Profile image uploaded from `assets/icons/social-profile.png`

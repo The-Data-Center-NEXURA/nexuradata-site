@@ -2,7 +2,9 @@
 
 ## Current repo status
 
-Repo-side assets are ready, but the Facebook Page itself still has to be created or confirmed in Meta Business Suite.
+Repo-side assets are ready and the Facebook Page URL is confirmed as `https://www.facebook.com/nexuradata`.
+
+Public visibility still needs a final Meta-side check: an unauthenticated request may show Facebook's generic "content isn't available" page if the Page is unpublished, restricted, not fully set up, or only visible to logged-in users.
 
 Prepared assets:
 
@@ -119,6 +121,7 @@ After page creation:
 4. Set page notifications to an actively monitored inbox.
 5. Connect Instagram only if the account will be maintained.
 6. Do not launch ads until the website, phone, email and Google Business Profile are stable.
+7. Structured data `sameAs` entries already include `https://www.facebook.com/nexuradata`; keep them only if the Page remains controlled by NEXURADATA.
 
 ## 7. Verification and security
 
@@ -138,7 +141,8 @@ Optional later:
 
 ## Quick checklist
 
-- [ ] Facebook Page created or claimed
+- [x] Facebook Page created or claimed
+- [ ] Public unauthenticated visibility confirmed
 - [ ] Profile image uploaded
 - [ ] Cover image uploaded
 - [ ] Website, email and phone added
