@@ -1666,6 +1666,109 @@ select {
   font-family: var(--font-sans);
 }
 
+.paid-path-app {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(20rem, 1.1fr);
+  gap: clamp(1.2rem, 3vw, 2rem);
+  align-items: start;
+  margin-bottom: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.paid-path-copy h2,
+.paid-path-result h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.paid-path-copy h2 {
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+}
+
+.paid-path-copy p:last-child {
+  margin-bottom: 0;
+  color: var(--color-text-soft);
+}
+
+.paid-path-controls {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.paid-path-controls label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.paid-path-controls span {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.paid-path-controls select {
+  width: 100%;
+  min-height: 3.15rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(232, 228, 220, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(13, 13, 11, 0.96);
+  color: var(--color-text);
+}
+
+.paid-path-result {
+  position: relative;
+  padding: clamp(1rem, 2.5vw, 1.45rem);
+  border: 1px solid rgba(232, 228, 220, 0.16);
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 0.45rem;
+  background:
+    linear-gradient(135deg, rgba(232, 228, 220, 0.08), rgba(232, 228, 220, 0.018) 48%, rgba(13, 13, 11, 0.84)),
+    rgba(18, 18, 16, 0.98);
+  box-shadow: var(--shadow-soft);
+}
+
+.paid-path-result::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1.2rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(232, 228, 220, 0.52), rgba(232, 228, 220, 0.04));
+}
+
+.paid-path-result h3 {
+  margin-bottom: 0.75rem;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+}
+
+.paid-path-result > p:not(.pricing-kicker):not(.price-tag) {
+  color: var(--color-text-soft);
+}
+
+.paid-path-steps {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paid-path-steps li {
+  padding-left: 1rem;
+  border-left: 1px solid rgba(232, 228, 220, 0.18);
+  color: var(--color-text-soft);
+}
+
+.paid-path-actions {
+  margin-top: 1.2rem;
+  margin-bottom: 0;
+}
+
 .pricing-card p:last-child {
   margin-bottom: 0;
   color: var(--color-text-soft);
@@ -1682,6 +1785,42 @@ select {
   gap: 1.25rem;
   align-items: start;
   margin-bottom: 1.25rem;
+}
+
+.authorization-request {
+  border-color: rgba(232, 228, 220, 0.18);
+  background: linear-gradient(180deg, rgba(232, 228, 220, 0.045), rgba(13, 13, 11, 0.82));
+}
+
+.authorization-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.authorization-summary p {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(232, 228, 220, 0.1);
+  border-radius: var(--radius-sm) var(--radius-sm) var(--radius-sm) 0.35rem;
+  background: rgba(13, 13, 11, 0.64);
+  color: var(--color-text-soft);
+}
+
+.authorization-summary strong {
+  display: block;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.authorization-form {
+  display: grid;
+  gap: 1rem;
 }
 
 .status-gate {
@@ -2680,7 +2819,8 @@ select {
   .tactical-grid,
   .authority-grid,
   .contact-layout,
-  .status-layout {
+  .status-layout,
+  .paid-path-app {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     margin-top: 1.9rem;
@@ -2981,6 +3121,10 @@ select {
   .process-grid,
   .tier-grid,
   .cert-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .authorization-summary {
     grid-template-columns: 1fr;
   }
 

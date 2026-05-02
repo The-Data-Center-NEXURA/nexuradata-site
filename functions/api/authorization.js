@@ -1,35 +1,26 @@
-import { getPublicCaseByCredentials, validateStatusLookup } from "../_lib/cases.js";
+import { approveCaseAuthorization } from "../_lib/cases.js";
 import { json, methodNotAllowed, onOptions, parsePayload } from "../_lib/http.js";
 import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 
-const genericErrorMessage = "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour.";
+const genericErrorMessage = "L'autorisation n'a pas pu être confirmée. Vérifiez le dossier ou demandez une mise à jour.";
 
 export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
-  const limit = checkRateLimit(context.request, 10);
+  const limit = checkRateLimit(context.request, 8);
   if (!limit.allowed) return tooManyRequests(limit.retryAfter);
 
   try {
     if (!context.env?.DATABASE_URL) {
       return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
     }
+
     if (!context.env?.ACCESS_CODE_SECRET) {
       return json({ ok: false, message: "Service temporairement indisponible." }, { status: 503 });
     }
-    const payload = await parsePayload(context.request);
-    const { caseId, accessCode } = validateStatusLookup(payload);
-    const detail = await getPublicCaseByCredentials(context.env, caseId, accessCode);
 
-    if (!detail) {
-      return json(
-        {
-          ok: false,
-          message: genericErrorMessage
-        },
-        { status: 404 }
-      );
-    }
+    const payload = await parsePayload(context.request);
+    const detail = await approveCaseAuthorization(context.env, payload);
 
     return json({
       ok: true,
@@ -44,11 +35,11 @@ export const onRequestPost = async (context) => {
       authorization: detail.authorization
     });
   } catch (error) {
-    console.error("status lookup error:", error);
+    console.error("authorization approval error:", error);
     return json(
       {
         ok: false,
-        message: genericErrorMessage
+        message: error instanceof Error ? error.message : genericErrorMessage
       },
       { status: 400 }
     );

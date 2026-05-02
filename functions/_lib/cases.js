@@ -168,6 +168,31 @@ export const validateStatusLookup = (payload) => {
   };
 };
 
+export const validateAuthorizationApproval = (payload) => {
+  const caseId = normalizeCaseId(payload.caseId || payload.dossier);
+  const accessCode = normalizeAccessCode(payload.accessCode || payload.code);
+  const signerName = normalizeText(payload.signerName || payload.nom || payload.name, 120);
+  const consent = payload.consent === true || payload.consent === "true" || payload.consent === "on";
+
+  if (!caseId || !accessCode) {
+    throw new Error("Entrez un numéro de dossier et un code d'accès valides.");
+  }
+
+  if (!signerName) {
+    throw new Error("Inscrivez le nom de la personne qui autorise l'intervention.");
+  }
+
+  if (!consent) {
+    throw new Error("Confirmez l'autorisation avant de continuer.");
+  }
+
+  return {
+    caseId,
+    accessCode,
+    signerName
+  };
+};
+
 /**
  * Validate query parameters for case listing in ops endpoints.
  * Returns sanitized filters or throws if invalid values provided.
@@ -498,6 +523,22 @@ const mapPublicPayment = (payment) => {
   };
 };
 
+const mapPublicAuthorization = (row) => {
+  const quoteStatus = normalizeText(row.quote_status, 20).toLowerCase() || "none";
+  const isApproved = quoteStatus === "approved" || Boolean(row.preapproval_confirmed);
+  const isAvailable = quoteStatus === "sent" || isApproved;
+
+  return {
+    available: isAvailable,
+    approved: isApproved,
+    quoteStatus,
+    quoteAmountCents: row.quote_amount_cents,
+    quoteAmountFormatted: row.quote_amount_cents ? formatCurrency(row.quote_amount_cents) : "",
+    quoteSentAt: row.quote_sent_at,
+    quoteApprovedAt: row.quote_approved_at
+  };
+};
+
 export const listCasePayments = async (env, caseId) => {
   const sql = getDb(env);
   const normalizedCaseId = normalizeCaseId(caseId);
@@ -542,8 +583,102 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
     nextStep: row.next_step,
     summary: row.client_summary,
     steps: await getVisibleTimeline(env, row.case_id),
-    payments: payments.map(mapPublicPayment)
+    payments: payments.map(mapPublicPayment),
+    authorization: mapPublicAuthorization(row)
   };
+};
+
+export const approveCaseAuthorization = async (env, payload) => {
+  const sql = getDb(env);
+  const input = validateAuthorizationApproval(payload);
+  const row = await getCaseRow(env, input.caseId);
+
+  if (!row) {
+    throw new Error("Dossier introuvable.");
+  }
+
+  const hashed = await hashAccessCode(input.accessCode, env);
+
+  if (hashed !== row.access_code_hash) {
+    throw new Error("Dossier introuvable.");
+  }
+
+  const quoteStatus = normalizeText(row.quote_status, 20).toLowerCase();
+
+  if (quoteStatus === "approved" || row.preapproval_confirmed) {
+    return getPublicCaseByCredentials(env, input.caseId, input.accessCode);
+  }
+
+  if (quoteStatus !== "sent") {
+    throw new Error("Aucune autorisation active n'est prête pour ce dossier.");
+  }
+
+  const timestamp = nowIso();
+  const status = "Intervention autorisée";
+  const nextStep = "NEXURADATA prépare les consignes et la séquence de traitement confirmées.";
+  const clientSummary = "Votre autorisation a été reçue. Le laboratoire peut maintenant poursuivre selon le cadre transmis et préparer les prochaines actions nécessaires.";
+
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp},
+        status = ${status},
+        next_step = ${nextStep},
+        client_summary = ${clientSummary},
+        quote_status = 'approved',
+        quote_approved_at = ${timestamp},
+        preapproval_confirmed = 1,
+        last_client_contact_at = ${timestamp}
+    WHERE case_id = ${input.caseId}`;
+
+  await sql`UPDATE case_updates
+    SET is_visible = 0, updated_at = ${timestamp}
+    WHERE case_id = ${input.caseId} AND kind = 'timeline' AND is_visible = 1`;
+
+  const approvedTimeline = [
+    {
+      title: "Dossier reçu",
+      note: "La demande a été enregistrée et qualifiée.",
+      state: "complete",
+      sortOrder: 0
+    },
+    {
+      title: "Soumission transmise",
+      note: "Le cadre d'intervention a été présenté au client.",
+      state: "complete",
+      sortOrder: 1
+    },
+    {
+      title: "Autorisation reçue",
+      note: `Autorisation confirmée par ${input.signerName}.`,
+      state: "complete",
+      sortOrder: 2
+    },
+    {
+      title: "Préparation du traitement",
+      note: "Le laboratoire prépare les consignes, outils ou manipulations applicables au dossier.",
+      state: "active",
+      sortOrder: 3
+    }
+  ];
+
+  for (const step of approvedTimeline) {
+    await sql`INSERT INTO case_updates (
+      case_id, kind, title, note, state, sort_order, is_visible,
+      created_at, updated_at, created_by
+    ) VALUES (
+      ${input.caseId}, 'timeline', ${step.title}, ${step.note}, ${step.state},
+      ${step.sortOrder}, 1, ${timestamp}, ${timestamp}, 'client-portal'
+    )`;
+  }
+
+  await recordCaseEvent(
+    env,
+    input.caseId,
+    "client-portal",
+    "Autorisation client reçue",
+    `Autorisation confirmée par ${input.signerName}.`
+  );
+
+  return getPublicCaseByCredentials(env, input.caseId, input.accessCode);
 };
 
 export const listCases = async (env, rawQuery = "", filters = {}) => {

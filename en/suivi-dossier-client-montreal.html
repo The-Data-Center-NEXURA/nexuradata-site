@@ -126,6 +126,33 @@
           <p><strong>Next step:</strong> <span data-status-next></span></p>
         </div>
         <p class="status-summary" data-status-summary></p>
+        <section class="status-section authorization-request" data-authorization-section hidden>
+          <div class="status-section-head">
+            <div>
+              <p class="guide-meta">Authorization</p>
+              <h3>Approve the intervention request</h3>
+            </div>
+            <p class="status-section-note" data-authorization-note>Authorization is required before the work continues.</p>
+          </div>
+          <div class="authorization-summary">
+            <p><strong>Authorized amount:</strong> <span data-authorization-amount></span></p>
+            <p><strong>Status:</strong> <span data-authorization-state></span></p>
+          </div>
+          <form class="authorization-form" data-authorization-form data-authorization-endpoint="/api/authorization" novalidate>
+            <label class="field">
+              <span>Name of the person authorizing</span>
+              <input type="text" name="signerName" autocomplete="name" required>
+            </label>
+            <label class="consent-check">
+              <input type="checkbox" name="consent" required>
+              <span>I authorize NEXURADATA to continue the intervention according to the provided scope, including the instructions, handling steps or treatment actions required for the case.</span>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="button button-primary">Approve authorization</button>
+            </div>
+            <p class="form-status" data-authorization-message aria-live="polite"></p>
+          </form>
+        </section>
         <section class="status-section" data-status-payments-section hidden>
           <div class="status-section-head">
             <div>
