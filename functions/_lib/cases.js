@@ -1,5 +1,6 @@
 import { getDb } from "./db.js";
 import { createHostedCheckoutSession } from "./stripe.js";
+import { buildCaseAutomationDraft } from "./automation.js";
 import {
   decryptAccessCode,
   encryptAccessCode,
@@ -375,20 +376,23 @@ export const createCase = async (env, submission) => {
   const accessCodeHash = await hashAccessCode(accessCode, env);
   const accessCodeCiphertext = await encryptAccessCode(accessCode, env);
   const timeline = buildInitialTimeline();
+  const automationDraft = buildCaseAutomationDraft(submission);
   const status = "Dossier reçu";
-  const nextStep = "Lecture initiale du cas et qualification technique.";
-  const clientSummary = "Votre demande a été reçue. Un dossier initial a été ouvert et le laboratoire prépare maintenant l'évaluation du cas.";
+  const nextStep = automationDraft.nextStep;
+  const clientSummary = automationDraft.clientSummary;
 
   await sql`INSERT INTO cases (
     case_id, created_at, updated_at, name, email, phone, support, urgency,
     message, source_path, status, next_step, client_summary,
     access_code_hash, access_code_ciphertext,
-    access_code_last_sent_at, status_email_last_sent_at
+    access_code_last_sent_at, status_email_last_sent_at,
+    qualification_summary, handling_flags
   ) VALUES (
     ${caseId}, ${createdAt}, ${createdAt}, ${submission.nom}, ${submission.courriel},
     ${submission.telephone}, ${submission.support}, ${submission.urgence},
     ${submission.message}, ${submission.sourcePath}, ${status}, ${nextStep},
-    ${clientSummary}, ${accessCodeHash}, ${accessCodeCiphertext}, '', ''
+    ${clientSummary}, ${accessCodeHash}, ${accessCodeCiphertext}, '', '',
+    ${automationDraft.qualificationSummary}, ${automationDraft.handlingFlags}
   )`;
 
   for (const step of timeline) {
