@@ -230,4 +230,4 @@ If marketing/ads features are turned on later, a consent banner becomes mandator
 - [ ] Merchant Center account created, website claimed, feed scheduled
 - [ ] Business Profile created, verification requested
 - [x] GA4 snippet wired into public HTML + CSP updated
-- [ ] Privacy policy reviewed for Law 25 compliance
+- [x] Privacy policy reviewed for Law 25 compliance
