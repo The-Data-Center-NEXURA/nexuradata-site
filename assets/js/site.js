@@ -62,6 +62,9 @@ const publicI18n = isEnglishDocument
     fieldPhone: "Phone",
     fieldSupport: "Support",
     fieldUrgency: "Urgency",
+    fieldProfile: "Requester profile",
+    fieldImpact: "Business impact",
+    fieldSensitivity: "Case sensitivity",
     fieldDescription: "Issue description",
     intakeRequired: "Complete the required fields before opening a case.",
     intakeBusy: "Opening...",
@@ -146,6 +149,9 @@ const publicI18n = isEnglishDocument
     fieldPhone: "Téléphone",
     fieldSupport: "Support",
     fieldUrgency: "Urgence",
+    fieldProfile: "Profil du demandeur",
+    fieldImpact: "Impact d'affaires",
+    fieldSensitivity: "Sensibilité du dossier",
     fieldDescription: "Description du problème",
     intakeRequired: "Complétez les champs requis avant d'ouvrir un dossier.",
     intakeBusy: "Ouverture...",
@@ -234,6 +240,13 @@ if (footerNote) {
     : `<p>&copy; ${year} NEXURA DATA. Tous droits r\u00e9serv\u00e9s.</p>`;
   footerNote.insertAdjacentElement("afterend", copyrightDiv);
 }
+
+// Public header logo — normalize to the locked master asset on public pages.
+document.querySelectorAll(".site-nav .brand-logo").forEach((logo) => {
+  if (logo.getAttribute("src")?.includes("logo-petit.svg")) {
+    logo.setAttribute("src", "/assets/nexuradata-master.svg");
+  }
+});
 
 const revealElements = document.querySelectorAll("[data-reveal]");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -556,6 +569,9 @@ const buildIntakeMailto = (formData) => {
     `${publicI18n.fieldPhone}: ${formData.get("telephone") || ""}`,
     `${publicI18n.fieldSupport}: ${formData.get("support") || ""}`,
     `${publicI18n.fieldUrgency}: ${formData.get("urgence") || ""}`,
+    `${publicI18n.fieldProfile}: ${formData.get("profil") || ""}`,
+    `${publicI18n.fieldImpact}: ${formData.get("impact") || ""}`,
+    `${publicI18n.fieldSensitivity}: ${formData.get("sensibilite") || ""}`,
     "",
     `${publicI18n.fieldDescription}:`,
     `${formData.get("message") || ""}`
@@ -727,6 +743,9 @@ if (intakeForm) {
       telephone: `${formData.get("telephone") || ""}`.trim(),
       support: `${formData.get("support") || ""}`.trim(),
       urgence: `${formData.get("urgence") || ""}`.trim(),
+      profil: `${formData.get("profil") || ""}`.trim(),
+      impact: `${formData.get("impact") || ""}`.trim(),
+      sensibilite: `${formData.get("sensibilite") || ""}`.trim(),
       message: `${formData.get("message") || ""}`.trim(),
       consentement: formData.get("consentement") === "on",
       website: `${formData.get("website") || ""}`.trim(),

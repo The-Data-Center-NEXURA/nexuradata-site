@@ -220,6 +220,9 @@ describe("validateSubmission()", () => {
     telephone: "514-555-0100",
     support: "Disque dur",
     urgence: "Standard",
+    profil: "Entreprise / TI",
+    impact: "Données importantes",
+    sensibilite: "Confidentiel",
     message: "Mon disque ne démarre plus.",
     consentement: true
   };
@@ -230,7 +233,20 @@ describe("validateSubmission()", () => {
     expect(result.courriel).toBe("jean@example.com");
     expect(result.support).toBe("Disque dur");
     expect(result.urgence).toBe("Standard");
+    expect(result.profil).toBe("Entreprise / TI");
+    expect(result.impact).toBe("Données importantes");
+    expect(result.sensibilite).toBe("Confidentiel");
+    expect(result.message).toContain("Profil du demandeur: Entreprise / TI");
     expect(result.sourcePath).toBe("/");
+  });
+
+  it("keeps qualification fields optional for API compatibility", () => {
+    const { profil, impact, sensibilite, ...payload } = validPayload;
+    const result = validateSubmission(payload);
+    expect(result.profil).toBe("");
+    expect(result.impact).toBe("");
+    expect(result.sensibilite).toBe("");
+    expect(result.message).toBe("Mon disque ne démarre plus.");
   });
 
   it("normalises email to lowercase", () => {
@@ -272,11 +288,17 @@ describe("validateSubmission()", () => {
   });
 
   it("accepts all valid support types", () => {
-    const supports = ["Disque dur", "SSD", "RAID / NAS / serveur", "Téléphone / mobile", "USB / carte mémoire", "Je ne sais pas"];
+    const supports = ["Disque dur", "SSD", "RAID / NAS / serveur", "Téléphone / mobile", "Forensique / preuve numérique", "Mandat entreprise / juridique", "USB / carte mémoire", "Je ne sais pas"];
     for (const support of supports) {
       const result = validateSubmission({ ...validPayload, support });
       expect(result.support).toBe(support);
     }
+  });
+
+  it("rejects invalid qualification values", () => {
+    expect(() => validateSubmission({ ...validPayload, profil: "Robot" })).toThrow("Profil du demandeur invalide.");
+    expect(() => validateSubmission({ ...validPayload, impact: "Unknown" })).toThrow("Impact d'affaires invalide.");
+    expect(() => validateSubmission({ ...validPayload, sensibilite: "Secret" })).toThrow("Sensibilité du dossier invalide.");
   });
 
   it("accepts all valid urgency levels", () => {
