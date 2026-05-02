@@ -13,6 +13,7 @@ import {
   decryptAccessCode,
   validateTimelineSteps,
   validatePaymentRequestInput,
+  validateAuthorizationApproval,
   getPublicOrigin,
   authorizeOpsRequest
 } from "../../functions/_lib/cases.js";
@@ -345,6 +346,32 @@ describe("validateStatusLookup()", () => {
 
   it("throws when both are empty", () => {
     expect(() => validateStatusLookup({})).toThrow();
+  });
+});
+
+// ─── validateAuthorizationApproval ─────────────────────────
+
+describe("validateAuthorizationApproval()", () => {
+  const validPayload = {
+    caseId: "nx-20260101-abcd1234",
+    accessCode: "abcd-efgh",
+    signerName: "Client Example",
+    consent: true
+  };
+
+  it("accepts a valid authorization approval", () => {
+    const result = validateAuthorizationApproval(validPayload);
+    expect(result.caseId).toBe("NX-20260101-ABCD1234");
+    expect(result.accessCode).toBe("ABCD-EFGH");
+    expect(result.signerName).toBe("Client Example");
+  });
+
+  it("requires a signer name", () => {
+    expect(() => validateAuthorizationApproval({ ...validPayload, signerName: "" })).toThrow("nom");
+  });
+
+  it("requires explicit consent", () => {
+    expect(() => validateAuthorizationApproval({ ...validPayload, consent: false })).toThrow("autorisation");
   });
 });
 

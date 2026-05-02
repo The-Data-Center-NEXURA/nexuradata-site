@@ -1203,7 +1203,7 @@ export const listQuotes = async (env, filters = {}) => {
     AND (${filterQuoteStatus} = '' OR quote_status = ${filterQuoteStatus})
     AND (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like}))
   ORDER BY
-    CASE quote_status WHEN 'sent' THEN 0 WHEN 'draft' THEN 1 WHEN 'approved' THEN 2 WHEN 'expired' THEN 3 WHEN 'declined' THEN 4 ELSE 5 END,
+    CASE quote_status WHEN 'approved' THEN 0 WHEN 'sent' THEN 1 WHEN 'draft' THEN 2 WHEN 'expired' THEN 3 WHEN 'declined' THEN 4 ELSE 5 END,
     updated_at DESC
   LIMIT 50`;
 
