@@ -9,9 +9,12 @@ This file is the single-page tracker for Google and Facebook/Meta launch readine
 - [x] Privacy policy discloses GA4 analytics use and Google opt-out
 - [x] Merchant Center feed exists at `merchant-feed.xml` with French-first service listings
 - [x] Google Business Profile asset exists at `assets/icons/gbp-profile.png`
+- [x] Google Business Profile cover/social banner exists at `assets/icons/social-banner.png`
 - [x] Google Business Profile landing pages and brand fields documented
 - [x] Facebook cover exists at `assets/icons/facebook-cover.png`
 - [x] Facebook/social profile assets exist at `assets/icons/social-profile.png` and `assets/icons/social-banner.png`
+- [x] Intake QR asset exists at `assets/icons/contact-qr.png` and points to `https://nexuradata.ca/#contact`
+- [x] Google and Facebook launch posts documented with service-specific landing pages
 - [x] Email signature template uses locked `assets/nexuradata-signature.png`
 - [x] Facebook/Meta setup runbook exists at `docs/FACEBOOK-META-SETUP.md`
 - [x] Google setup runbook exists at `docs/GOOGLE-SETUP.md`
@@ -34,6 +37,8 @@ These cannot be verified from the repository. They must be completed in Google, 
 - [ ] Google Business Profile created
 - [ ] Google Business Profile verification requested or completed
 - [ ] Business hours, phone and services confirmed
+- [ ] `assets/icons/gbp-profile.png`, `assets/icons/social-banner.png` and `assets/icons/contact-qr.png` uploaded to Google Business Profile
+- [ ] First Google Business Profile post published with QR/contact link
 
 ### Facebook / Meta
 
@@ -44,9 +49,11 @@ These cannot be verified from the repository. They must be completed in Google, 
 - [ ] Website, email and phone added
 - [ ] Profile image uploaded from `assets/icons/social-profile.png`
 - [ ] Cover image uploaded from `assets/icons/facebook-cover.png`
+- [ ] Intake QR image uploaded or used in pinned post from `assets/icons/contact-qr.png`
 - [ ] Service area configured
 - [ ] CTA button configured
 - [ ] First launch post published
+- [ ] Two-week launch content cadence scheduled
 - [ ] Page added to Meta Business Suite
 - [ ] Two-factor authentication enabled for admins
 - [ ] Messaging enabled only if monitored daily

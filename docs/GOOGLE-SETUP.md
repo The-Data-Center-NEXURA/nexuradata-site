@@ -95,6 +95,7 @@ Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 wit
    - Add hours, services (mirror items in `tarifs-recuperation-donnees-montreal.html`).
    - Upload profile/logo image: `assets/icons/gbp-profile.png` (720 × 720).
    - Upload cover/brand image: `assets/icons/social-banner.png` (1500 × 500).
+   - Upload intake QR image as an additional photo/post asset: `assets/icons/contact-qr.png` (1080 × 1080).
    - Enable messaging only if someone monitors it daily.
 
 ### Google profile branding fields
@@ -116,6 +117,72 @@ Short description:
 ```text
 NEXURADATA accompagne les dossiers de récupération de données, RAID, SSD, mobile et forensique numérique pour Montréal et le Grand Montréal. Les demandes sont qualifiées avant intervention, avec confidentialité, suivi par dossier et cadre de paiement ou d'autorisation clair.
 ```
+
+### Google Business Profile posts
+
+Publish these posts after verification. Use `assets/icons/contact-qr.png` on the first post and reuse it monthly as the direct intake asset. Keep the tone practical: the client needs a qualified path, not self-diagnosis.
+
+Post 1 — opening / qualification:
+
+```text
+Support inaccessible, RAID dégradé, SSD non reconnu ou téléphone verrouillé?
+
+NEXURADATA qualifie les demandes de récupération de données et de forensique numérique avant intervention. Le dossier est cadré, autorisé, puis suivi de façon sécurisée.
+
+Ouvrir une demande: https://nexuradata.ca/#contact
+```
+
+Suggested button: `Learn more` → `https://nexuradata.ca/#contact`
+
+Post 2 — urgent prevention:
+
+```text
+Avant de relancer un disque qui clique, de reconstruire un RAID ou d'essayer plusieurs outils sur un SSD, arrêtez les manipulations répétées.
+
+Chaque tentative peut modifier l'état du support. NEXURADATA vérifie le contexte et confirme le parcours utile avant intervention.
+
+Processus: https://nexuradata.ca/processus-recuperation-donnees-montreal.html
+```
+
+Suggested button: `Learn more` → `https://nexuradata.ca/processus-recuperation-donnees-montreal.html`
+
+Post 3 — RAID / NAS / enterprise:
+
+```text
+RAID, NAS ou serveur en panne: le bon réflexe est de documenter l'état, limiter les redémarrages et qualifier le dossier avant toute reconstruction.
+
+NEXURADATA accompagne les mandats d'entreprise avec confidentialité, autorisation claire et suivi par dossier.
+
+RAID et entreprise: https://nexuradata.ca/recuperation-raid-ssd-montreal.html
+```
+
+Suggested button: `Learn more` → `https://nexuradata.ca/recuperation-raid-ssd-montreal.html`
+
+Post 4 — mobile / phone:
+
+```text
+Téléphone endommagé, verrouillé ou données critiques à préserver?
+
+NEXURADATA traite les demandes mobile avec une approche contrôlée: qualification, limites réalistes, autorisation et confidentialité.
+
+Mobile: https://nexuradata.ca/recuperation-telephone-montreal.html
+```
+
+Suggested button: `Learn more` → `https://nexuradata.ca/recuperation-telephone-montreal.html`
+
+Post 5 — forensic / confidential:
+
+```text
+Les dossiers sensibles exigent plus qu'un outil: ils exigent un cadre.
+
+NEXURADATA accompagne les besoins de forensique numérique, préservation de données et documentation d'intervention pour Montréal et le Grand Montréal.
+
+Forensique: https://nexuradata.ca/forensique-numerique-montreal.html
+```
+
+Suggested button: `Learn more` → `https://nexuradata.ca/forensique-numerique-montreal.html`
+
+Posting cadence: publish posts 1 and 2 during launch week, then one service post per week. Refresh the QR intake post monthly and whenever ads or printed material point to the profile.
 
 Do not add a Facebook profile to structured data or Google public links until the Facebook Page is created, secured and controlled by NEXURADATA.
 

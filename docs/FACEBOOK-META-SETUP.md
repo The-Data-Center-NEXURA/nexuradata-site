@@ -11,6 +11,7 @@ Prepared assets:
 - Page cover: `assets/icons/facebook-cover.png`
 - Profile image: `assets/icons/social-profile.png`
 - Social banner: `assets/icons/social-banner.png`
+- Intake QR image: `assets/icons/contact-qr.png`
 - Open Graph fallback: `assets/icons/og-default.png`
 
 Recommended account owner: `olivier@nexuradata.ca` or a Meta Business account controlled by NEXURADATA.
@@ -37,6 +38,7 @@ Upload:
 
 - Profile image: `assets/icons/social-profile.png`
 - Cover image: `assets/icons/facebook-cover.png`
+- Save `assets/icons/contact-qr.png` for the launch post, pinned post and recurring intake reminders.
 
 Use this short bio:
 
@@ -79,36 +81,85 @@ Use one of these, in order of preference:
 
 Do not enable messaging if nobody owns daily response time. A slow inbox damages trust faster than no inbox.
 
-## 5. First posts
+## 5. First posts and launch content
 
-Post 1 — launch positioning:
+Use French first. Add an English version only when the post is targeted to bilingual or English-speaking audiences. The objective is not to entertain casually; it is to make a stressed client understand that NEXURADATA has a controlled path and that they should open a qualified request.
+
+Post 1 — launch / pinned intake post:
 
 ```text
-NEXURADATA accompagne les dossiers de récupération de données, RAID, SSD, mobile et forensique numérique à Montréal.
+Un disque qui clique, un RAID dégradé, un SSD non reconnu ou un téléphone inaccessible ne se règle pas à coups d'essais répétés.
 
-Le processus est structuré: qualification du dossier, cadre d'intervention, paiement ou autorisation, puis suivi sécurisé par numéro de dossier.
+NEXURADATA accompagne les dossiers de récupération de données, RAID, SSD, mobile et forensique numérique à Montréal avec une démarche structurée: qualification, autorisation, intervention contrôlée et suivi sécurisé.
 
-https://nexuradata.ca/
+Ouvrir une demande: https://nexuradata.ca/#contact
 ```
 
-Post 2 — what not to do:
+Asset: `assets/icons/contact-qr.png`. Pin this post after publication.
+
+Post 2 — what not to do / urgency without fear:
 
 ```text
-Support instable, disque qui clique, RAID dégradé ou téléphone verrouillé: évitez les manipulations répétées avant qualification.
+Si le support contient des données importantes, le premier objectif n'est pas d'essayer plus fort. C'est d'éviter d'aggraver l'état du dossier.
 
-Chaque nouvelle tentative peut modifier l'état du support. NEXURADATA confirme le parcours utile avant intervention.
+Évitez les redémarrages en boucle, les reconstructions RAID improvisées et les outils lancés sans diagnostic clair. NEXURADATA qualifie le contexte avant de recommander la suite.
 
 https://nexuradata.ca/processus-recuperation-donnees-montreal.html
 ```
 
-Post 3 — client portal:
+Asset: use the Facebook cover or a cropped version of `assets/icons/social-banner.png`.
+
+Post 3 — enterprise / RAID:
+
+```text
+RAID, NAS, serveur ou poste critique: un dossier d'entreprise doit être cadré avant intervention.
+
+NEXURADATA documente la demande, confirme les autorisations, limite les manipulations inutiles et garde un suivi clair par numéro de dossier.
+
+https://nexuradata.ca/mandats-entreprise.html
+```
+
+Asset: `assets/icons/social-banner.png`.
+
+Post 4 — client portal / trust:
 
 ```text
 Chaque dossier NEXURADATA peut être suivi avec un numéro de dossier et un code d'accès.
 
-Le portail client affiche le statut, les prochaines étapes, les paiements ou autorisations applicables et l'espace de travail guidé après validation.
+Le portail client affiche le statut, les prochaines étapes, les paiements ou autorisations applicables et l'espace de travail guidé après validation. L'objectif: moins d'aller-retour, plus de clarté, un dossier mieux contrôlé.
 
 https://nexuradata.ca/suivi-dossier-client-montreal.html
+```
+
+Asset: `assets/icons/social-profile.png` or a screenshot after the portal is publicly reviewed.
+
+### Two-week launch cadence
+
+- Day 1: publish and pin post 1 with `contact-qr.png`.
+- Day 2: publish post 2; share it to local community/business channels only where relevant.
+- Day 4: publish post 3 for RAID/NAS/enterprise work.
+- Day 7: publish post 4 for trust and portal clarity.
+- Day 10: publish a mobile-focused post linking to `https://nexuradata.ca/recuperation-telephone-montreal.html`.
+- Day 14: publish a forensics/confidentiality post linking to `https://nexuradata.ca/forensique-numerique-montreal.html`.
+
+Mobile-focused post:
+
+```text
+Téléphone endommagé, verrouillé ou données importantes à préserver?
+
+NEXURADATA qualifie les demandes mobile avant intervention: contexte, limites réalistes, autorisation et confidentialité.
+
+https://nexuradata.ca/recuperation-telephone-montreal.html
+```
+
+Forensics/confidentiality post:
+
+```text
+Les dossiers sensibles demandent une intervention documentée et confidentielle.
+
+NEXURADATA accompagne les besoins de forensique numérique, préservation de données et récupération contrôlée pour Montréal et le Grand Montréal.
+
+https://nexuradata.ca/forensique-numerique-montreal.html
 ```
 
 ## 6. Meta Business Suite
