@@ -7,6 +7,9 @@ This file is the single-page tracker for Google and Facebook/Meta launch readine
 - [x] GA4 installed on public pages with Measurement ID `G-TC31YSS01P`
 - [x] CSP allows Google Tag Manager and Google Analytics
 - [x] Privacy policy discloses GA4 analytics use and Google opt-out
+- [x] Meta Pixel installed with ID `751859640106935`
+- [x] CSP allows Meta Pixel script and event endpoints
+- [x] Privacy policy discloses Meta Pixel measurement use
 - [x] Merchant Center feed exists at `merchant-feed.xml` with French-first service listings
 - [x] Google Business Profile asset exists at `assets/icons/gbp-profile.png`
 - [x] Google Business Profile cover/social banner exists at `assets/icons/social-banner.png`
@@ -52,6 +55,7 @@ These cannot be verified from the repository. They must be completed in Google, 
 - [ ] Intake QR image uploaded or used in pinned post from `assets/icons/contact-qr.png`
 - [ ] Service area configured
 - [ ] CTA button configured
+- [ ] Meta Events Manager confirms Pixel `751859640106935` receives live PageView/Contact events
 - [ ] First launch post published
 - [ ] Two-week launch content cadence scheduled
 - [ ] Page added to Meta Business Suite
