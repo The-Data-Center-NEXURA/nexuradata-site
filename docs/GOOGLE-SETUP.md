@@ -1,5 +1,23 @@
 # Google services setup — olivier@nexuradata.ca
 
+## Current repo status
+
+Repo-side Google preparation is mostly complete:
+
+- GA4 Measurement ID `G-TC31YSS01P` is wired into the public HTML pages.
+- `_headers` already allows Google Tag Manager and Google Analytics in the CSP.
+- `merchant-feed.xml` is published for Merchant Center scheduled fetch.
+- Google Business Profile asset is available at `assets/icons/gbp-profile.png`.
+- Internal operator pages and non-public utility HTML intentionally do not carry GA4.
+
+Account-side tasks still need confirmation in Google and Cloudflare dashboards:
+
+- Search Console domain property verified by DNS TXT.
+- `https://nexuradata.ca/sitemap.xml` submitted.
+- GA4 property receiving traffic for `G-TC31YSS01P`.
+- Merchant Center account created, website claimed and feed scheduled.
+- Google Business Profile created and verification requested or completed.
+
 Pre-launch checklist for connecting NEXURADATA to Google. All properties must be created and owned by **olivier@nexuradata.ca** (Workspace account on `nexuradata.ca`).
 
 > Verification domain: `nexuradata.ca` (apex). Add `www.nexuradata.ca` only after the apex is verified and the redirect in `_redirects` is confirmed.
@@ -33,8 +51,8 @@ Pre-launch checklist for connecting NEXURADATA to Google. All properties must be
 3. **Create property**: `nexuradata.ca`, time zone `America/Montreal`, currency `CAD`.
 4. Industry: `Business & Industrial Markets`. Size: `Small`.
 5. **Data stream → Web** → URL `https://nexuradata.ca`, name `NEXURADATA Web`.
-6. Copy the **Measurement ID** (`G-XXXXXXXXXX`).
-7. Send the ID to the dev workflow — it must be wired into every HTML page **and** added to the CSP in `_headers`. See §5 below.
+6. Measurement ID currently wired in repo: `G-TC31YSS01P`.
+7. Confirm in GA4 Realtime that visits to `https://nexuradata.ca/` are received after deployment.
 
 ### Recommended GA4 settings
 
@@ -80,24 +98,24 @@ Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 wit
 
 ---
 
-## 5. Code wiring (after GA4 ID is known)
+## 5. Code wiring status
 
-Send the Measurement ID (`G-XXXXXXXXXX`) and any Search Console TXT will be DNS-only — no code change needed for SC.
+Search Console TXT verification is DNS-only — no code change needed for SC.
 
-**For GA4** the dev step will:
+**For GA4** the repo already includes:
 
-1. Inject this snippet into every HTML page just before `</head>`:
+1. A GA4 snippet on public HTML pages just before `</head>`:
    ```html
-   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+   <script async src="https://www.googletagmanager.com/gtag/js?id=G-TC31YSS01P"></script>
    <script>
      window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
-     gtag('js',new Date());gtag('config','G-XXXXXXXXXX',{anonymize_ip:true});
+     gtag('js',new Date());gtag('config','G-TC31YSS01P');
    </script>
    ```
-2. Update CSP in [_headers](../_headers) `script-src` and `connect-src`:
-   - `script-src`: add `https://www.googletagmanager.com`
-   - `connect-src`: add `https://www.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net`
-   - `img-src`: add `https://www.google-analytics.com https://*.g.doubleclick.net`
+2. CSP in [_headers](../_headers):
+   - `script-src` and `script-src-elem` allow `https://www.googletagmanager.com`
+   - `connect-src` allows `https://www.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.g.doubleclick.net`
+   - `img-src` allows `https://www.google-analytics.com https://*.g.doubleclick.net`
 3. Update `docs/branding-read-only.txt` only if a cookie/consent banner is added (not required for GA4 anonymized in QC under Law 25 if no advertising features are enabled).
 
 ---
@@ -118,8 +136,8 @@ If marketing/ads features are turned on later, a consent banner becomes mandator
 
 - [ ] Search Console domain property verified via DNS TXT
 - [ ] `sitemap.xml` submitted in Search Console
-- [ ] GA4 property created, Measurement ID `G-__________` recorded
+- [ ] GA4 property confirmed live for Measurement ID `G-TC31YSS01P`
 - [ ] Merchant Center account created, website claimed, feed scheduled
 - [ ] Business Profile created, verification requested
-- [ ] GA4 snippet wired into HTML + CSP updated (after ID provided)
+- [x] GA4 snippet wired into public HTML + CSP updated
 - [ ] Privacy policy reviewed for Law 25 compliance

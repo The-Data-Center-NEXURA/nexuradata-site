@@ -14,6 +14,7 @@ import {
   validateTimelineSteps,
   validatePaymentRequestInput,
   validateAuthorizationApproval,
+  validateCaseFilters,
   getPublicOrigin,
   authorizeOpsRequest
 } from "../../functions/_lib/cases.js";
@@ -372,6 +373,28 @@ describe("validateAuthorizationApproval()", () => {
 
   it("requires explicit consent", () => {
     expect(() => validateAuthorizationApproval({ ...validPayload, consent: false })).toThrow("autorisation");
+  });
+});
+
+// ─── validateCaseFilters ───────────────────────────────────
+
+describe("validateCaseFilters()", () => {
+  it("accepts operator console status labels", () => {
+    const result = validateCaseFilters({
+      status: "Évaluation en cours",
+      quoteStatus: "sent",
+      urgency: "Urgent"
+    });
+
+    expect(result).toEqual({
+      status: "Évaluation en cours",
+      quoteStatus: "sent",
+      urgency: "Urgent"
+    });
+  });
+
+  it("rejects unknown status filters", () => {
+    expect(() => validateCaseFilters({ status: "Dossier magique" })).toThrow("Statut invalide");
   });
 });
 

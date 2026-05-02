@@ -55,6 +55,21 @@ const allowedStepStates = new Set(["pending", "active", "complete"]);
 const allowedPaymentKinds = new Set(["deposit", "final", "custom"]);
 const allowedQuoteStatuses = new Set(["none", "draft", "sent", "approved", "expired", "declined"]);
 const allowedReminderTypes = new Set(["quote_follow_up", "payment_follow_up", "missing_information", "general_follow_up"]);
+const allowedCaseFilterStatuses = new Set([
+  "Dossier reçu",
+  "Évaluation en cours",
+  "Soumission envoyée",
+  "En attente du client",
+  "En cours",
+  "En pause",
+  "Terminé",
+  "Fermé",
+  "Intervention autorisée",
+  "nouveau",
+  "en-cours",
+  "complete",
+  "fermé"
+]);
 
 const localHostnames = new Set(["localhost", "127.0.0.1"]);
 
@@ -202,10 +217,8 @@ export const validateCaseFilters = (queryParams) => {
   const filters = {};
 
   if (queryParams.status) {
-    const status = normalizeText(queryParams.status, 40);
-    // Valid database statuses: nouveau, en-cours, complete, fermé
-    const validStatuses = ["nouveau", "en-cours", "complete", "fermé"];
-    if (status && !validStatuses.includes(status)) {
+    const status = normalizeText(queryParams.status, 80);
+    if (status && !allowedCaseFilterStatuses.has(status)) {
       throw new Error(`Statut invalide: ${status}`);
     }
     if (status) filters.status = status;
