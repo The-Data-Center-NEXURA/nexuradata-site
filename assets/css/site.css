@@ -448,7 +448,6 @@ select {
     font-family: var(--font-display);
     font-weight: 600;
   overflow-wrap: break-word;
-  text-wrap: balance;
 }
 
 .hero-copy h1 {
@@ -534,7 +533,6 @@ select {
   margin: 1.25rem 0 0;
   font-size: 1.12rem;
   overflow-wrap: break-word;
-  text-wrap: pretty;
 }
 
 .hero-points {
@@ -2739,7 +2737,6 @@ select {
   margin: 0;
   color: var(--color-text-soft);
   overflow-wrap: break-word;
-  text-wrap: pretty;
 }
 
 .process-step:hover,
@@ -2793,7 +2790,6 @@ select {
   margin: 0 0 0.25rem;
   color: var(--color-text-soft);
   overflow-wrap: break-word;
-  text-wrap: pretty;
 }
 
 .tier-card-featured {
@@ -2858,7 +2854,6 @@ select {
   color: var(--color-text-soft);
   font-size: 0.95rem;
   overflow-wrap: break-word;
-  text-wrap: pretty;
 }
 
 /* ── 404 page ──────────────────────────────────────────────── */

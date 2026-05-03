@@ -47,9 +47,11 @@ const shouldCopyRootEntry = (entry) => {
 };
 
 const GA4_ID = "G-TC31YSS01P";
+const GA4_INIT_PATH = "/assets/js/ga4-init.js";
+const LEGACY_GA_SNIPPET = /\s*<script async src="https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-TC31YSS01P"><\/script>\s*<script>window\.dataLayer=window\.dataLayer\|\|\[\];function gtag\(\)\{dataLayer\.push\(arguments\);\}gtag\('js',new Date\(\)\);gtag\('config','G-TC31YSS01P'\);<\/script>/g;
 const GA4_SNIPPET = `  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script>
-  <script src="/assets/js/ga4-init.js" defer></script>
+  <script src="${GA4_INIT_PATH}" defer></script>
 </head>`;
 
 const injectGa4 = async (dir) => {
@@ -68,16 +70,23 @@ const injectGa4 = async (dir) => {
     if (path.extname(entry.name).toLowerCase() !== ".html") continue;
 
     const content = await readFile(fullPath, "utf8");
-    if (content.includes(GA4_ID)) continue; // already present
+    let updated = content.replace(LEGACY_GA_SNIPPET, "");
 
-    const updated = content.replace("</head>", GA4_SNIPPET);
+    if (updated.includes(GA4_INIT_PATH)) {
+      if (updated !== content) {
+        await writeFile(fullPath, updated, "utf8");
+      }
+      continue;
+    }
+
+    updated = updated.replace("</head>", GA4_SNIPPET);
     if (updated !== content) {
       await writeFile(fullPath, updated, "utf8");
     }
   }
 };
 
-
+await rm(releaseDir, { recursive: true, force: true });
 await mkdir(releaseDir, { recursive: true });
 
 const entries = await readdir(projectRoot, { withFileTypes: true });

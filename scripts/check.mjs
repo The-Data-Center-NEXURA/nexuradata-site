@@ -13,10 +13,11 @@
  */
 
 import { execSync } from "node:child_process";
-import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const errors = [];
 
 function fail(rule, detail) {
@@ -50,19 +51,24 @@ const SECRET_PATTERNS = [
 
 const funcFiles = [];
 function walk(dir) {
-    let entries;
-    try {
-        entries = execSync(`find "${dir}" -type f -name "*.js"`, { encoding: "utf8" }).trim().split("\n").filter(Boolean);
-    } catch {
+    if (!existsSync(dir)) {
         return;
     }
-    funcFiles.push(...entries);
+
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = join(dir, entry.name);
+        if (entry.isDirectory()) {
+            walk(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith(".js")) {
+            funcFiles.push(fullPath);
+        }
+    }
 }
 walk(join(ROOT, "functions"));
 
 for (const file of funcFiles) {
     const content = readFileSync(file, "utf8");
-    const rel = file.replace(ROOT, "");
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
     for (const { pattern, label } of SECRET_PATTERNS) {
         if (pattern.test(content)) {
             fail("SECRET_IN_CODE", `${rel}: possible ${label} detected. Use context.env.SECRET_NAME instead.`);
@@ -73,7 +79,7 @@ for (const file of funcFiles) {
 // ─── 3. onRequestOptions signature — must pass env ───────────────────────────
 for (const file of funcFiles) {
     const content = readFileSync(file, "utf8");
-    const rel = file.replace(ROOT, "");
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
     // Detect old signature: () => onOptions(  (no env argument)
     if (/onRequestOptions\s*=\s*\(\s*\)\s*=>\s*onOptions\s*\(/.test(content)) {
         fail(
