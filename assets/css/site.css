@@ -1,4 +1,16 @@
-﻿/* ── Locked branding tokens ─────────────────────────────────── */
+﻿/*
+  NEXURADATA site stylesheet map
+  1. Tokens, reset, base layout
+  2. Locked branding: header, nav, footer, responsive brand rules
+  3. Shared components: buttons, sections, cards, forms, grids, tables
+  4. Conversion surfaces: hero, intake, pricing estimator, payment feedback
+  5. Client portal: status, authorization, workroom
+  6. Operations console and filtered ops views
+  7. Editorial/SEO pages, process steps, urgency tiers, credential cards
+  8. Responsive, print and WhatsApp contact surfaces
+*/
+
+/* ── Locked branding tokens ─────────────────────────────────── */
 :root {
   color-scheme: dark;
   --noir: #0d0d0b;
@@ -261,6 +273,8 @@ select {
   border-color: rgba(232, 228, 220, 0.26);
   background: rgba(30, 30, 27, 0.98);
 }
+
+/* ── Shared components: buttons and page sections ───────────── */
 
 .button {
   position: relative;
@@ -1824,6 +1838,8 @@ select {
   background: linear-gradient(180deg, rgba(30, 30, 27, 0.98), rgba(18, 18, 16, 0.95));
   border-color: rgba(232, 228, 220, 0.12);
 }
+
+/* ── Client portal: status, authorization and workroom ─────── */
 
 .status-layout {
   display: grid;

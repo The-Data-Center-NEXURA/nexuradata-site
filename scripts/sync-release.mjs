@@ -6,7 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 const releaseDir = path.join(projectRoot, "release-cloudflare");
-const excludedHtmlFiles = new Set(["index2.html"]);
+// Legacy URLs handled by _redirects only; do not publish stale source files if they reappear.
+const redirectOnlyHtmlFiles = new Set(["index2.html"]);
 
 const rootFiles = new Set([
   "_headers",
@@ -40,7 +41,7 @@ const shouldCopyRootEntry = (entry) => {
   }
 
   if (path.extname(entry).toLowerCase() === ".html") {
-    return !excludedHtmlFiles.has(entry);
+    return !redirectOnlyHtmlFiles.has(entry);
   }
 
   return false;

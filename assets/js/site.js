@@ -1,3 +1,14 @@
+/*
+  NEXURADATA site script map
+  1. Analytics, Meta Pixel and contact intent tracking
+  2. Public UI helpers: navigation, reveal effects, counters, FAQ, anchors
+  3. Pricing/self-assessment paths and payment feedback
+  4. Intake form and client status portal
+  5. Client authorization and guided workroom rendering
+  6. Operations console
+  7. Filtered operations views: quotes, payments and follow-up
+*/
+
 const yearTarget = document.querySelector("[data-year]");
 const documentLanguage = document.documentElement.lang?.toLowerCase() || "fr-ca";
 const isEnglishDocument = documentLanguage.startsWith("en");
@@ -123,6 +134,8 @@ const escapeHtml = (text) => {
   div.textContent = text || "";
   return div.innerHTML;
 };
+
+// ── Public copy, labels and demo records ─────────────────────
 
 const publicI18n = isEnglishDocument
   ? {
@@ -361,6 +374,8 @@ const publicI18n = isEnglishDocument
 if (yearTarget) {
   yearTarget.textContent = new Date().getFullYear();
 }
+
+// ── Public UI helpers: footer notes, nav, reveals, counters ──
 
 // Copyright footer — inject on all public pages that have .footer-note
 const footerNote = document.querySelector(".footer-note");
@@ -850,6 +865,8 @@ document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
     mailLink.href = `mailto:contact@nexuradata.ca?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 }
+
+// ── Pricing/self-assessment paths ────────────────────────────
 
 document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
   const form = app.querySelector("[data-paid-path-form]");
@@ -1391,6 +1408,8 @@ const renderStatusRecord = (record, statusPanel) => {
 
 const intakeForm = document.querySelector("[data-intake-form]");
 
+// ── Intake form ──────────────────────────────────────────────
+
 if (intakeForm) {
   const statusTarget = intakeForm.querySelector("[data-form-status]");
   const submitButton = intakeForm.querySelector('button[type="submit"]');
@@ -1485,6 +1504,8 @@ if (intakeForm) {
 }
 
 const statusForm = document.querySelector("[data-status-form]");
+
+// ── Client status portal, authorization and workroom ─────────
 
 if (statusForm) {
   const messageTarget = statusForm.querySelector("[data-status-form-message]");
@@ -1701,6 +1722,8 @@ if (statusForm) {
 }
 
 const operationsRoot = document.querySelector("[data-ops-app]");
+
+// ── Operations console ───────────────────────────────────────
 
 if (operationsRoot) {
   const searchForm = document.querySelector("[data-ops-search-form]");
@@ -2562,6 +2585,8 @@ if (operationsRoot) {
 /* ── Ops filtered view pages (quotes, payments, follow-up) ── */
 
 const opsViewRoot = document.querySelector("[data-ops-view]");
+
+// ── Filtered operations views ────────────────────────────────
 
 if (opsViewRoot) {
   const viewName = opsViewRoot.getAttribute("data-ops-view");

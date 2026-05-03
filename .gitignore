@@ -16,6 +16,7 @@ node_modules/
 .env.*
 .dev.vars
 .dev.vars.*
+!.dev.vars.example
 
 # Cloudflare / build artifacts
 .wrangler/
@@ -24,3 +25,5 @@ release-cloudflare/
 
 # Generated previews / accidental exports
 .github/agents/*.html
+.github/agents/Agent Discovery Results
+.github/agents/Agent Discovery Results*

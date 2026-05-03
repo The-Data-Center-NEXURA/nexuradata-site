@@ -14,6 +14,8 @@ Le depot couvre:
 ## Structure utile
 
 - `index.html` / `en/index.html` : pages d'accueil publiques (FR / EN)
+- `*.html` a la racine : pages marketing FR publiees telles quelles pour garder des URLs courtes et stables
+- `en/*.html` : equivalents EN des pages publiques; toute modification FR doit etre refletee cote EN
 - `suivi-dossier-client-montreal.html` : portail client `noindex`
 - `operations/index.html` : console interne a proteger via Cloudflare Access
 - `assets/css/site.css` : styles partages
@@ -24,8 +26,29 @@ Le depot couvre:
 - `functions/_lib/` : logique partagee (DB, auth, emails, Stripe, rate-limit)
 - `migrations/neon/0001_full_schema.sql` : schema Postgres consolide
 - `migrations/d1-archive/` : ancienne base D1 (archive historique uniquement)
-- `wrangler.jsonc` : configuration Pages/Functions, source de verite
-- `.dev.vars.example` : variables locales a copier vers `.dev.vars`
+- `wrangler.jsonc` : configuration Pages/Functions avec uniquement des valeurs de role non personnelles
+- `.dev.vars.example` : modele local sans secrets ni adresse personnelle, a copier vers `.dev.vars`
+
+## Hygiene du depot
+
+- Ne jamais commiter `.dev.vars`, `.env*`, `.wrangler/`, `release-cloudflare/` ou des exports locaux d'agents.
+- Les fichiers `.github/agents/Agent Discovery Results*` sont des sorties locales de VS Code/Copilot et doivent rester hors Git.
+- Les adresses personnelles et chemins locaux propres a une machine sont bloques par `npm run check`.
+- Les templates HTML internes vont dans `docs/`, pas dans `assets/`, parce que `assets/` est publie avec le site.
+- `release-cloudflare/` est regenere par `npm run build`; modifier uniquement les sources suivies.
+- Les pages FR racine et leurs versions `en/` doivent rester synchronisees pour le SEO bilingue.
+
+## Carte canonique du site
+
+Cette carte evite d'empiler une nouvelle version du site quand un bon element existe deja.
+
+- **Conversion principale**: `index.html`, `tarifs-recuperation-donnees-montreal.html`, `suivi-dossier-client-montreal.html`, `paiement-reussi.html`, `paiement-annule.html`.
+- **Services coeur**: `recuperation-donnees-montreal.html`, `recuperation-raid-ssd-montreal.html`, `recuperation-telephone-montreal.html`, `forensique-numerique-montreal.html`, `services-recuperation-forensique-montreal.html`.
+- **Preuve et confiance**: `le-laboratoire.html`, `mandats-entreprise.html`, `reception-securisee-donnees-montreal.html`, `engagements-conformite-quebec.html`, `conditions-intervention-paiement.html`, `mentions-legales.html`, `politique-confidentialite.html`.
+- **SEO et education**: `processus-recuperation-donnees-montreal.html`, `problemes-courants-recuperation-montreal.html`, `prevention-perte-donnees-montreal.html`, `sauvegarde-vs-recuperation-donnees-montreal.html`, `resilience-donnees-entreprise-montreal.html`, `zones-desservies-montreal-quebec.html`, `statut-services-montreal.html`.
+- **Console interne**: `operations/` et `/api/ops/*`, a proteger par Cloudflare Access.
+
+Avant d'ajouter une page, verifier cette carte et renforcer la page canonique existante. Les fichiers `copy`, `old`, `backup`, `draft`, `test`, `tmp`, `v2` ou `index2.html` sont bloques par `npm run check`.
 
 ## Prerequis de lancement
 

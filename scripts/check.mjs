@@ -6,9 +6,11 @@
  *   1. CSP does not contain unsafe-inline or unsafe-eval
  *   2. No secrets hardcoded in functions/ (API keys, tokens, passwords)
  *   3. Functions handlers use correct onRequestOptions signature (env-aware CORS)
- *   4. GitHub metadata does not contain generated preview exports or placeholder templates
+ *   4. GitHub metadata does not contain generated/local agent exports or placeholder templates
  *   5. release-cloudflare/ is in sync with source after build
  *   6. Public files do not expose private address/name markers
+ *   7. Public HTML pages stay paired FR/EN and do not include draft/backup variants
+ *   8. Internal HTML templates do not live under public assets/
  *
  * Run: node ./scripts/check.mjs
  * Exit 0 = all clear. Exit 1 = violations found (with details).
@@ -32,7 +34,7 @@ function walkFiles(dir, files = []) {
     }
 
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        if ([".git", "node_modules", ".wrangler"].includes(entry.name)) {
+        if ([".git", "node_modules", ".wrangler", "release-cloudflare"].includes(entry.name)) {
             continue;
         }
 
@@ -116,6 +118,11 @@ for (const file of funcFiles) {
 const agentsDir = join(ROOT, ".github", "agents");
 for (const file of walkFiles(agentsDir)) {
     const rel = relative(ROOT, file).replaceAll("\\", "/");
+    const content = readFileSync(file, "utf8");
+    if (/Agent Discovery Results/i.test(rel) || /(?:\b[A-Z]:\/Users|\/C:\/Users|\/workspaces\/|\/home\/codespace)/i.test(content)) {
+        fail("GITHUB_LOCAL_AGENT_ARTIFACT", `${rel}: local agent discovery output or machine-specific paths do not belong in the repo.`);
+    }
+
     if (rel.endsWith(".html")) {
         fail("GITHUB_GENERATED_EXPORT", `${rel}: generated HTML exports do not belong in .github/agents/. Keep only agent Markdown files.`);
     }
@@ -129,6 +136,46 @@ if (existsSync(prTemplatePath)) {
     }
 } else {
     fail("PR_TEMPLATE_MISSING", ".github/pull_request_template.md is missing.");
+}
+
+// ─── 4b. Site source hygiene ────────────────────────────────────────────────
+const ROOT_HTML_EXCLUDES = new Set(["404.html"]);
+const DRAFT_HTML_PATTERN = /(?:^|[-_.])(copy|old|backup|bak|draft|test|tmp|v[0-9]+)(?:[-_.]|$)|^index[0-9]+\.html$/i;
+const rootHtmlPages = readdirSync(ROOT, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".html") && !ROOT_HTML_EXCLUDES.has(entry.name))
+    .map((entry) => entry.name);
+const enDir = join(ROOT, "en");
+const enHtmlPages = existsSync(enDir)
+    ? readdirSync(enDir, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
+        .map((entry) => entry.name)
+    : [];
+const enHtmlSet = new Set(enHtmlPages);
+const rootHtmlSet = new Set(rootHtmlPages);
+
+for (const page of rootHtmlPages) {
+    if (DRAFT_HTML_PATTERN.test(page)) {
+        fail("DRAFT_HTML_SOURCE", `${page}: draft, backup, versioned or redirect-only HTML pages should not be kept as public source.`);
+    }
+    if (!enHtmlSet.has(page)) {
+        fail("BILINGUAL_PAGE_PAIR", `${page}: missing matching en/${page}. Keep FR and EN public pages paired.`);
+    }
+}
+
+for (const page of enHtmlPages) {
+    if (DRAFT_HTML_PATTERN.test(page)) {
+        fail("DRAFT_HTML_SOURCE", `en/${page}: draft, backup, versioned or redirect-only HTML pages should not be kept as public source.`);
+    }
+    if (!rootHtmlSet.has(page)) {
+        fail("BILINGUAL_PAGE_PAIR", `en/${page}: missing matching root ${page}. Keep FR and EN public pages paired.`);
+    }
+}
+
+for (const file of walkFiles(join(ROOT, "assets"))) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (extname(file).toLowerCase() === ".html") {
+        fail("PUBLIC_ASSET_HTML", `${rel}: internal HTML templates do not belong under public assets/. Move them to docs/ or a non-published folder.`);
+    }
 }
 
 // ─── 5. release-cloudflare/ in sync with source ──────────────────────────────
@@ -149,6 +196,8 @@ try {
 const TEXT_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".jsonc", ".md", ".txt", ".xml"]);
 const SENSITIVE_SCAN_EXCLUDE = new Set(["scripts/check.mjs"]);
 const PRIVATE_CONTENT_PATTERNS = [
+    { pattern: /o\.blanchet13@gmail\.com/i, label: "personal email" },
+    { pattern: /(?:\b[A-Z]:\/Users|\/C:\/Users|\/workspaces\/nexuradata-site|\/home\/codespace)/i, label: "machine-specific local path" },
     { pattern: /Giacomo\s+Navarro/i, label: "personal name" },
     { pattern: /\b1102\b/i, label: "private street number" },
     { pattern: /J4K\s*1W6/i, label: "private postal code" },

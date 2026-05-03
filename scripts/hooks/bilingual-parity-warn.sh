@@ -23,6 +23,9 @@ if isinstance(ti, dict):
     print('\\n'.join(p for p in paths if p))
 " 2>/dev/null || true)
 
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || (cd "$SCRIPT_DIR/../.." && pwd))"
+
 MISSING=""
 while IFS= read -r path; do
   [ -z "$path" ] && continue
@@ -32,7 +35,7 @@ while IFS= read -r path; do
   esac
   if echo "$base" | grep -qE '\.html$'; then
     parent=$(dirname "$path")
-    if [ "$parent" = "." ] || [ "$parent" = "/workspaces/nexuradata-site" ]; then
+    if [ "$parent" = "." ] || [ "$parent" = "$REPO_ROOT" ]; then
       if ! echo "$FILE_PATHS" | grep -qF "/en/${base}" && ! echo "$FILE_PATHS" | grep -qxF "en/${base}"; then
         MISSING="${MISSING}${base}, "
       fi

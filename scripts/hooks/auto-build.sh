@@ -39,7 +39,9 @@ if ! echo "$FILE_PATH" | grep -qE "$TRIGGER_PATHS"; then
   exit 0
 fi
 
-cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || echo /workspaces/nexuradata-site)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || (cd "$SCRIPT_DIR/../.." && pwd))"
+cd "$REPO_ROOT"
 echo "[auto-build] Source file changed — running npm run build..." >&2
 npm run build --silent >&2
 
