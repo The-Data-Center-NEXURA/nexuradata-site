@@ -3520,9 +3520,13 @@ select {
     padding: 0.46rem 0;
   }
 
-  .site-nav.nav-enhanced .brand,
-  .site-nav.nav-enhanced .brand img {
-    width: min(42vw, 166px);
+  .site-nav.nav-enhanced .brand {
+    width: min(58vw, 220px);
+  }
+
+  .site-nav.nav-enhanced .brand-logo {
+    width: min(58vw, 220px);
+    max-width: 220px;
   }
 
   .hero {
