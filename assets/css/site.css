@@ -3020,7 +3020,7 @@ select {
     .site-nav .nav-links {
     grid-template-columns: 1fr;
     min-width: 0;
-  
+  }
   
     
     .site-nav .nav-links a {
