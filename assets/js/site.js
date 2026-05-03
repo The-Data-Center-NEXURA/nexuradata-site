@@ -791,6 +791,100 @@ document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
   }
 }
 
+document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
+  const form = app.querySelector("[data-paid-path-form]");
+  const titleTarget = app.querySelector("[data-paid-path-title]");
+  const priceTarget = app.querySelector("[data-paid-path-price]");
+  const summaryTarget = app.querySelector("[data-paid-path-summary]");
+  const stepsTarget = app.querySelector("[data-paid-path-steps]");
+  const startLink = app.querySelector("[data-paid-path-start]");
+  const whatsappLink = app.querySelector("[data-paid-path-whatsapp]");
+
+  if (!form || !titleTarget || !priceTarget || !summaryTarget || !stepsTarget) return;
+
+  const estimatorCopy = isEnglishDocument
+    ? {
+      deleted_files: ["Deleted files recovery", "From $79 to $149", "A targeted recovery path when files were deleted, moved, formatted or lost without signs of physical damage.", "Je ne sais pas"],
+      external_media: ["External media recovery", "From $129 to $350", "For USB keys, memory cards and external drives that are still partly detected or unstable.", "USB / carte mémoire"],
+      hdd_ssd: ["HDD / SSD intervention", "From $350 to $650", "For drives or SSDs that are inaccessible, unstable, corrupted or showing symptoms that need specialized handling.", "SSD"],
+      phone: ["Phone data recovery", "From $149 to $450", "For photos, videos, messages and app data on phones or tablets, depending on model, access and damage level.", "Téléphone / mobile"],
+      raid_server: ["RAID / NAS / server case", "From $650 or quoted", "For multi-disk systems, business interruption, degraded arrays, missing volumes or server-side recovery.", "RAID / NAS / serveur"],
+      forensic: ["Sensitive or evidence case", "Quoted", "For incidents, disputes, insurance, legal context or confidential evidence preservation.", "Forensique / preuve numérique"]
+    }
+    : {
+      deleted_files: ["Récupération de fichiers supprimés", "De 79 $ à 149 $", "Parcours ciblé lorsque des fichiers ont été supprimés, déplacés, formatés ou perdus sans signe de dommage physique.", "Je ne sais pas"],
+      external_media: ["Récupération support externe", "De 129 $ à 350 $", "Pour clés USB, cartes mémoire et disques externes encore partiellement détectés ou instables.", "USB / carte mémoire"],
+      hdd_ssd: ["Intervention HDD / SSD", "De 350 $ à 650 $", "Pour disques ou SSD inaccessibles, instables, corrompus ou présentant des symptômes qui exigent une manipulation spécialisée.", "SSD"],
+      phone: ["Récupération téléphone", "De 149 $ à 450 $", "Pour photos, vidéos, messages et données applicatives sur téléphone ou tablette, selon le modèle, l'accès et le dommage.", "Téléphone / mobile"],
+      raid_server: ["Dossier RAID / NAS / serveur", "À partir de 650 $ ou sur soumission", "Pour systèmes multidisques, interruption d'activité, RAID dégradé, volume absent ou récupération côté serveur.", "RAID / NAS / serveur"],
+      forensic: ["Dossier sensible ou preuve", "Sur soumission", "Pour incident, litige, assurance, contexte juridique ou conservation confidentielle de preuve.", "Forensique / preuve numérique"]
+    };
+
+  const labels = isEnglishDocument
+    ? {
+      standard: "Standard", priority: "Priority", critical: "Urgent or operations blocked",
+      personal: "Personal or non-urgent", important: "Important data", blocked: "Work, client or activity blocked", legal: "Legal, insurance or evidence",
+      none: "No attempt", software: "Recovery or repair software was launched", rebuild: "RAID rebuild, reset or format attempted", shop: "Already seen by another shop",
+      scoped: "Quoted after scope confirmation", priorityQuote: "Priority quote", note: "Stop using the affected device until NEXURADATA confirms the next step.", prefix: "Estimate from the NEXURADATA self-assessment"
+    }
+    : {
+      standard: "Standard", priority: "Rapide", critical: "Urgent ou opérations bloquées",
+      personal: "Personnel ou non urgent", important: "Données importantes", blocked: "Travail, client ou activité bloquée", legal: "Juridique, assurance ou preuve",
+      none: "Aucune tentative", software: "Logiciel de récupération ou réparation lancé", rebuild: "Reconstruction RAID, réinitialisation ou formatage tenté", shop: "Déjà vu par un autre atelier",
+      scoped: "Sur soumission après cadrage", priorityQuote: "Soumission prioritaire", note: "Cessez d'utiliser le support touché jusqu'à confirmation de la prochaine étape.", prefix: "Estimation issue de l'auto-évaluation NEXURADATA"
+    };
+
+  const updateEstimate = () => {
+    const formData = new FormData(form);
+    const support = `${formData.get("support") || "deleted_files"}`;
+    const symptom = `${formData.get("symptom") || "deleted"}`;
+    const urgency = `${formData.get("urgency") || "standard"}`;
+    const impact = `${formData.get("impact") || "personal"}`;
+    const attempts = `${formData.get("attempts") || "none"}`;
+    const profile = estimatorCopy[support] || estimatorCopy.deleted_files;
+    const scoped = support === "forensic" || impact === "legal" || attempts === "rebuild" || attempts === "shop" || symptom === "clicking" || symptom === "raid_degraded";
+    const priority = urgency === "critical" || impact === "blocked";
+    const estimate = scoped ? labels.scoped : priority ? labels.priorityQuote : profile[1];
+    const summary = `${profile[2]} ${scoped || priority ? labels.note : ""}`.trim();
+    const steps = isEnglishDocument
+      ? ["Keep the device in its current state and avoid new repair attempts.", "Open the case with this estimate so the context follows the request.", "NEXURADATA confirms the final quote before any intervention."]
+      : ["Gardez le support dans son état actuel et évitez toute nouvelle tentative.", "Ouvrez le dossier avec cette estimation pour transmettre le contexte.", "NEXURADATA confirme le devis final avant toute intervention."];
+
+    titleTarget.textContent = profile[0];
+    priceTarget.textContent = estimate;
+    summaryTarget.textContent = summary;
+    stepsTarget.replaceChildren(...steps.map((step) => {
+      const item = document.createElement("li");
+      item.textContent = step;
+      return item;
+    }));
+
+    const message = [
+      labels.prefix,
+      `${isEnglishDocument ? "Path" : "Parcours"}: ${profile[0]}`,
+      `${isEnglishDocument ? "Estimate" : "Estimation"}: ${estimate}`,
+      `${isEnglishDocument ? "Urgency" : "Urgence"}: ${labels[urgency]}`,
+      `${isEnglishDocument ? "Impact" : "Impact"}: ${labels[impact]}`,
+      `${isEnglishDocument ? "Attempts" : "Tentatives"}: ${labels[attempts]}`,
+      `${isEnglishDocument ? "Symptom" : "Symptôme"}: ${symptom}`
+    ].join("\n");
+    const query = new URLSearchParams({
+      support: profile[3],
+      urgence: urgency === "critical" ? "Urgent" : urgency === "priority" ? "Rapide" : "Standard",
+      profil: impact === "blocked" ? "Entreprise / TI" : impact === "legal" ? "Cabinet juridique" : "Particulier",
+      impact: impact === "blocked" ? "Opérations bloquées" : impact === "legal" ? "Client, juridique ou assurance impliqué" : impact === "important" ? "Données importantes" : "Planifié / non urgent",
+      sensibilite: impact === "legal" ? "Preuve / chaîne de possession" : impact === "blocked" ? "Données sensibles" : impact === "important" ? "Confidentiel" : "Standard",
+      message
+    });
+
+    if (startLink) startLink.href = isEnglishDocument ? `/en/?${query.toString()}#contact` : `index.html?${query.toString()}#contact`;
+    if (whatsappLink) whatsappLink.href = `https://wa.me/14388130592?text=${encodeURIComponent(message)}`;
+  };
+
+  form.addEventListener("change", updateEstimate);
+  updateEstimate();
+});
+
 const setMessage = (target, state, text) => {
   if (!target) {
     return;
