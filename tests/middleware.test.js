@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { blockBots } from "../functions/_middleware.js";
+import { blockBots, secureFunctionResponses } from "../functions/_middleware.js";
 
 function makeContext(ua) {
     return {
@@ -51,4 +51,52 @@ describe("_middleware — user agent blocking", () => {
             expect(res.status).toBe(200);
         });
     }
+
+    it("adds security headers to blocked responses", async () => {
+        const res = await blockBots(makeContext("sqlmap/1.7"));
+
+        expect(res.status).toBe(403);
+        expect(res.headers.get("cache-control")).toBe("no-store");
+        expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+        expect(res.headers.get("x-frame-options")).toBe("DENY");
+        expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    });
+});
+
+describe("_middleware — dynamic response hardening", () => {
+    it("adds security headers to Function responses", async () => {
+        const res = await secureFunctionResponses({
+            next: () => new Response(JSON.stringify({ ok: true }), {
+                status: 200,
+                headers: { "content-type": "application/json" }
+            })
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.headers.get("content-type")).toBe("application/json");
+        expect(res.headers.get("cache-control")).toBe("no-store");
+        expect(res.headers.get("cross-origin-opener-policy")).toBe("same-origin");
+        expect(res.headers.get("cross-origin-resource-policy")).toBe("same-site");
+        expect(res.headers.get("origin-agent-cluster")).toBe("?1");
+        expect(res.headers.get("referrer-policy")).toBe("strict-origin-when-cross-origin");
+        expect(res.headers.get("permissions-policy")).toContain("camera=()");
+        expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+        expect(res.headers.get("x-frame-options")).toBe("DENY");
+        expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    });
+
+    it("does not overwrite explicit response headers", async () => {
+        const res = await secureFunctionResponses({
+            next: () => new Response("ok", {
+                headers: {
+                    "cache-control": "private",
+                    "x-robots-tag": "none"
+                }
+            })
+        });
+
+        expect(res.headers.get("cache-control")).toBe("private");
+        expect(res.headers.get("x-robots-tag")).toBe("none");
+        expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    });
 });
