@@ -1,4 +1,4 @@
-# Google services setup — olivier@nexuradata.ca
+﻿# Google services setup — admin@nexuradata.ca
 
 ## Current repo status
 
@@ -18,7 +18,7 @@ Account-side tasks still need confirmation in Google and Cloudflare dashboards:
 - Merchant Center account created, website claimed and feed scheduled.
 - Google Business Profile created and verification requested or completed.
 
-Pre-launch checklist for connecting NEXURADATA to Google. All properties must be created and owned by **olivier@nexuradata.ca** (Workspace account on `nexuradata.ca`).
+Pre-launch checklist for connecting NEXURADATA to Google. All properties must be created and owned by **admin@nexuradata.ca** (Workspace account on `nexuradata.ca`).
 
 > Verification domain: `nexuradata.ca` (apex). Add `www.nexuradata.ca` only after the apex is verified and the redirect in `_redirects` is confirmed.
 
@@ -26,7 +26,7 @@ Pre-launch checklist for connecting NEXURADATA to Google. All properties must be
 
 ## 1. Google Search Console
 
-1. Go to https://search.google.com/search-console — sign in as `olivier@nexuradata.ca`.
+1. Go to https://search.google.com/search-console — sign in as `admin@nexuradata.ca`.
 2. **Add property → Domain** → enter `nexuradata.ca`.
 3. Choose **DNS verification (TXT record)**. Copy the `google-site-verification=...` value.
 4. Add the TXT record at the registrar (Cloudflare DNS):
@@ -37,7 +37,7 @@ Pre-launch checklist for connecting NEXURADATA to Google. All properties must be
 5. Wait 2–10 minutes, click **Verify**.
 6. Once verified:
    - **Sitemaps** → submit `https://nexuradata.ca/sitemap.xml`.
-   - **Settings → Users and permissions** → confirm `olivier@nexuradata.ca` is **Owner**.
+   - **Settings → Users and permissions** → confirm `admin@nexuradata.ca` is **Owner**.
    - **Settings → Associations** → link the Google Analytics 4 property (after step 2).
 
 > Domain verification covers both `https://nexuradata.ca/` and `https://nexuradata.ca/en/` automatically — no per-language property needed.
@@ -46,7 +46,7 @@ Pre-launch checklist for connecting NEXURADATA to Google. All properties must be
 
 ## 2. Google Analytics 4 (GA4)
 
-1. Go to https://analytics.google.com → sign in as `olivier@nexuradata.ca`.
+1. Go to https://analytics.google.com → sign in as `admin@nexuradata.ca`.
 2. **Admin → Create → Account**: `NEXURADATA` (Canada, CAD, English).
 3. **Create property**: `nexuradata.ca`, time zone `America/Montreal`, currency `CAD`.
 4. Industry: `Business & Industrial Markets`. Size: `Small`.
@@ -68,7 +68,7 @@ Pre-launch checklist for connecting NEXURADATA to Google. All properties must be
 
 Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 with `g:` namespace). The current feed is French-first and points to the French public pages.
 
-1. Go to https://merchants.google.com → sign in as `olivier@nexuradata.ca`.
+1. Go to https://merchants.google.com → sign in as `admin@nexuradata.ca`.
 2. **Create account** → business name `NEXURADATA`, country `Canada`, time zone `America/Montreal`.
 3. **Tools → Business information → Website** → claim `https://nexuradata.ca` (use Search Console verification — auto-claims since same Google account).
 4. **Products → Feeds → Add primary feed**:
@@ -85,7 +85,7 @@ Feed already published at `https://nexuradata.ca/merchant-feed.xml` (RSS 2.0 wit
 
 ## 4. Google Business Profile (Maps + local SEO)
 
-1. Go to https://business.google.com → sign in as `olivier@nexuradata.ca`.
+1. Go to https://business.google.com → sign in as `admin@nexuradata.ca`.
 2. **Add business** → name `NEXURADATA`, category `Data recovery service`.
 3. Address: lab address in Montreal (do **not** publish if it's a residential address — choose "I deliver goods and services to my customers" and set a service area).
 4. Service area: `Montréal`, `Laval`, `Longueuil`, `Brossard`, `Boucherville`, `Saint-Léonard`, `Anjou`, `Lachine`, `LaSalle`, `Verdun` (matches `zones-desservies-montreal-quebec.html`).

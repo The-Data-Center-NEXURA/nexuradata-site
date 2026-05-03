@@ -56,7 +56,7 @@ html {
 
 body {
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--font-sans);
   font-size: 1rem;
   color: var(--os);
   background:
@@ -146,8 +146,8 @@ select {
 /* ── Locked branding: header/nav ─────────────────────────────── */
 .brand-logo {
   display: block;
-  width: 100%;
-  max-width: 520px;
+  width: clamp(15.5rem, 24vw, 20rem);
+  max-width: min(46vw, 20rem);
   height: auto;
 }
 
@@ -174,6 +174,7 @@ select {
 .brand {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   text-decoration: none;
 }
 
@@ -219,7 +220,12 @@ select {
 
 .brand img {
   display: block;
-  width: auto;
+  height: auto;
+}
+
+.site-nav .brand-logo {
+  width: clamp(15.5rem, 24vw, 20rem);
+  max-width: min(46vw, 20rem);
   height: auto;
 }
 
@@ -410,16 +416,16 @@ select {
 .hero-copy h1,
 .page-hero h1 {
   margin: 0;
-  line-height: 0.98;
-    letter-spacing: 0.01em;
+  line-height: 1.02;
+    letter-spacing: 0;
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 700;
   overflow-wrap: break-word;
 }
 
 .hero-copy h1 {
-  max-width: 15ch;
-    font-size: clamp(2.2rem, 4.8vw, 3.9rem);
+  max-width: 18ch;
+    font-size: clamp(2.35rem, 5vw, 4.35rem);
     text-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
@@ -498,7 +504,8 @@ select {
 .hero-lead {
   max-width: 50rem;
   margin: 1.25rem 0 0;
-  font-size: 1.12rem;
+  font-size: 1.08rem;
+  line-height: 1.72;
   overflow-wrap: break-word;
 }
 
@@ -1239,6 +1246,75 @@ select {
 
 .contact-card address {
   font-style: normal;
+}
+
+.contact-card-channels {
+  border-color: rgba(232, 228, 220, 0.14);
+}
+
+.channel-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.95rem;
+}
+
+.channel-link {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(232, 228, 220, 0.1);
+  border-radius: var(--radius-sm) var(--radius-sm) var(--radius-sm) 0.35rem;
+  background: rgba(13, 13, 11, 0.5);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    transform 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out);
+}
+
+.channel-link:hover,
+.channel-link:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(232, 228, 220, 0.24);
+  background: rgba(26, 26, 23, 0.92);
+}
+
+.channel-link span {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.channel-link strong {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.channel-link-whatsapp {
+  border-color: rgba(37, 211, 102, 0.28);
+}
+
+.channel-link-whatsapp strong {
+  color: #77e7a4;
+}
+
+.qr-card {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+}
+
+.contact-qr {
+  width: min(100%, 13.5rem);
+  height: auto;
+  padding: 0.55rem;
+  border: 1px solid rgba(232, 228, 220, 0.12);
+  border-radius: var(--radius-sm) var(--radius-sm) var(--radius-sm) 0.35rem;
+  background: var(--os);
 }
 
 .contact-list {
@@ -2950,8 +3026,12 @@ select {
   }
 
   .brand img {
-    width: min(46vw, 180px);
     height: auto;
+  }
+
+  .site-nav .brand-logo {
+    width: min(58vw, 220px);
+    max-width: 220px;
   }
 
   .nav-toggle {
@@ -2982,7 +3062,7 @@ select {
   }
 
   .site-nav .brand {
-    width: min(46vw, 180px);
+    width: min(58vw, 220px);
   }
 
     .site-nav .nav-links {
@@ -3497,20 +3577,21 @@ select {
 /* ── Locked branding: responsive overrides ──────────────────── */
 @media (max-width: 980px) {
   .site-nav {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .nav-links {
     gap: 16px 20px;
+    justify-content: flex-end;
   }
 }
 
 @media (max-width: 640px) {
 
   .brand-logo {
-    width: 100%;
-    max-width: 100%;
+    width: min(58vw, 220px);
+    max-width: 220px;
     height: auto;
   }
 

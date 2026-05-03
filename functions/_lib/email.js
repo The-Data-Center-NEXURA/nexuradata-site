@@ -35,7 +35,7 @@ const buildEmailHtml = (content) => `<!DOCTYPE html>
   <tr><td style="padding:24px 28px;">${content}</td></tr>
   <tr><td style="padding:0 28px 22px;">
     <div style="height:1px;background:rgba(232,228,220,0.1);margin-bottom:16px;"></div>
-    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#4a4540;line-height:1.7;">Ce message est confidentiel et destiné uniquement à son destinataire. Toute diffusion ou utilisation non autorisée est interdite.<br>NEXURADATA · Longueuil, QC, Canada · <a href="https://nexuradata.ca" style="color:#6a655e;text-decoration:none;">nexuradata.ca</a></p>
+    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#4a4540;line-height:1.7;">Ce message est confidentiel et destiné uniquement à son destinataire. Toute diffusion ou utilisation non autorisée est interdite.<br>NEXURADATA · Montréal, QC, Canada · <a href="https://nexuradata.ca" style="color:#6a655e;text-decoration:none;">nexuradata.ca</a></p>
   </td></tr>
 </table>
 </td></tr></table>

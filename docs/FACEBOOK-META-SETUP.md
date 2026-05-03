@@ -1,4 +1,4 @@
-# Facebook / Meta setup — NEXURADATA
+﻿# Facebook / Meta setup — NEXURADATA
 
 ## Current repo status
 
@@ -14,7 +14,7 @@ Prepared assets:
 - Intake QR image: `assets/icons/contact-qr.png`
 - Open Graph fallback: `assets/icons/og-default.png`
 
-Recommended account owner: `olivier@nexuradata.ca` or a Meta Business account controlled by NEXURADATA.
+Recommended account owner: `admin@nexuradata.ca` or a Meta Business account controlled by NEXURADATA.
 
 ## 1. Create or claim the Facebook Page
 
