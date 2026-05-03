@@ -74,7 +74,7 @@ export const inferRiskFlags = (submission = {}) => {
     flags.add("overwrite-risk");
   }
 
-  if (includesAny(`${urgency} ${impact}`, ["urgent", "très sensible", "tres sensible", "opérations bloquées", "operations blocked", "client", "juridique", "assurance"])) {
+  if (includesAny(`${urgency} ${impact} ${message}`, ["urgent", "très sensible", "tres sensible", "opérations bloquées", "operations blocked", "client", "juridique", "assurance"])) {
     flags.add("priority-response");
   }
 

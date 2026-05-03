@@ -864,41 +864,6 @@ select {
   align-items: start;
 }
 
-.triage-board {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.triage-card {
-  position: relative;
-  padding: 1.4rem;
-  border: 1px solid rgba(232, 228, 220, 0.09);
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(28, 28, 25, 0.97), rgba(17, 17, 15, 0.94));
-  box-shadow: 0 20px 40px -34px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-}
-
-.triage-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, var(--color-accent), var(--color-highlight));
-}
-
-.triage-number {
-  margin: 0 0 1rem;
-  color: var(--color-accent);
-  font-size: 0.82rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-}
-
-.triage-card h3,
 .warning-card h3,
 .authority-note h3,
 .authority-item h3 {
@@ -907,7 +872,6 @@ select {
   font-family: var(--font-sans);
 }
 
-.triage-card p,
 .warning-card p,
 .authority-item p,
 .lane-summary {
@@ -2994,10 +2958,6 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .triage-board {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .contact-grid {
     grid-template-columns: 1fr;
   }
@@ -3346,7 +3306,6 @@ select {
     grid-column: auto;
   }
 
-  .triage-board,
   .lane-grid,
   .metro-grid,
   .trust-grid,

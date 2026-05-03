@@ -47,6 +47,16 @@ describe("inferRiskFlags()", () => {
     expect(flags).toContain("forensic-boundary");
     expect(flags).toContain("priority-response");
   });
+
+  it("keeps priority markers from qualified intake messages", () => {
+    const flags = inferRiskFlags({
+      support: "Disque dur",
+      urgence: "Standard",
+      message: "Impact d'affaires: Opérations bloquées\nSensibilité du dossier: Confidentiel\n\nDescription:\nDisque externe non reconnu."
+    });
+
+    expect(flags).toContain("priority-response");
+  });
 });
 
 describe("inferMissingInformation()", () => {
