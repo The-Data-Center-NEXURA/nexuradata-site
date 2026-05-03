@@ -21,3 +21,6 @@ node_modules/
 .wrangler/
 release-cloudflare/
 *.zip
+
+# Generated previews / accidental exports
+.github/agents/*.html

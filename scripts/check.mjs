@@ -6,7 +6,9 @@
  *   1. CSP does not contain unsafe-inline or unsafe-eval
  *   2. No secrets hardcoded in functions/ (API keys, tokens, passwords)
  *   3. Functions handlers use correct onRequestOptions signature (env-aware CORS)
- *   4. release-cloudflare/ is in sync with source after build
+ *   4. GitHub metadata does not contain generated preview exports or placeholder templates
+ *   5. release-cloudflare/ is in sync with source after build
+ *   6. Public files do not expose private address/name markers
  *
  * Run: node ./scripts/check.mjs
  * Exit 0 = all clear. Exit 1 = violations found (with details).
@@ -14,7 +16,7 @@
 
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -22,6 +24,27 @@ const errors = [];
 
 function fail(rule, detail) {
     errors.push({ rule, detail });
+}
+
+function walkFiles(dir, files = []) {
+    if (!existsSync(dir)) {
+        return files;
+    }
+
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if ([".git", "node_modules", ".wrangler"].includes(entry.name)) {
+            continue;
+        }
+
+        const fullPath = join(dir, entry.name);
+        if (entry.isDirectory()) {
+            walkFiles(fullPath, files);
+        } else if (entry.isFile()) {
+            files.push(fullPath);
+        }
+    }
+
+    return files;
 }
 
 // ─── 1. CSP — no unsafe directives ───────────────────────────────────────────
@@ -89,7 +112,26 @@ for (const file of funcFiles) {
     }
 }
 
-// ─── 4. release-cloudflare/ in sync with source ──────────────────────────────
+// ─── 4. GitHub repo hygiene ──────────────────────────────────────────────────
+const agentsDir = join(ROOT, ".github", "agents");
+for (const file of walkFiles(agentsDir)) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (rel.endsWith(".html")) {
+        fail("GITHUB_GENERATED_EXPORT", `${rel}: generated HTML exports do not belong in .github/agents/. Keep only agent Markdown files.`);
+    }
+}
+
+const prTemplatePath = join(ROOT, ".github", "pull_request_template.md");
+if (existsSync(prTemplatePath)) {
+    const template = readFileSync(prTemplatePath, "utf8");
+    if (/Sample Pull Request Template|customize it to fit|Don't forget to commit your template/i.test(template)) {
+        fail("PR_TEMPLATE_PLACEHOLDER", ".github/pull_request_template.md still contains placeholder template text.");
+    }
+} else {
+    fail("PR_TEMPLATE_MISSING", ".github/pull_request_template.md is missing.");
+}
+
+// ─── 5. release-cloudflare/ in sync with source ──────────────────────────────
 try {
     execSync("npm run build --silent", { cwd: ROOT, stdio: "pipe" });
     const dirty = execSync("git status --porcelain release-cloudflare/", { cwd: ROOT, encoding: "utf8" }).trim();
@@ -101,6 +143,32 @@ try {
     }
 } catch (e) {
     fail("BUILD_FAILED", "npm run build failed: " + (e.message || e));
+}
+
+// ─── 6. Public sensitive content guard ───────────────────────────────────────
+const TEXT_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".jsonc", ".md", ".txt", ".xml"]);
+const SENSITIVE_SCAN_EXCLUDE = new Set(["scripts/check.mjs"]);
+const PRIVATE_CONTENT_PATTERNS = [
+    { pattern: /Giacomo\s+Navarro/i, label: "personal name" },
+    { pattern: /\b1102\b/i, label: "private street number" },
+    { pattern: /J4K\s*1W6/i, label: "private postal code" },
+    { pattern: /C[oô]teau[-\s]Rouge/i, label: "private street name" },
+    { pattern: /ch\.\s*du\s*C[oô]teau/i, label: "private street abbreviation" },
+    { pattern: /chemin\s+du\s+C[oô]teau/i, label: "private street wording" },
+];
+
+for (const file of walkFiles(ROOT)) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (SENSITIVE_SCAN_EXCLUDE.has(rel) || !TEXT_EXTENSIONS.has(extname(file).toLowerCase())) {
+        continue;
+    }
+
+    const content = readFileSync(file, "utf8");
+    for (const { pattern, label } of PRIVATE_CONTENT_PATTERNS) {
+        if (pattern.test(content)) {
+            fail("SENSITIVE_PUBLIC_CONTENT", `${rel}: blocked ${label}. Use public business contact language only.`);
+        }
+    }
 }
 
 // ─── Report ───────────────────────────────────────────────────────────────────
