@@ -32,5 +32,14 @@ jobs:
       - name: Build release output
         run: npm run build
 
-      # Deployment is handled automatically by Cloudflare Pages Connect to Git.
-      # The wrangler deploy step is intentionally disabled to avoid conflicts.
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          COMMIT_MESSAGE="$(git log -1 --pretty=%B)"
+          npx wrangler pages deploy ./release-cloudflare \
+            --project-name nexuradata \
+            --branch main \
+            --commit-hash "${{ github.sha }}" \
+            --commit-message "$COMMIT_MESSAGE"
