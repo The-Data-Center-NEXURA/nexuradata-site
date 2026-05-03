@@ -24,7 +24,7 @@
   "devDependencies": {
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",
-    "vitest": "^4.1.4",
+    "vitest": "^4.1.5",
     "wrangler": "^4.84.0"
   },
   "dependencies": {
