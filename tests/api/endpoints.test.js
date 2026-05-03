@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { onRequestPost as intakeHandler, onRequestOptions as intakeOptions } from "../../functions/api/intake.js";
 import { onRequestPost as statusHandler, onRequestOptions as statusOptions, onRequest as statusFallback } from "../../functions/api/status.js";
 import { onRequestPost as authorizationHandler, onRequestOptions as authorizationOptions, onRequest as authorizationFallback } from "../../functions/api/authorization.js";
-import { onRequestPost as webhookHandler } from "../../functions/api/stripe-webhook.js";
+import { isAllowedStripeWebhookEvent, onRequestPost as webhookHandler } from "../../functions/api/stripe-webhook.js";
 
 // ─── Helpers ────────────────────────────────────────────────
 
@@ -128,6 +128,14 @@ describe("POST /api/authorization", () => {
 // ─── stripe webhook endpoint ────────────────────────────────
 
 describe("POST /api/stripe-webhook", () => {
+  it("accepts the Stripe Checkout events used by the payment workflow", () => {
+    expect(isAllowedStripeWebhookEvent("checkout.session.completed")).toBe(true);
+    expect(isAllowedStripeWebhookEvent("checkout.session.async_payment_succeeded")).toBe(true);
+    expect(isAllowedStripeWebhookEvent("checkout.session.async_payment_failed")).toBe(true);
+    expect(isAllowedStripeWebhookEvent("checkout.session.expired")).toBe(true);
+    expect(isAllowedStripeWebhookEvent("async_payment_succeeded")).toBe(false);
+  });
+
   it("returns 503 when DATABASE_URL is not configured", async () => {
     const ctx = makeContext({}, {});
     ctx.request = new Request("https://nexuradata.ca/api/stripe-webhook", {

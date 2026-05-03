@@ -2,6 +2,15 @@ import { syncPaymentRequestFromStripe } from "../_lib/cases.js";
 import { json, methodNotAllowed, onOptions } from "../_lib/http.js";
 import { verifyStripeWebhook } from "../_lib/stripe.js";
 
+export const allowedStripeWebhookEvents = new Set([
+  "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
+  "checkout.session.async_payment_failed",
+  "checkout.session.expired"
+]);
+
+export const isAllowedStripeWebhookEvent = (eventType) => allowedStripeWebhookEvents.has(`${eventType || ""}`);
+
 export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
 export const onRequestPost = async (context) => {
@@ -20,9 +29,7 @@ export const onRequestPost = async (context) => {
     );
   }
 
-  // Validate event type
-  const allowedEvents = ["checkout.session.completed", "async_payment_succeeded", "async_payment_failed"];
-  if (!allowedEvents.includes(event.type)) {
+  if (!isAllowedStripeWebhookEvent(event.type)) {
     console.error(JSON.stringify({
       timestamp: new Date().toISOString(),
       context: "stripe_webhook_unknown_event",
