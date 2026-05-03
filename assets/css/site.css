@@ -3485,6 +3485,11 @@ select {
     font-size: 0.86rem;
   }
 
+  .hero-actions .button-secondary,
+  .hero-actions .button-outline {
+    display: none;
+  }
+
   .whatsapp-fab {
     display: none;
   }
