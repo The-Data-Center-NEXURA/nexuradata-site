@@ -7,6 +7,14 @@ describe("json()", () => {
     expect(res).toBeInstanceOf(Response);
     expect(res.headers.get("content-type")).toBe("application/json; charset=UTF-8");
     expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(res.headers.get("cross-origin-opener-policy")).toBe("same-origin");
+    expect(res.headers.get("cross-origin-resource-policy")).toBe("same-site");
+    expect(res.headers.get("origin-agent-cluster")).toBe("?1");
+    expect(res.headers.get("referrer-policy")).toBe("strict-origin-when-cross-origin");
+    expect(res.headers.get("permissions-policy")).toContain("camera=()");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
+    expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
     const body = await res.json();
     expect(body).toEqual({ ok: true });
   });
@@ -49,6 +57,9 @@ describe("onOptions()", () => {
     expect(res.headers.get("access-control-allow-origin")).toBe("https://nexuradata.ca");
     expect(res.headers.get("access-control-allow-methods")).toBe("GET, POST, OPTIONS");
     expect(res.headers.get("access-control-allow-headers")).toBe("content-type");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
+    expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
   });
 
   it("uses custom origin from env", () => {

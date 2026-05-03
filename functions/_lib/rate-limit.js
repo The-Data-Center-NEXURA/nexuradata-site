@@ -1,3 +1,5 @@
+import { apiSecurityHeaders } from "./http.js";
+
 /**
  * In-memory sliding-window rate limiter for Cloudflare Workers.
  *
@@ -69,7 +71,7 @@ export function tooManyRequests(retryAfter) {
       headers: {
         "content-type": "application/json; charset=UTF-8",
         "retry-after": String(retryAfter),
-        "cache-control": "no-store"
+        ...apiSecurityHeaders
       }
     }
   );
