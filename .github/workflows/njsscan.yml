@@ -38,16 +38,24 @@ jobs:
         run: |
           python3 - <<'PY'
           import base64
+          import gzip
           import json
           import os
+          import sys
+          import urllib.error
           import urllib.request
+          from datetime import datetime, timezone
 
           repository = os.environ["GITHUB_REPOSITORY"]
+          with open("njsscan.sarif", "rb") as sarif_file:
+              sarif = base64.b64encode(gzip.compress(sarif_file.read())).decode("ascii")
+
           payload = {
               "commit_sha": os.environ["GITHUB_SHA"],
               "ref": os.environ["GITHUB_REF"],
-              "sarif": base64.b64encode(open("njsscan.sarif", "rb").read()).decode("ascii"),
+              "sarif": sarif,
               "checkout_uri": f"https://github.com/{repository}",
+              "started_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "tool_name": "njsscan",
           }
           request = urllib.request.Request(
@@ -61,6 +69,10 @@ jobs:
                   "X-GitHub-Api-Version": "2022-11-28",
               },
           )
-          with urllib.request.urlopen(request) as response:
-              print(response.read().decode("utf-8"))
+          try:
+              with urllib.request.urlopen(request) as response:
+                  print(response.read().decode("utf-8"))
+          except urllib.error.HTTPError as error:
+              print(error.read().decode("utf-8"), file=sys.stderr)
+              raise
           PY
