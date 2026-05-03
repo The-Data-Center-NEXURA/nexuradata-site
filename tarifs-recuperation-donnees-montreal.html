@@ -108,47 +108,69 @@
         <p class="eyebrow">Tarifs indicatifs</p>
         <h1>Choisir un parcours d'intervention</h1>
         <p class="page-intro">
-          Le prix dépend du niveau de risque. Commencez par le parcours, puis NEXURADATA confirme le cadre,
-          le paiement et les actions assistées à transmettre.
+          Répondez à quelques questions pour obtenir une estimation indicative et le parcours recommandé. Le prix final
+          est toujours confirmé avant intervention.
         </p>
       </header>
 
       <section class="paid-path-app page-card" data-paid-path-app data-locale="fr" aria-labelledby="paid-path-title">
         <div class="paid-path-copy">
-          <p class="eyebrow">Intervention payante</p>
-          <h2 id="paid-path-title">Vous payez pour gagner du temps, pas pour deviner le problème.</h2>
+          <p class="eyebrow">Auto-évaluation</p>
+          <h2 id="paid-path-title">Obtenir un prix indicatif avant d'ouvrir un dossier.</h2>
           <p>
-            Le principe est clair: vous envoyez le contexte utile, NEXURADATA qualifie le dossier, puis vous recevez
-            après paiement le bon parcours: consignes structurées, liste de fichiers à transmettre,
-            vérifications à faire, ou prise en charge laboratoire quand l'action à distance serait risquée.
+            Sélectionnez le type de support, le symptôme et l'urgence. L'outil prépare le contexte utile pour que
+            NEXURADATA puisse confirmer rapidement le bon prix, les risques à éviter et la prochaine étape.
           </p>
         </div>
 
         <form class="paid-path-controls" data-paid-path-form>
           <label>
-            <span>Besoin principal</span>
-            <select name="objective">
-              <option value="guided">Aide guidée pour corriger un problème logiciel ou restaurer proprement</option>
-              <option value="recovery">Récupération de données avec support à analyser</option>
-              <option value="forensic">Incident, preuve, litige ou dossier sensible</option>
-              <option value="enterprise">Entreprise, RAID, serveur, NAS ou interruption d'activité</option>
+            <span>Support touché</span>
+            <select name="support">
+              <option value="deleted_files">Fichiers supprimés ou dossier disparu</option>
+              <option value="external_media">Disque externe, clé USB ou carte mémoire</option>
+              <option value="hdd_ssd">Disque dur ou SSD non accessible</option>
+              <option value="phone">Téléphone ou tablette</option>
+              <option value="raid_server">RAID, NAS, serveur ou poste critique</option>
+              <option value="forensic">Preuve, litige, incident ou dossier sensible</option>
             </select>
           </label>
           <label>
-            <span>Ce que vous pouvez envoyer</span>
-            <select name="material">
-              <option value="screens">Captures, symptômes, journaux, liste de fichiers ou contexte</option>
-              <option value="device">Support physique, disque, SSD, USB, téléphone ou carte mémoire</option>
-              <option value="system">Informations système, RAID/NAS/serveur, sauvegardes ou architecture</option>
-              <option value="evidence">Éléments de preuve, chronologie, parties impliquées ou mandat</option>
+            <span>Symptôme principal</span>
+            <select name="symptom">
+              <option value="deleted">Suppression, formatage ou dossier manquant</option>
+              <option value="not_detected">Support non reconnu ou accès impossible</option>
+              <option value="clicking">Bruit, chute, surchauffe ou panne physique possible</option>
+              <option value="corrupt">Fichiers corrompus, lenteur ou erreurs de lecture</option>
+              <option value="raid_degraded">RAID dégradé, NAS hors ligne ou volume absent</option>
+              <option value="locked_phone">Téléphone brisé, verrouillé ou données applicatives</option>
+              <option value="evidence">Chronologie, preuve ou conservation confidentielle</option>
             </select>
           </label>
           <label>
-            <span>Temps visé</span>
+            <span>Urgence</span>
             <select name="urgency">
-              <option value="standard">Standard: réponse structurée</option>
-              <option value="priority">Prioritaire: décision rapide</option>
-              <option value="critical">Critique: opérations, client ou dossier juridique bloqué</option>
+              <option value="standard">Standard</option>
+              <option value="priority">Rapide</option>
+              <option value="critical">Urgent ou opérations bloquées</option>
+            </select>
+          </label>
+          <label>
+            <span>Impact</span>
+            <select name="impact">
+              <option value="personal">Personnel ou non urgent</option>
+              <option value="important">Données importantes</option>
+              <option value="blocked">Travail, client ou activité bloquée</option>
+              <option value="legal">Juridique, assurance ou preuve</option>
+            </select>
+          </label>
+          <label>
+            <span>Tentatives déjà faites</span>
+            <select name="attempts">
+              <option value="none">Aucune tentative</option>
+              <option value="software">Logiciel de récupération ou réparation lancé</option>
+              <option value="rebuild">Reconstruction RAID, réinitialisation ou formatage tenté</option>
+              <option value="shop">Déjà vu par un autre atelier</option>
             </select>
           </label>
         </form>
@@ -167,7 +189,8 @@
             <li>Recevoir les outils, consignes et prochaines actions validées.</li>
           </ul>
           <div class="page-links paid-path-actions">
-            <a class="button button-primary" href="index.html#contact" data-paid-path-start>Ouvrir une demande payante</a>
+            <a class="button button-primary" href="index.html#contact" data-paid-path-start>Ouvrir ce dossier</a>
+            <a class="button button-secondary" href="https://wa.me/14388130592" target="_blank" rel="noopener noreferrer" data-paid-path-whatsapp>Envoyer par WhatsApp</a>
             <a class="button button-secondary" href="suivi-dossier-client-montreal.html">J'ai déjà un dossier</a>
           </div>
         </aside>

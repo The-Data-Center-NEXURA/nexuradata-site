@@ -553,85 +553,212 @@ document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
   const summaryTarget = app.querySelector("[data-paid-path-summary]");
   const stepsTarget = app.querySelector("[data-paid-path-steps]");
   const startLink = app.querySelector("[data-paid-path-start]");
+  const whatsappLink = app.querySelector("[data-paid-path-whatsapp]");
 
   if (!form || !titleTarget || !priceTarget || !summaryTarget || !stepsTarget) {
     return;
   }
 
-  const copy = isEnglishDocument
+  const profiles = isEnglishDocument
     ? {
-      guided: {
-        title: "Paid guided review",
-        price: "From $149",
-        summary: "A lab-guided sequence for software issues, clean restores, account-side recovery steps or safe preparation before a deeper intervention.",
-        steps: ["Pay for the guided review.", "Send screenshots, symptoms, logs or file lists.", "Receive the validated steps and limits to follow."]
+      deleted_files: {
+        title: "Deleted files recovery",
+        basePrice: "From $79 to $149",
+        contactSupport: "Je ne sais pas",
+        summary: "A targeted recovery path when files were deleted, moved, formatted or lost without signs of physical damage."
       },
-      recovery: {
-        title: "Media intervention deposit",
-        price: "From $350",
-        summary: "For physical media, NEXURADATA confirms the safest handling path before work begins and tells you exactly what to send or avoid doing.",
-        steps: ["Open the case and confirm the deposit.", "Prepare the media using the reception instructions.", "Receive the next handling or lab treatment step."]
+      external_media: {
+        title: "External media recovery",
+        basePrice: "From $129 to $350",
+        contactSupport: "USB / carte mémoire",
+        summary: "For USB keys, memory cards and external drives that are still partly detected or unstable."
+      },
+      hdd_ssd: {
+        title: "HDD / SSD intervention",
+        basePrice: "From $350 to $650",
+        contactSupport: "SSD",
+        summary: "For drives or SSDs that are inaccessible, unstable, corrupted or showing symptoms that need specialized handling."
+      },
+      phone: {
+        title: "Phone data recovery",
+        basePrice: "From $149 to $450",
+        contactSupport: "Téléphone / mobile",
+        summary: "For photos, videos, messages and app data on phones or tablets, depending on model, access and damage level."
+      },
+      raid_server: {
+        title: "RAID / NAS / server case",
+        basePrice: "From $650 or quoted",
+        contactSupport: "RAID / NAS / serveur",
+        summary: "For multi-disk systems, business interruption, degraded arrays, missing volumes or server-side recovery."
       },
       forensic: {
-        title: "Sensitive case authorization",
-        price: "Quoted",
-        summary: "For evidence, incidents or disputes, the authorization confirms scope, confidentiality expectations and the next controlled action.",
-        steps: ["Open the request with the relevant context.", "Review the transmitted scope.", "Authorize the controlled intervention through the client portal."]
-      },
-      enterprise: {
-        title: "Operational intervention path",
-        price: "Priority quote",
-        summary: "For RAID, NAS, servers or blocked operations, the first decision is about risk, continuity and the cleanest route to restore activity.",
-        steps: ["Share the system context and business impact.", "Receive the intervention frame.", "Approve the request before production-facing work begins."]
+        title: "Sensitive or evidence case",
+        basePrice: "Quoted",
+        contactSupport: "Forensique / preuve numérique",
+        summary: "For incidents, disputes, insurance, legal context or confidential evidence preservation."
       }
     }
     : {
-      guided: {
-        title: "Revue guidée payante",
-        price: "À partir de 149 $",
-        summary: "Une séquence guidée par le laboratoire pour les problèmes logiciels, restaurations propres, accès ou préparation sécurisée avant une intervention plus lourde.",
-        steps: ["Payer la revue guidée.", "Envoyer les captures, symptômes, journaux ou listes de fichiers.", "Recevoir les étapes validées et les limites à respecter."]
+      deleted_files: {
+        title: "Récupération de fichiers supprimés",
+        basePrice: "De 79 $ à 149 $",
+        contactSupport: "Je ne sais pas",
+        summary: "Parcours ciblé lorsque des fichiers ont été supprimés, déplacés, formatés ou perdus sans signe de dommage physique."
       },
-      recovery: {
-        title: "Acompte d'intervention support",
-        price: "À partir de 350 $",
-        summary: "Pour un support physique, NEXURADATA confirme la voie de manipulation la plus sûre avant le traitement et indique exactement quoi transmettre ou éviter.",
-        steps: ["Ouvrir le dossier et confirmer l'acompte.", "Préparer le support selon les consignes de réception.", "Recevoir la prochaine étape de manipulation ou de traitement."]
+      external_media: {
+        title: "Récupération support externe",
+        basePrice: "De 129 $ à 350 $",
+        contactSupport: "USB / carte mémoire",
+        summary: "Pour clés USB, cartes mémoire et disques externes encore partiellement détectés ou instables."
+      },
+      hdd_ssd: {
+        title: "Intervention HDD / SSD",
+        basePrice: "De 350 $ à 650 $",
+        contactSupport: "SSD",
+        summary: "Pour disques ou SSD inaccessibles, instables, corrompus ou présentant des symptômes qui exigent une manipulation spécialisée."
+      },
+      phone: {
+        title: "Récupération téléphone",
+        basePrice: "De 149 $ à 450 $",
+        contactSupport: "Téléphone / mobile",
+        summary: "Pour photos, vidéos, messages et données applicatives sur téléphone ou tablette, selon le modèle, l'accès et le dommage."
+      },
+      raid_server: {
+        title: "Dossier RAID / NAS / serveur",
+        basePrice: "À partir de 650 $ ou sur soumission",
+        contactSupport: "RAID / NAS / serveur",
+        summary: "Pour systèmes multidisques, interruption d'activité, RAID dégradé, volume absent ou récupération côté serveur."
       },
       forensic: {
-        title: "Autorisation de dossier sensible",
-        price: "Sur soumission",
-        summary: "Pour une preuve, un incident ou un litige, l'autorisation confirme le périmètre, la confidentialité et la prochaine action contrôlée.",
-        steps: ["Ouvrir la demande avec le contexte pertinent.", "Réviser le cadre transmis.", "Autoriser l'intervention contrôlée dans le portail client."]
-      },
-      enterprise: {
-        title: "Parcours d'intervention opérationnelle",
-        price: "Soumission prioritaire",
-        summary: "Pour RAID, NAS, serveurs ou opérations bloquées, la première décision porte sur le risque, la continuité et la voie de reprise la plus propre.",
-        steps: ["Partager le contexte système et l'impact d'affaires.", "Recevoir le cadre d'intervention.", "Approuver la demande avant le travail touchant la production."]
+        title: "Dossier sensible ou preuve",
+        basePrice: "Sur soumission",
+        contactSupport: "Forensique / preuve numérique",
+        summary: "Pour incident, litige, assurance, contexte juridique ou conservation confidentielle de preuve."
       }
     };
 
+  const labels = isEnglishDocument
+    ? {
+      standard: "Standard",
+      priority: "Priority",
+      critical: "Urgent or operations blocked",
+      personal: "Personal or non-urgent",
+      important: "Important data",
+      blocked: "Work, client or activity blocked",
+      legal: "Legal, insurance or evidence",
+      none: "No attempt",
+      software: "Recovery or repair software was launched",
+      rebuild: "RAID rebuild, reset or format attempted",
+      shop: "Already seen by another shop",
+      sensitivePrice: "Quoted after scope confirmation",
+      priorityPrice: "Priority quote",
+      urgencyNote: "Priority handling may change the final quote.",
+      riskNote: "Stop using the affected device until NEXURADATA confirms the next step.",
+      contactPrefix: "Estimate from the NEXURADATA self-assessment",
+      openSubject: "NEXURADATA estimate"
+    }
+    : {
+      standard: "Standard",
+      priority: "Rapide",
+      critical: "Urgent ou opérations bloquées",
+      personal: "Personnel ou non urgent",
+      important: "Données importantes",
+      blocked: "Travail, client ou activité bloquée",
+      legal: "Juridique, assurance ou preuve",
+      none: "Aucune tentative",
+      software: "Logiciel de récupération ou réparation lancé",
+      rebuild: "Reconstruction RAID, réinitialisation ou formatage tenté",
+      shop: "Déjà vu par un autre atelier",
+      sensitivePrice: "Sur soumission après cadrage",
+      priorityPrice: "Soumission prioritaire",
+      urgencyNote: "Le traitement prioritaire peut modifier le devis final.",
+      riskNote: "Cessez d'utiliser le support touché jusqu'à confirmation de la prochaine étape.",
+      contactPrefix: "Estimation issue de l'auto-évaluation NEXURADATA",
+      openSubject: "Estimation NEXURADATA"
+    };
+
+  const contactUrgency = {
+    standard: isEnglishDocument ? "Standard" : "Standard",
+    priority: isEnglishDocument ? "Rapide" : "Rapide",
+    critical: isEnglishDocument ? "Urgent" : "Urgent"
+  };
+
+  const contactImpact = {
+    personal: "Planifié / non urgent",
+    important: "Données importantes",
+    blocked: "Opérations bloquées",
+    legal: "Client, juridique ou assurance impliqué"
+  };
+
+  const contactSensitivity = {
+    personal: "Standard",
+    important: "Confidentiel",
+    blocked: "Données sensibles",
+    legal: "Preuve / chaîne de possession"
+  };
+
   const updateRecommendation = () => {
     const formData = new FormData(form);
-    const objective = `${formData.get("objective") || "guided"}`;
+    const support = `${formData.get("support") || "deleted_files"}`;
+    const symptom = `${formData.get("symptom") || "deleted"}`;
     const urgency = `${formData.get("urgency") || "standard"}`;
-    const recommendation = copy[objective] || copy.guided;
+    const impact = `${formData.get("impact") || "personal"}`;
+    const attempts = `${formData.get("attempts") || "none"}`;
+    const profile = profiles[support] || profiles.deleted_files;
+    const needsScope = support === "forensic" || impact === "legal" || attempts === "rebuild" || attempts === "shop" || symptom === "clicking" || symptom === "raid_degraded";
+    const needsPriority = urgency === "critical" || impact === "blocked";
+    const estimate = needsScope ? labels.sensitivePrice : needsPriority ? labels.priorityPrice : profile.basePrice;
+    const details = [
+      profile.summary,
+      needsPriority ? labels.urgencyNote : "",
+      attempts !== "none" || symptom === "clicking" || symptom === "raid_degraded" ? labels.riskNote : ""
+    ].filter(Boolean).join(" ");
+    const steps = isEnglishDocument
+      ? [
+        "Keep the device in its current state and avoid new repair attempts.",
+        "Open the case with this estimate so the context follows the request.",
+        "NEXURADATA confirms the final quote before any intervention."
+      ]
+      : [
+        "Gardez le support dans son état actuel et évitez toute nouvelle tentative.",
+        "Ouvrez le dossier avec cette estimation pour transmettre le contexte.",
+        "NEXURADATA confirme le devis final avant toute intervention."
+      ];
 
-    titleTarget.textContent = recommendation.title;
-    priceTarget.textContent = urgency === "critical" && objective !== "guided"
-      ? (isEnglishDocument ? "Priority quote" : "Soumission prioritaire")
-      : recommendation.price;
-    summaryTarget.textContent = recommendation.summary;
-    stepsTarget.replaceChildren(...recommendation.steps.map((step) => {
+    titleTarget.textContent = profile.title;
+    priceTarget.textContent = estimate;
+    summaryTarget.textContent = details;
+    stepsTarget.replaceChildren(...steps.map((step) => {
       const item = document.createElement("li");
       item.textContent = step;
       return item;
     }));
 
+    const contextLines = [
+      labels.contactPrefix,
+      `${isEnglishDocument ? "Path" : "Parcours"}: ${profile.title}`,
+      `${isEnglishDocument ? "Estimate" : "Estimation"}: ${estimate}`,
+      `${isEnglishDocument ? "Urgency" : "Urgence"}: ${labels[urgency] || urgency}`,
+      `${isEnglishDocument ? "Impact" : "Impact"}: ${labels[impact] || impact}`,
+      `${isEnglishDocument ? "Attempts" : "Tentatives"}: ${labels[attempts] || attempts}`,
+      `${isEnglishDocument ? "Symptom" : "Symptôme"}: ${symptom}`
+    ];
+    const message = contextLines.join("\n");
+    const query = new URLSearchParams({
+      support: profile.contactSupport,
+      urgence: contactUrgency[urgency] || "Standard",
+      profil: impact === "blocked" ? "Entreprise / TI" : impact === "legal" ? "Cabinet juridique" : "Particulier",
+      impact: contactImpact[impact] || "Données importantes",
+      sensibilite: contactSensitivity[impact] || "Confidentiel",
+      message
+    });
+
     if (startLink) {
-      const label = encodeURIComponent(recommendation.title);
-      startLink.href = isEnglishDocument ? `/en/?path=${label}#contact` : `index.html?path=${label}#contact`;
+      startLink.href = isEnglishDocument ? `/en/?${query.toString()}#contact` : `index.html?${query.toString()}#contact`;
+    }
+
+    if (whatsappLink) {
+      whatsappLink.href = `https://wa.me/14388130592?text=${encodeURIComponent(message)}`;
     }
   };
 
@@ -1095,6 +1222,16 @@ if (intakeForm) {
   const statusTarget = intakeForm.querySelector("[data-form-status]");
   const submitButton = intakeForm.querySelector('button[type="submit"]');
   const endpoint = intakeForm.getAttribute("data-intake-endpoint") || "/api/intake";
+  const intakeParams = new URLSearchParams(window.location.search);
+
+  ["support", "urgence", "profil", "impact", "sensibilite", "message"].forEach((name) => {
+    const field = intakeForm.elements[name];
+    const value = intakeParams.get(name);
+
+    if (field && value) {
+      field.value = value;
+    }
+  });
 
   intakeForm.addEventListener("submit", async (event) => {
     event.preventDefault();
