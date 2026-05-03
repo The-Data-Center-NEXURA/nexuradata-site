@@ -16,14 +16,74 @@ const isEnglishDocument = documentLanguage.startsWith("en");
 fbq("init", "751859640106935");
 fbq("track", "PageView");
 
+const normalizeAnalyticsValue = (value, fallback = "unknown") => {
+  const normalized = `${value || fallback}`
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80);
+
+  return normalized || fallback;
+};
+
+const trackGaEvent = (eventName, params = {}) => {
+  if (typeof gtag !== "function") return;
+  gtag("event", eventName, params);
+};
+
+const trackMetaEvent = (eventName, params = {}) => {
+  if (typeof fbq !== "function") return;
+  fbq("track", eventName, params);
+};
+
 const trackContactIntent = (method) => {
-  if (typeof fbq === "function") fbq("track", "Contact", { content_name: method });
-  if (typeof gtag === "function") {
-    gtag("event", "generate_lead", {
-      method,
-      event_category: "contact"
-    });
-  }
+  const contactMethod = normalizeAnalyticsValue(method, "contact_link");
+
+  trackMetaEvent("Contact", { content_name: contactMethod });
+  trackGaEvent("generate_lead", {
+    event_category: "contact",
+    method: contactMethod,
+    contact_method: contactMethod
+  });
+  trackGaEvent("contact_intent", {
+    event_category: "contact",
+    method: contactMethod,
+    contact_method: contactMethod
+  });
+};
+
+const trackIntakeFormSubmit = (deliveryStatus = "unknown") => {
+  const status = normalizeAnalyticsValue(deliveryStatus, "unknown");
+
+  trackMetaEvent("Lead", { content_name: "intake_form" });
+  trackGaEvent("form_submit", {
+    event_category: "lead",
+    form_name: "intake_form",
+    delivery_status: status
+  });
+  trackGaEvent("generate_lead", {
+    event_category: "lead",
+    method: "intake_form",
+    delivery_status: status
+  });
+};
+
+const trackSelfAssessmentIntent = (method, context = {}) => {
+  const normalizedMethod = normalizeAnalyticsValue(method, "self_assessment");
+  const support = normalizeAnalyticsValue(context.support, "unknown_support");
+  const urgency = normalizeAnalyticsValue(context.urgency, "unknown_urgency");
+  const impact = normalizeAnalyticsValue(context.impact, "unknown_impact");
+  const estimateType = normalizeAnalyticsValue(context.estimateType, "standard");
+
+  trackGaEvent("self_assessment_intent", {
+    event_category: "self_assessment",
+    method: normalizedMethod,
+    support,
+    urgency,
+    impact,
+    estimate_type: estimateType
+  });
 };
 
 // ── WhatsApp floating button ──────────────────────────────────
@@ -844,6 +904,7 @@ document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
     const profile = estimatorCopy[support] || estimatorCopy.deleted_files;
     const scoped = support === "forensic" || impact === "legal" || attempts === "rebuild" || attempts === "shop" || symptom === "clicking" || symptom === "raid_degraded";
     const priority = urgency === "critical" || impact === "blocked";
+    const estimateType = scoped ? "scoped" : priority ? "priority" : "standard";
     const estimate = scoped ? labels.scoped : priority ? labels.priorityQuote : profile[1];
     const summary = `${profile[2]} ${scoped || priority ? labels.note : ""}`.trim();
     const steps = isEnglishDocument
@@ -877,11 +938,29 @@ document.querySelectorAll("[data-paid-path-app]").forEach((app) => {
       message
     });
 
+    app.dataset.estimateSupport = support;
+    app.dataset.estimateUrgency = urgency;
+    app.dataset.estimateImpact = impact;
+    app.dataset.estimateType = estimateType;
+
     if (startLink) startLink.href = isEnglishDocument ? `/en/?${query.toString()}#contact` : `index.html?${query.toString()}#contact`;
     if (whatsappLink) whatsappLink.href = `https://wa.me/14388130592?text=${encodeURIComponent(message)}`;
   };
 
   form.addEventListener("change", updateEstimate);
+  if (startLink) {
+    startLink.addEventListener("click", () => {
+      trackSelfAssessmentIntent("open_case", app.dataset);
+    });
+  }
+
+  if (whatsappLink) {
+    whatsappLink.addEventListener("click", () => {
+      trackSelfAssessmentIntent("whatsapp", app.dataset);
+      trackContactIntent("self_assessment_whatsapp");
+    });
+  }
+
   updateEstimate();
 });
 
@@ -1370,7 +1449,7 @@ if (intakeForm) {
 
       if (response.ok && data?.ok) {
         intakeForm.reset();
-        if (typeof fbq === "function") fbq("track", "Lead", { content_name: "intake_form" });
+        trackIntakeFormSubmit(data?.delivery?.client || "queued");
         setMessage(
           statusTarget,
           "success",

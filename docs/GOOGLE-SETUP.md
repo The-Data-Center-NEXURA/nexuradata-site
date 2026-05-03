@@ -60,7 +60,27 @@ Pre-launch checklist for connecting NEXURADATA to Google. All properties must be
 - **Data Retention**: set to **14 months** (max under default plan).
 - **IP Anonymization**: GA4 anonymizes by default — no action.
 - **Events**: keep enhanced measurement ON (page_view, scroll, outbound clicks, file_download).
-- Mark **`form_submit`** as a conversion once the intake form starts firing it.
+- Mark **`form_submit`** and **`generate_lead`** as conversions once GA4 Realtime confirms they are firing.
+
+### Repo-wired GA4 events
+
+The public JavaScript sends privacy-safe events only. Do not send names, emails, phone numbers, message contents or access codes to GA4.
+
+| Event | When it fires | Useful dimensions |
+| --- | --- | --- |
+| `contact_intent` | Phone, email, WhatsApp, Google or Facebook contact link clicked | `contact_method`, `method` |
+| `generate_lead` | Contact link clicked or intake form accepted by the API | `method`, `delivery_status` |
+| `form_submit` | Intake form accepted by the API | `form_name`, `delivery_status` |
+| `self_assessment_intent` | Pricing/self-assessment CTA clicked | `support`, `urgency`, `impact`, `estimate_type`, `method` |
+
+Recommended GA4 custom dimensions:
+
+- `contact_method`
+- `delivery_status`
+- `support`
+- `urgency`
+- `impact`
+- `estimate_type`
 
 ---
 

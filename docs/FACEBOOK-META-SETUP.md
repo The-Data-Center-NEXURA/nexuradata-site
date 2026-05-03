@@ -85,6 +85,8 @@ Do not enable messaging if nobody owns daily response time. A slow inbox damages
 
 Use French first. Add an English version only when the post is targeted to bilingual or English-speaking audiences. The objective is not to entertain casually; it is to make a stressed client understand that NEXURADATA has a controlled path and that they should open a qualified request.
 
+For the full first-month publishing queue, use [FACEBOOK-CONTENT-CALENDAR-2026-05.md](FACEBOOK-CONTENT-CALENDAR-2026-05.md). The posts below are the minimum launch set.
+
 Post 1 — launch / pinned intake post:
 
 ```text
@@ -188,7 +190,7 @@ Optional later:
 
 - Meta Business verification.
 - WhatsApp Business connection.
-- Meta Pixel only if a consent banner and privacy update are implemented.
+- Paid Meta campaigns only after contact coverage, page access, privacy settings and tracking consent requirements are reviewed.
 
 ## Quick checklist
 

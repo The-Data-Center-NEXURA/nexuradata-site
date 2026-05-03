@@ -1,6 +1,6 @@
 # Marketing account status
 
-This file is the single-page tracker for Google and Facebook/Meta launch readiness.
+This file is the single-page tracker for Google, Facebook/Meta and WhatsApp launch readiness.
 
 ## Repo-ready items
 
@@ -18,6 +18,10 @@ This file is the single-page tracker for Google and Facebook/Meta launch readine
 - [x] Facebook/social profile assets exist at `assets/icons/social-profile.png` and `assets/icons/social-banner.png`
 - [x] Intake QR asset exists at `assets/icons/contact-qr.png` and points to `https://nexuradata.ca/#contact`
 - [x] Google and Facebook launch posts documented with service-specific landing pages
+- [x] First-month Facebook content calendar exists at `docs/FACEBOOK-CONTENT-CALENDAR-2026-05.md`
+- [x] WhatsApp Business setup runbook exists at `docs/WHATSAPP-BUSINESS-SETUP.md`
+- [x] WhatsApp quick replies exist at `docs/WHATSAPP-QUICK-REPLIES-2026-05.md`
+- [x] GA4 events documented for contact intent, intake form and self-assessment CTAs
 - [x] Email signature template uses locked `assets/nexuradata-signature.png`
 - [x] Facebook/Meta setup runbook exists at `docs/FACEBOOK-META-SETUP.md`
 - [x] Google setup runbook exists at `docs/GOOGLE-SETUP.md`
@@ -42,6 +46,8 @@ These cannot be verified from the repository. They must be completed in Google, 
 - [x] Track phone, email and WhatsApp clicks as lead/contact intent for GA4 and Meta Pixel.
 - [ ] Publish the Facebook launch post with `assets/icons/contact-qr.png` and pin it.
 - [ ] Set the Facebook CTA button to the monitored contact path.
+- [ ] Configure WhatsApp Business profile, labels, greeting and away message.
+- [ ] Load WhatsApp quick replies from `docs/WHATSAPP-QUICK-REPLIES-2026-05.md`.
 - [ ] Submit `https://nexuradata.ca/sitemap.xml` in Search Console.
 - [ ] Create or verify Google Business Profile, then publish the first qualification post.
 - [ ] Confirm the phone line and `contact@nexuradata.ca` are monitored before turning on ads.
@@ -51,6 +57,7 @@ These cannot be verified from the repository. They must be completed in Google, 
 - [ ] Search Console domain property for `nexuradata.ca` verified via DNS TXT
 - [ ] `https://nexuradata.ca/sitemap.xml` submitted in Search Console
 - [ ] GA4 Realtime confirms traffic for `G-TC31YSS01P`
+- [ ] GA4 Realtime confirms `contact_intent`, `generate_lead`, `form_submit` and `self_assessment_intent` events
 - [ ] Merchant Center account created
 - [ ] Website claimed in Merchant Center
 - [ ] `https://nexuradata.ca/merchant-feed.xml` scheduled as a feed
@@ -75,9 +82,23 @@ These cannot be verified from the repository. They must be completed in Google, 
 - [ ] Meta Events Manager confirms Pixel `751859640106935` receives live PageView/Contact events
 - [ ] First launch post published
 - [ ] Two-week launch content cadence scheduled
+- [ ] First-month content calendar scheduled from `docs/FACEBOOK-CONTENT-CALENDAR-2026-05.md`
 - [ ] Page added to Meta Business Suite
 - [ ] Two-factor authentication enabled for admins
 - [ ] Messaging enabled only if monitored daily
+
+### WhatsApp Business
+
+- [ ] WhatsApp Business profile created or verified for `+1 438 813 0592`
+- [ ] Business description, website, email and service area configured
+- [ ] No personal address displayed
+- [ ] Greeting message configured from `docs/WHATSAPP-BUSINESS-SETUP.md`
+- [ ] Away message configured from `docs/WHATSAPP-BUSINESS-SETUP.md`
+- [ ] Labels created for new, urgent, RAID/NAS, phone, SSD/disk, forensic and follow-up cases
+- [ ] Quick replies loaded from `docs/WHATSAPP-QUICK-REPLIES-2026-05.md`
+- [ ] WhatsApp contact link tested from homepage and pricing/self-assessment flow
+- [ ] GA4 Realtime confirms WhatsApp `contact_intent` clicks
+- [ ] WhatsApp monitored daily before using as a public CTA
 
 ## Do not launch ads until
 
@@ -85,4 +106,5 @@ These cannot be verified from the repository. They must be completed in Google, 
 - `contact@nexuradata.ca` is monitored
 - Google Business Profile status is known
 - Facebook Page admin access is secured
+- WhatsApp Business inbox is monitored daily if used as a CTA
 - privacy policy is reviewed if any ad pixel, remarketing or cross-site tracking is added
