@@ -128,6 +128,12 @@ export const sendLabNotificationEmail = async (env, intakeRecord, requestUrl) =>
     "Description du problème:",
     intakeRecord.message,
     "",
+    intakeRecord.concierge?.operatorSummary ? "Concierge maison:" : "",
+    intakeRecord.concierge?.operatorSummary || "",
+    intakeRecord.concierge?.clientMessage ? "" : "",
+    intakeRecord.concierge?.clientMessage ? "Message proposé:" : "",
+    intakeRecord.concierge?.clientMessage || "",
+    "",
     `Console interne: ${portalUrl}`
   ]);
   const html = buildEmailHtml(
@@ -142,6 +148,10 @@ export const sendLabNotificationEmail = async (env, intakeRecord, requestUrl) =>
     emailRow("Source", intakeRecord.sourcePath) +
     `<p style="margin:18px 0 8px;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;color:#6a655e;text-transform:uppercase;">Description du problème</p>` +
     emailBlock(intakeRecord.message) +
+    (intakeRecord.concierge?.operatorSummary
+      ? `<p style="margin:18px 0 8px;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;color:#6a655e;text-transform:uppercase;">Concierge maison</p>` +
+        emailBlock(`${intakeRecord.concierge.operatorSummary}\n\nMessage proposé:\n${intakeRecord.concierge.clientMessage || ""}`)
+      : "") +
     emailCta("Ouvrir la console", portalUrl)
   );
 

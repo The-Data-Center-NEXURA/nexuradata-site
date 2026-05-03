@@ -1671,6 +1671,12 @@ if (operationsRoot) {
   const reminderMessageInput = operationsRoot.querySelector("[data-ops-reminder-message]");
   const logReminderButton = operationsRoot.querySelector("[data-ops-log-reminder]");
   const reminderResult = operationsRoot.querySelector("[data-ops-reminder-result]");
+  const conciergeSummary = operationsRoot.querySelector("[data-ops-concierge-summary]");
+  const conciergeMessage = operationsRoot.querySelector("[data-ops-concierge-message]");
+  const conciergeWhatsApp = operationsRoot.querySelector("[data-ops-concierge-whatsapp]");
+  const conciergeCopyButton = operationsRoot.querySelector("[data-ops-concierge-copy]");
+  const conciergeGenerateButton = operationsRoot.querySelector("[data-ops-concierge-generate]");
+  const conciergeResult = operationsRoot.querySelector("[data-ops-concierge-result]");
 
   const createStepRow = (step = { title: "", note: "", state: "pending" }) => {
     const wrapper = document.createElement("div");
@@ -1861,6 +1867,24 @@ if (operationsRoot) {
     );
   };
 
+  const renderConcierge = (concierge) => {
+    if (conciergeSummary) {
+      conciergeSummary.textContent = concierge
+        ? `${concierge.priorityLabel || "Suivi"} · ${concierge.recommendedPath || "Parcours à confirmer"} · ${concierge.channel === "whatsapp" ? "WhatsApp prêt" : "Courriel ou téléphone"}`
+        : "Aucun message concierge disponible.";
+    }
+
+    if (conciergeMessage) {
+      conciergeMessage.value = concierge?.clientMessage || "";
+    }
+
+    if (conciergeWhatsApp) {
+      const whatsappUrl = concierge?.whatsappUrl || "";
+      conciergeWhatsApp.href = whatsappUrl || "#";
+      conciergeWhatsApp.hidden = !whatsappUrl;
+    }
+  };
+
   const fillCaseDetail = (record) => {
     if (casePanel) {
       casePanel.hidden = false;
@@ -1879,6 +1903,7 @@ if (operationsRoot) {
     if (metaStatusSent) metaStatusSent.textContent = record.statusEmailLastSentAt ? formatTimestamp(record.statusEmailLastSentAt) : "Pas encore";
     if (messageTarget) messageTarget.textContent = record.message;
     if (currentCaseIdInput) currentCaseIdInput.value = record.caseId;
+    renderConcierge(record.concierge);
 
     if (caseForm) {
       const statusInput = caseForm.querySelector('[name="status"]');
@@ -1934,6 +1959,11 @@ if (operationsRoot) {
     if (reminderResult) {
       reminderResult.textContent = "";
       reminderResult.dataset.state = "";
+    }
+
+    if (conciergeResult) {
+      conciergeResult.textContent = "";
+      conciergeResult.dataset.state = "";
     }
 
     renderHistory(record.history || []);
@@ -2326,6 +2356,59 @@ if (operationsRoot) {
         setMessage(reminderResult, "error", error instanceof Error ? error.message : "Relance non enregistrée.");
       } finally {
         setButtonBusy(logReminderButton, false);
+      }
+    });
+  }
+
+  if (conciergeCopyButton) {
+    conciergeCopyButton.addEventListener("click", async () => {
+      const message = conciergeMessage?.value || "";
+
+      if (!message) {
+        setMessage(conciergeResult, "error", "Aucun message à copier.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(message);
+        setMessage(conciergeResult, "success", "Message copié.");
+      } catch {
+        conciergeMessage?.select();
+        setMessage(conciergeResult, "success", "Message sélectionné pour copie manuelle.");
+      }
+    });
+  }
+
+  if (conciergeGenerateButton) {
+    conciergeGenerateButton.addEventListener("click", async () => {
+      const caseId = currentCaseIdInput?.value || "";
+      if (!caseId) {
+        setMessage(conciergeResult, "error", "Chargez d'abord un dossier.");
+        return;
+      }
+
+      setMessage(conciergeResult, "success", "Génération du message concierge...");
+      setButtonBusy(conciergeGenerateButton, true, "Génération...");
+
+      try {
+        const response = await fetch(searchEndpoint, {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ action: "concierge-draft", caseId })
+        });
+        const data = await parseJsonResponse(response);
+
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.message || "Concierge indisponible.");
+        }
+
+        if (data.case) fillCaseDetail(data.case);
+        renderConcierge(data.concierge);
+        setMessage(conciergeResult, "success", "Message concierge généré et ajouté à l'historique.");
+      } catch (error) {
+        setMessage(conciergeResult, "error", error instanceof Error ? error.message : "Concierge indisponible.");
+      } finally {
+        setButtonBusy(conciergeGenerateButton, false);
       }
     });
   }

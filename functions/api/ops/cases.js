@@ -1,5 +1,6 @@
 import {
   authorizeOpsRequest,
+  buildAndLogConciergeDraft,
   createCasePaymentRequest,
   getCaseDetail,
   getResendableAccessCode,
@@ -195,6 +196,16 @@ export const onRequestPost = async (context) => {
       return json({
         ok: true,
         case: detail
+      });
+    }
+
+    if (action === "concierge-draft") {
+      const result = await buildAndLogConciergeDraft(context.env, payload.caseId, auth.actor);
+
+      return json({
+        ok: true,
+        case: result.detail,
+        concierge: result.draft
       });
     }
 

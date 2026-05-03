@@ -9,6 +9,7 @@
   <meta name="author" content="NEXURADATA">
   <link rel="manifest" href="../site.webmanifest">
   <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -141,6 +142,21 @@
             <h3>Message initial</h3>
             <p data-ops-message></p>
           </article>
+
+          <section class="ops-concierge-card">
+            <h3>Concierge maison</h3>
+            <p class="form-note" data-ops-concierge-summary>Message client préparé selon le support, l'urgence et les informations manquantes.</p>
+            <label class="field">
+              <span>Message proposé</span>
+              <textarea data-ops-concierge-message rows="7" readonly></textarea>
+            </label>
+            <div class="form-actions">
+              <a class="button button-primary" href="#" target="_blank" rel="noopener noreferrer" data-ops-concierge-whatsapp>Ouvrir WhatsApp</a>
+              <button type="button" class="button button-secondary" data-ops-concierge-copy>Copier le message</button>
+              <button type="button" class="button button-secondary" data-ops-concierge-generate>Régénérer</button>
+            </div>
+            <p class="form-status" data-ops-concierge-result aria-live="polite"></p>
+          </section>
 
           <form class="ops-case-form" data-ops-case-form>
             <div class="form-grid">

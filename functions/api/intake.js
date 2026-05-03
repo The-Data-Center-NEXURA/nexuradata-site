@@ -78,6 +78,14 @@ export const onRequestPost = async (context) => {
       caseId: intakeRecord.caseId,
       message: "Demande reçue. Un numéro de dossier initial a été généré.",
       nextStep: "Le laboratoire peut maintenant qualifier le cas et préparer la suite.",
+      concierge: {
+        provider: intakeRecord.concierge?.provider,
+        channel: intakeRecord.concierge?.channel,
+        priority: intakeRecord.concierge?.priority,
+        recommendedPath: intakeRecord.concierge?.recommendedPath,
+        questions: intakeRecord.concierge?.questions || [],
+        whatsappUrl: intakeRecord.concierge?.whatsappUrl || ""
+      },
       delivery: {
         lab: labDelivery.sent ? "sent" : labDelivery.reason,
         client: clientDelivery.sent ? "sent" : clientDelivery.reason

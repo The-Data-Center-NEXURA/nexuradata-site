@@ -1,6 +1,7 @@
 import { getDb } from "./db.js";
 import { createHostedCheckoutSession } from "./stripe.js";
 import { buildCaseAutomationDraft } from "./automation.js";
+import { buildConciergeDraft, formatConciergeEventNote } from "./concierge.js";
 import {
   decryptAccessCode,
   encryptAccessCode,
@@ -419,6 +420,18 @@ export const createCase = async (env, submission) => {
   }
 
   await recordCaseEvent(env, caseId, "system", "Dossier ouvert", "Demande initiale reçue via le formulaire public.");
+  const conciergeDraft = buildConciergeDraft({
+    caseId,
+    name: submission.nom,
+    email: submission.courriel,
+    phone: submission.telephone,
+    support: submission.support,
+    urgency: submission.urgence,
+    impact: submission.impact,
+    sensibilite: submission.sensibilite,
+    message: submission.message
+  });
+  await recordCaseEvent(env, caseId, "nexuradata-concierge", "Message concierge préparé", formatConciergeEventNote(conciergeDraft));
 
   return {
     caseId,
@@ -427,6 +440,7 @@ export const createCase = async (env, submission) => {
     status,
     nextStep,
     clientSummary,
+    concierge: conciergeDraft,
     ...submission
   };
 };
@@ -777,7 +791,32 @@ export const getCaseDetail = async (env, caseId) => {
       isVisible: Boolean(entry.is_visible),
       createdAt: entry.created_at,
       createdBy: entry.created_by
-    }))
+    })),
+    concierge: buildConciergeDraft({
+      caseId: row.case_id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      support: row.support,
+      urgency: row.urgency,
+      message: row.message
+    })
+  };
+};
+
+export const buildAndLogConciergeDraft = async (env, caseId, actor = "ops") => {
+  const detail = await getCaseDetail(env, caseId);
+
+  if (!detail) {
+    throw new Error("Dossier introuvable.");
+  }
+
+  const draft = buildConciergeDraft(detail);
+  await recordCaseEvent(env, detail.caseId, actor, "Message concierge généré", formatConciergeEventNote(draft));
+
+  return {
+    detail: await getCaseDetail(env, detail.caseId),
+    draft
   };
 };
 
