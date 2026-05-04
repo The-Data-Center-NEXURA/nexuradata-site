@@ -214,25 +214,18 @@ Search Console TXT verification is DNS-only — no code change needed for SC.
 
 **For GA4** the repo already includes:
 
-1. A GA4 snippet on public HTML pages just before `</head>`:
-   ```html
-   <script async src="https://www.googletagmanager.com/gtag/js?id=G-TC31YSS01P"></script>
-   <script>
-     window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
-     gtag('js',new Date());gtag('config','G-TC31YSS01P');
-   </script>
-   ```
+1. Consent-gated GA4 loading in [assets/js/site.js](../assets/js/site.js). The public pages do not carry an inline GA snippet; the script loads `https://www.googletagmanager.com/gtag/js?id=G-TC31YSS01P` only after the visitor allows audience measurement in the cookie banner.
 2. CSP in [_headers](../_headers):
    - `script-src` and `script-src-elem` allow `https://www.googletagmanager.com`
    - `connect-src` allows `https://www.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.g.doubleclick.net`
    - `img-src` allows `https://www.googletagmanager.com https://www.google-analytics.com https://*.g.doubleclick.net`
-3. Update `docs/branding-read-only.txt` only if a cookie/consent banner is added (not required for GA4 anonymized in QC under Law 25 if no advertising features are enabled).
+3. Cookie preferences are exposed in the banner and footer. Keep Google Signals and advertising personalization OFF unless the privacy policy and consent wording are reviewed again.
 
 ---
 
 ## 6. Law 25 (Quebec) compliance note
 
-Under Law 25, GA4 with **default settings + IP anonymization + Google Signals OFF** is acceptable as analytics-only without prior consent, provided:
+Under the current site posture, GA4 stays behind explicit audience-measurement consent. Keep **IP anonymization ON**, **Google Signals OFF** and advertising personalization disabled unless the privacy policy and banner wording are reviewed again.
 
 - The privacy policy ([politique-confidentialite.html](../politique-confidentialite.html)) discloses analytics use, the data collected, the retention period, and the recipient (Google LLC, USA).
 - Users can opt out (link to https://tools.google.com/dlpage/gaoptout in the privacy policy).
@@ -249,5 +242,5 @@ If marketing/ads features are turned on later, a consent banner becomes mandator
 - [ ] GA4 property confirmed live for Measurement ID `G-TC31YSS01P`
 - [ ] Merchant Center account created, website claimed, feed scheduled
 - [ ] Business Profile created, verification requested
-- [x] GA4 snippet wired into public HTML + CSP updated
+- [x] Consent-gated GA4 loader wired in `assets/js/site.js` + CSP updated
 - [x] Privacy policy reviewed for Law 25 compliance

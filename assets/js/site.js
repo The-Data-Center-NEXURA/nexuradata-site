@@ -267,9 +267,176 @@ const bindCookiePreferenceTriggers = () => {
   });
 };
 
+const initKineticCanvas = () => {
+  const canvases = Array.from(document.querySelectorAll("[data-kinetic-canvas]"));
+  if (!canvases.length) return;
+
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (reducedMotionQuery.matches) return;
+
+  canvases.forEach((canvas) => {
+    const context = canvas.getContext("2d", { alpha: true });
+    if (!context) return;
+
+    let animationFrame = 0;
+    let isVisible = true;
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+    let pixelRatio = 1;
+    const nodes = Array.from({ length: 34 }, (_, index) => ({
+      column: (index * 37) % 100,
+      row: (index * 61) % 100,
+      size: 10 + ((index * 7) % 34),
+      phase: index * 0.37,
+      lane: index % 5
+    }));
+
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
+      canvasWidth = Math.max(1, Math.floor(rect.width));
+      canvasHeight = Math.max(1, Math.floor(rect.height));
+      canvas.width = Math.floor(canvasWidth * pixelRatio);
+      canvas.height = Math.floor(canvasHeight * pixelRatio);
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    };
+
+    const drawGrid = (time) => {
+      const gridSize = canvasWidth < 720 ? 48 : 72;
+      const horizontalOffset = (time * 10) % gridSize;
+      const verticalOffset = (time * 6) % gridSize;
+
+      context.lineWidth = 1;
+      context.strokeStyle = "rgba(232,228,220,0.07)";
+
+      for (let columnPosition = -gridSize; columnPosition < canvasWidth + gridSize; columnPosition += gridSize) {
+        context.beginPath();
+        context.moveTo(columnPosition + horizontalOffset, 0);
+        context.lineTo(columnPosition + horizontalOffset - canvasHeight * 0.12, canvasHeight);
+        context.stroke();
+      }
+
+      context.strokeStyle = "rgba(132,184,204,0.055)";
+      for (let rowPosition = -gridSize; rowPosition < canvasHeight + gridSize; rowPosition += gridSize) {
+        context.beginPath();
+        context.moveTo(0, rowPosition + verticalOffset);
+        context.lineTo(canvasWidth, rowPosition + verticalOffset + canvasWidth * 0.04);
+        context.stroke();
+      }
+    };
+
+    const drawNodes = (time) => {
+      nodes.forEach((node, index) => {
+        const pulse = (Math.sin(time * 1.55 + node.phase) + 1) / 2;
+        const laneOffset = Math.sin(time * 0.42 + node.lane) * 26;
+        const nodeLeft = (node.column / 100) * canvasWidth + laneOffset;
+        const nodeTop = (node.row / 100) * canvasHeight + Math.cos(time * 0.36 + node.phase) * 18;
+        const nodeWidth = node.size * (1.1 + pulse * 0.35);
+        const nodeHeight = Math.max(7, node.size * 0.42);
+
+        context.strokeStyle = index % 3 === 0 ? "rgba(132,184,204,0.28)" : "rgba(232,228,220,0.18)";
+        context.fillStyle = index % 4 === 0 ? "rgba(132,184,204,0.055)" : "rgba(232,228,220,0.04)";
+        context.lineWidth = 1;
+        context.beginPath();
+        context.rect(nodeLeft, nodeTop, nodeWidth, nodeHeight);
+        context.fill();
+        context.stroke();
+
+        if (index % 5 === 0) {
+          context.beginPath();
+          context.moveTo(nodeLeft + nodeWidth, nodeTop + nodeHeight / 2);
+          context.lineTo(nodeLeft + nodeWidth + 58 + pulse * 42, nodeTop + nodeHeight / 2);
+          context.strokeStyle = "rgba(232,228,220,0.13)";
+          context.stroke();
+        }
+      });
+    };
+
+    const drawScan = (time) => {
+      const scanProgress = (time * 0.11) % 1;
+      const scanLeft = scanProgress * (canvasWidth + canvasWidth * 0.45) - canvasWidth * 0.28;
+      const gradient = context.createLinearGradient(scanLeft, 0, scanLeft + canvasWidth * 0.24, 0);
+      gradient.addColorStop(0, "rgba(132,184,204,0)");
+      gradient.addColorStop(0.5, "rgba(132,184,204,0.18)");
+      gradient.addColorStop(1, "rgba(232,228,220,0)");
+
+      context.save();
+      context.transform(1, 0, -0.22, 1, 0, 0);
+      context.fillStyle = gradient;
+      context.fillRect(scanLeft, -40, canvasWidth * 0.24, canvasHeight + 80);
+      context.restore();
+    };
+
+    const drawFrame = (time) => {
+      const pulse = (Math.sin(time * 0.9) + 1) / 2;
+      context.lineWidth = 1;
+      context.strokeStyle = `rgba(232,228,220,${0.12 + pulse * 0.12})`;
+      context.strokeRect(canvasWidth * 0.54, canvasHeight * 0.18, canvasWidth * 0.28, canvasHeight * 0.28);
+      context.strokeRect(canvasWidth * 0.62, canvasHeight * 0.53, canvasWidth * 0.22, canvasHeight * 0.16);
+      context.fillStyle = "rgba(13,13,11,0.28)";
+      context.fillRect(canvasWidth * 0.57, canvasHeight * 0.22, canvasWidth * 0.08, canvasHeight * 0.06);
+      context.fillRect(canvasWidth * 0.68, canvasHeight * 0.58, canvasWidth * 0.06, canvasHeight * 0.045);
+    };
+
+    const render = (timestamp) => {
+      if (!isVisible || reducedMotionQuery.matches) return;
+
+      const time = timestamp / 1000;
+      context.clearRect(0, 0, canvasWidth, canvasHeight);
+      context.globalCompositeOperation = "source-over";
+      drawGrid(time);
+      context.globalCompositeOperation = "screen";
+      drawNodes(time);
+      drawScan(time);
+      drawFrame(time);
+      context.globalCompositeOperation = "source-over";
+
+      animationFrame = window.requestAnimationFrame(render);
+    };
+
+    const start = () => {
+      if (animationFrame || reducedMotionQuery.matches) return;
+      animationFrame = window.requestAnimationFrame(render);
+    };
+
+    const stop = () => {
+      if (!animationFrame) return;
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+    };
+
+    const observer = "IntersectionObserver" in window
+      ? new IntersectionObserver((entries) => {
+        isVisible = entries.some((entry) => entry.isIntersecting);
+        if (isVisible) start(); else stop();
+      }, { threshold: 0.05 })
+      : null;
+
+    resizeCanvas();
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(() => resizeCanvas()).observe(canvas);
+    } else {
+      window.addEventListener("resize", resizeCanvas, { passive: true });
+    }
+    observer?.observe(canvas);
+    start();
+
+    reducedMotionQuery.addEventListener?.("change", () => {
+      if (reducedMotionQuery.matches) {
+        stop();
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+      } else {
+        resizeCanvas();
+        start();
+      }
+    });
+  });
+};
+
 applyCookieConsent();
 renderCookieConsent();
 bindCookiePreferenceTriggers();
+initKineticCanvas();
 
 // ── IBM square chatbot dock ───────────────────────────────────
 (function () {

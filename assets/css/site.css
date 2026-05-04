@@ -59,8 +59,6 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  animation: none !important;
-  transition: none !important;
   scroll-behavior: auto !important;
 }
 
@@ -519,6 +517,63 @@ select {
     radial-gradient(ellipse 80% 55% at 65% 30%, rgba(232, 228, 220, 0.032) 0%, transparent 68%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.012), rgba(18, 18, 16, 0));
   pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.kinetic-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.78;
+  mix-blend-mode: screen;
+}
+
+.hero-backdrop::before,
+.hero-backdrop::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.hero-backdrop::before {
+  inset: -12% -8%;
+  z-index: 1;
+  background:
+    linear-gradient(115deg, transparent 0 44%, rgba(232, 228, 220, 0.075) 44% 44.32%, transparent 44.32% 100%),
+    repeating-linear-gradient(90deg, rgba(232, 228, 220, 0.036) 0 1px, transparent 1px 5.25rem),
+    repeating-linear-gradient(0deg, rgba(232, 228, 220, 0.026) 0 1px, transparent 1px 4.25rem);
+  opacity: 0.52;
+  transform: translate3d(-2rem, 0, 0) skewX(-6deg);
+  animation: motion-grid-drift 28s linear infinite;
+}
+
+.hero-backdrop::after {
+  top: -8%;
+  bottom: -8%;
+  left: -34%;
+  z-index: 2;
+  width: 32%;
+  background: linear-gradient(90deg, transparent, rgba(132, 184, 204, 0.18), rgba(232, 228, 220, 0.12), transparent);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) skewX(-17deg);
+  animation: motion-scan-sweep 11s var(--ease-out) infinite;
+}
+
+@keyframes motion-grid-drift {
+  0% { transform: translate3d(-2rem, 0, 0) skewX(-6deg); }
+  100% { transform: translate3d(5.25rem, 0, 0) skewX(-6deg); }
+}
+
+@keyframes motion-scan-sweep {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) skewX(-17deg); }
+  12% { opacity: 0.34; }
+  42% { opacity: 0.2; }
+  64% { opacity: 0; transform: translate3d(430%, 0, 0) skewX(-17deg); }
+  100% { opacity: 0; transform: translate3d(430%, 0, 0) skewX(-17deg); }
 }
 
 .hero-grid {
@@ -699,12 +754,26 @@ select {
     repeating-linear-gradient(0deg, rgba(232, 228, 220, 0.05) 0 1px, transparent 1px 2.15rem),
     linear-gradient(180deg, rgba(8, 8, 7, 0.16), rgba(8, 8, 7, 0.64));
   opacity: 0.86;
+  background-position: 0 0, 0 0, 0 0;
+  animation: motion-panel-grid 16s linear infinite;
 }
 
 .lab-snapshot::after {
   inset: auto 1rem 1rem;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(132, 184, 204, 0.58), transparent);
+  transform-origin: left center;
+  animation: motion-signal-line 6.5s var(--ease-out) infinite;
+}
+
+@keyframes motion-panel-grid {
+  0% { background-position: 0 0, 0 0, 0 0; }
+  100% { background-position: 0 0, 0 2.15rem, 0 0; }
+}
+
+@keyframes motion-signal-line {
+  0%, 100% { opacity: 0.22; transform: scaleX(0.28); }
+  48% { opacity: 0.78; transform: scaleX(1); }
 }
 
 .lab-snapshot-grid {
@@ -849,8 +918,14 @@ select {
     linear-gradient(180deg, rgba(21, 21, 18, 0.96), rgba(11, 11, 10, 0.92));
   background-size: 28px 28px, 5.5rem 100%, 100% 100%;
   background-position: center;
+  animation: motion-band-shift 24s linear infinite;
   -webkit-mask-image: linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
   mask-image: linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
+}
+
+@keyframes motion-band-shift {
+  0% { background-position: 0 0, 0 0, center; }
+  100% { background-position: 28px 0, 5.5rem 0, center; }
 }
 
 .brutalist-band::before,
@@ -945,6 +1020,7 @@ select {
     linear-gradient(180deg, transparent, rgba(132, 184, 204, 0.065), transparent);
   mix-blend-mode: screen;
   opacity: 0.74;
+  animation: motion-critical-scan 9s var(--ease-out) infinite;
 }
 
 .critical-frame,
@@ -963,6 +1039,15 @@ select {
 .frame-two { top: 38%; left: 40%; }
 .frame-three { right: 11%; bottom: 15%; }
 
+.frame-one,
+.frame-two,
+.frame-three {
+  animation: motion-frame-lock 7.5s var(--ease-out) infinite;
+}
+
+.frame-two { animation-delay: 0.55s; }
+.frame-three { animation-delay: 1.1s; }
+
 .critical-fragment {
   width: 1.1rem;
   height: 1.1rem;
@@ -972,6 +1057,29 @@ select {
 .fragment-two { left: 62%; top: 18%; }
 .fragment-three { right: 19%; top: 48%; }
 .fragment-four { left: 48%; bottom: 13%; }
+
+.critical-fragment {
+  animation: motion-fragment-align 6.8s var(--ease-out) infinite;
+}
+
+.fragment-two { animation-delay: 0.45s; }
+.fragment-three { animation-delay: 0.9s; }
+.fragment-four { animation-delay: 1.35s; }
+
+@keyframes motion-critical-scan {
+  0%, 100% { opacity: 0.42; transform: translate3d(0, -1.2rem, 0); }
+  52% { opacity: 0.82; transform: translate3d(0, 1.2rem, 0); }
+}
+
+@keyframes motion-frame-lock {
+  0%, 100% { opacity: 0.48; transform: translate3d(-0.4rem, 0.24rem, 0) skewX(-3deg); }
+  46% { opacity: 0.9; transform: translate3d(0, 0, 0) skewX(0); }
+}
+
+@keyframes motion-fragment-align {
+  0%, 100% { opacity: 0.32; transform: translate3d(0.35rem, -0.28rem, 0); }
+  54% { opacity: 0.86; transform: translate3d(0, 0, 0); }
+}
 
 .panel-card,
 .stat-card,
@@ -4446,6 +4554,23 @@ select {
 
   .hero-backdrop {
     animation: none;
+  }
+
+  .hero-backdrop::before,
+  .hero-backdrop::after,
+  .kinetic-canvas,
+  .lab-snapshot::before,
+  .lab-snapshot::after,
+  .brutalist-band,
+  .critical-story-panel::after,
+  .critical-frame,
+  .critical-fragment {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .kinetic-canvas {
+    display: none;
   }
 
   [data-reveal] {

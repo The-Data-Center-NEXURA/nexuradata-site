@@ -23,8 +23,8 @@ import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SITE_CSS_VERSION = "20260504f";
-const SITE_JS_VERSION = "20260504f";
+const SITE_CSS_VERSION = "20260504g";
+const SITE_JS_VERSION = "20260504g";
 const errors = [];
 
 function fail(rule, detail) {
@@ -99,11 +99,13 @@ for (const file of walkFiles(ROOT)) {
     }
 }
 
-const homepageUsesVideo = [join(ROOT, "index.html"), join(ROOT, "en", "index.html")]
-    .some((file) => existsSync(file) && /<(?:video|source)\b|\/assets\/video\//i.test(readFileSync(file, "utf8")));
+const homepageVideoMarkup = [join(ROOT, "index.html"), join(ROOT, "en", "index.html")]
+    .filter((file) => existsSync(file))
+    .map((file) => readFileSync(file, "utf8"))
+    .join("\n");
 
-if (homepageUsesVideo) {
-    fail("HOMEPAGE_VIDEO_DISABLED", "Homepage video is disabled for performance. Use static HTML/CSS panels instead.");
+if (/<video\b/i.test(homepageVideoMarkup) && !/data-motion-video/i.test(homepageVideoMarkup)) {
+    fail("HOMEPAGE_VIDEO_GUARD", "Homepage video must be marked as a controlled background motion layer with data-motion-video.");
 }
 
 const publicVideoDir = join(ROOT, "assets", "video");
@@ -111,7 +113,10 @@ if (existsSync(publicVideoDir)) {
     for (const entry of readdirSync(publicVideoDir, { withFileTypes: true })) {
         if (!entry.isFile() || !/\.(?:mp4|webm)$/i.test(entry.name)) continue;
 
-        fail("PUBLIC_VIDEO_ASSET", `assets/video/${entry.name}: public video assets are disabled for performance.`);
+        const size = readFileSync(join(publicVideoDir, entry.name)).byteLength;
+        if (size > 900_000) {
+            fail("PUBLIC_VIDEO_ASSET_SIZE", `assets/video/${entry.name}: background videos must stay below 900 KB.`);
+        }
     }
 }
 
@@ -137,6 +142,15 @@ if (existsSync(siteCssPath)) {
     if (!siteCss.includes(".cookie-consent") || !siteCss.includes(".footer-cookie-button")) {
         fail("COOKIE_CONSENT_CSS", "assets/css/site.css must style the cookie consent bar and footer preference button.");
     }
+
+    if (!siteCss.includes(".kinetic-canvas") || !siteCss.includes("@keyframes motion-grid-drift") || !siteCss.includes("@keyframes motion-critical-scan") || !siteCss.includes("prefers-reduced-motion: reduce")) {
+        fail("CONTROLLED_MOTION_CSS", "assets/css/site.css must provide controlled modern background motion with reduced-motion handling.");
+    }
+
+    const baseResetCss = siteCss.slice(0, siteCss.indexOf("html {") > 0 ? siteCss.indexOf("html {") : 0);
+    if (/animation:\s*none\s*!important/i.test(baseResetCss)) {
+        fail("GLOBAL_ANIMATION_KILL", "assets/css/site.css must not globally disable every animation; use reduced-motion and controlled background layers.");
+    }
 } else {
     fail("SITE_CSS_MISSING", "assets/css/site.css file not found.");
 }
@@ -154,6 +168,10 @@ if (existsSync(siteJsPath)) {
 
     if (!siteJs.includes("CONSENT_STORAGE_KEY") || !siteJs.includes("renderCookieConsent") || !siteJs.includes("loadGa4") || !siteJs.includes("loadMetaPixel")) {
         fail("COOKIE_CONSENT_JS", "assets/js/site.js must gate GA4 and Meta Pixel behind the cookie consent bar.");
+    }
+
+    if (!siteJs.includes("initKineticCanvas") || !siteJs.includes("data-kinetic-canvas") || !siteJs.includes("requestAnimationFrame")) {
+        fail("KINETIC_CANVAS_JS", "assets/js/site.js must render the homepage kinetic canvas background.");
     }
 
     if (/chatbot-meter[\s\S]{0,180}style=/.test(siteJs)) {
