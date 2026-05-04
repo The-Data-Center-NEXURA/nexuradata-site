@@ -17,11 +17,14 @@
  */
 
 import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const SITE_CSS_VERSION = "20260504f";
+const SITE_JS_VERSION = "20260504f";
 const errors = [];
 
 function fail(rule, detail) {
@@ -49,11 +52,31 @@ function walkFiles(dir, files = []) {
     return files;
 }
 
+const jsonLdScriptPattern = /<script\b(?=[^>]*\btype=["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi;
+const inlineScriptPattern = /<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+
+function collectJsonLdCspHashes(dir) {
+    const hashes = new Set();
+
+    for (const file of walkFiles(dir)) {
+        if (extname(file).toLowerCase() !== ".html") continue;
+
+        const content = readFileSync(file, "utf8");
+
+        for (const match of content.matchAll(jsonLdScriptPattern)) {
+            hashes.add(`'sha256-${createHash("sha256").update(match[1], "utf8").digest("base64")}'`);
+        }
+    }
+
+    return [...hashes].sort();
+}
+
 // ─── 1. CSP — no unsafe directives ───────────────────────────────────────────
 const headersPath = join(ROOT, "_headers");
+let headersContent = "";
 if (existsSync(headersPath)) {
-    const headers = readFileSync(headersPath, "utf8");
-    if (/unsafe-inline|unsafe-eval/.test(headers)) {
+    headersContent = readFileSync(headersPath, "utf8");
+    if (/unsafe-inline|unsafe-eval/.test(headersContent)) {
         fail(
             "CSP_UNSAFE_DIRECTIVE",
             "_headers contains 'unsafe-inline' or 'unsafe-eval' in Content-Security-Policy. Remove them."
@@ -61,6 +84,91 @@ if (existsSync(headersPath)) {
     }
 } else {
     fail("CSP_MISSING", "_headers file not found.");
+}
+
+for (const file of walkFiles(ROOT)) {
+    if (extname(file).toLowerCase() !== ".html") continue;
+
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    const content = readFileSync(file, "utf8");
+
+    for (const match of content.matchAll(inlineScriptPattern)) {
+        if (!/type=["']application\/ld\+json["']/i.test(match[0])) {
+            fail("INLINE_SCRIPT_SOURCE", `${rel}: inline scripts must be externalized unless they are JSON-LD.`);
+        }
+    }
+}
+
+const homepageUsesVideo = [join(ROOT, "index.html"), join(ROOT, "en", "index.html")]
+    .some((file) => existsSync(file) && /<(?:video|source)\b|\/assets\/video\//i.test(readFileSync(file, "utf8")));
+
+if (homepageUsesVideo) {
+    fail("HOMEPAGE_VIDEO_DISABLED", "Homepage video is disabled for performance. Use static HTML/CSS panels instead.");
+}
+
+const publicVideoDir = join(ROOT, "assets", "video");
+if (existsSync(publicVideoDir)) {
+    for (const entry of readdirSync(publicVideoDir, { withFileTypes: true })) {
+        if (!entry.isFile() || !/\.(?:mp4|webm)$/i.test(entry.name)) continue;
+
+        fail("PUBLIC_VIDEO_ASSET", `assets/video/${entry.name}: public video assets are disabled for performance.`);
+    }
+}
+
+const siteCssPath = join(ROOT, "assets", "css", "site.css");
+if (existsSync(siteCssPath)) {
+    const siteCss = readFileSync(siteCssPath, "utf8");
+    if (!siteCss.includes('--font-display: "IBM Plex Sans"') || !siteCss.includes('--font-sans: "IBM Plex Sans"') || !siteCss.includes('--font-mono: "IBM Plex Mono"')) {
+        fail("IBM_FONT_TOKENS", "assets/css/site.css must define IBM Plex Sans and IBM Plex Mono font tokens.");
+    }
+
+    if (/Georgia|Times New Roman/i.test(siteCss)) {
+        fail("NON_IBM_SITE_CSS_FONT", "assets/css/site.css must not reference Georgia or Times New Roman.");
+    }
+
+    if (!/body\s*\{[\s\S]*font-family:\s*var\(--font-sans\)/.test(siteCss)) {
+        fail("IBM_BODY_FONT", "assets/css/site.css body must use var(--font-sans).");
+    }
+
+    if (!siteCss.includes(".chatbot-dock") || !siteCss.includes(".chatbot-avatar") || /\.whatsapp-fab\b/.test(siteCss)) {
+        fail("IBM_CHATBOT_CSS", "assets/css/site.css must expose the IBM square chatbot dock with the robot image, not the old WhatsApp FAB.");
+    }
+
+    if (!siteCss.includes(".cookie-consent") || !siteCss.includes(".footer-cookie-button")) {
+        fail("COOKIE_CONSENT_CSS", "assets/css/site.css must style the cookie consent bar and footer preference button.");
+    }
+} else {
+    fail("SITE_CSS_MISSING", "assets/css/site.css file not found.");
+}
+
+const siteJsPath = join(ROOT, "assets", "js", "site.js");
+if (existsSync(siteJsPath)) {
+    const siteJs = readFileSync(siteJsPath, "utf8");
+    if (!siteJs.includes("chatbot-dock") || !siteJs.includes("chatbot-robot.svg") || !siteJs.includes("data-chatbot-diagnostic") || !siteJs.includes('data-chatbot-action="urgent_whatsapp"') || !siteJs.includes('data-chatbot-action="stripe_payment"') || !siteJs.includes('data-chatbot-action="copy_summary"') || !siteJs.includes("data-chatbot-protocol") || !siteJs.includes("data-chatbot-case-form") || !siteJs.includes("submitAutonomousCase")) {
+        fail("IBM_CHATBOT_JS", "assets/js/site.js must render the IBM square superbot with autonomous case creation, protocol, Stripe handoff, copy summary, and urgent WhatsApp.");
+    }
+
+    if (!siteJs.includes("data-stripe-checkout-link") || !siteJs.includes("nexuradata:payments-rendered")) {
+        fail("CHATBOT_STRIPE_HANDOFF", "assets/js/site.js must let the chatbot open existing Stripe Checkout links from the client portal.");
+    }
+
+    if (!siteJs.includes("CONSENT_STORAGE_KEY") || !siteJs.includes("renderCookieConsent") || !siteJs.includes("loadGa4") || !siteJs.includes("loadMetaPixel")) {
+        fail("COOKIE_CONSENT_JS", "assets/js/site.js must gate GA4 and Meta Pixel behind the cookie consent bar.");
+    }
+
+    if (/chatbot-meter[\s\S]{0,180}style=/.test(siteJs)) {
+        fail("CHATBOT_CSP_INLINE_STYLE", "assets/js/site.js must not render inline style attributes for the chatbot meter.");
+    }
+} else {
+    fail("SITE_JS_MISSING", "assets/js/site.js file not found.");
+}
+
+if (existsSync(join(ROOT, "assets", "js", "ga4-init.js"))) {
+    fail("LEGACY_GA4_INIT", "assets/js/ga4-init.js must not exist. GA4 is loaded only by the consent manager.");
+}
+
+if (!existsSync(join(ROOT, "assets", "icons", "chatbot-robot.svg"))) {
+    fail("IBM_CHATBOT_IMAGE", "assets/icons/chatbot-robot.svg must exist for the square diagnostic chatbot.");
 }
 
 // ─── 2. No hardcoded secrets in functions/ ───────────────────────────────────
@@ -153,6 +261,41 @@ const enHtmlPages = existsSync(enDir)
 const enHtmlSet = new Set(enHtmlPages);
 const rootHtmlSet = new Set(rootHtmlPages);
 
+for (const file of [...rootHtmlPages.map((page) => join(ROOT, page)), ...enHtmlPages.map((page) => join(enDir, page))]) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    const content = readFileSync(file, "utf8");
+
+    if (content.includes("site.css?v=") && !content.includes(`site.css?v=${SITE_CSS_VERSION}`)) {
+        fail("STALE_SITE_CSS_VERSION", `${rel}: update the site.css cache key to ${SITE_CSS_VERSION}.`);
+    }
+
+    if (content.includes("site.js") && !content.includes(`site.js?v=${SITE_JS_VERSION}`)) {
+        fail("STALE_SITE_JS_VERSION", `${rel}: update the site.js cache key to ${SITE_JS_VERSION}.`);
+    }
+
+    if (content.includes("site.css") && !/IBM\+Plex\+Mono[\s\S]*IBM\+Plex\+Sans/.test(content)) {
+        fail("IBM_FONT_LINK_MISSING", `${rel}: missing IBM Plex Sans/Mono Google Fonts link before site.css.`);
+    }
+}
+
+for (const file of walkFiles(ROOT)) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (extname(file).toLowerCase() !== ".html") continue;
+
+    const content = readFileSync(file, "utf8");
+    if (/googletagmanager\.com\/gtag|gtag\(['"]config['"],\s*['"]G-TC31YSS01P/i.test(content)) {
+        fail("TRACKING_BEFORE_CONSENT", `${rel}: GA4 must be loaded by the consent manager, not inline in HTML.`);
+    }
+
+    if (/mailto:privacy@nexuradata\.ca/.test(content) && !content.includes("data-cookie-preferences")) {
+        fail("COOKIE_PREFERENCES_FOOTER", `${rel}: privacy footer must include a cookie preference button.`);
+    }
+
+    if (/mailto:privacy\.ca|>privacy\.ca</i.test(content)) {
+        fail("PRIVACY_EMAIL_BROKEN", `${rel}: privacy email must be privacy@nexuradata.ca.`);
+    }
+}
+
 for (const page of rootHtmlPages) {
     if (DRAFT_HTML_PATTERN.test(page)) {
         fail("DRAFT_HTML_SOURCE", `${page}: draft, backup, versioned or redirect-only HTML pages should not be kept as public source.`);
@@ -181,6 +324,26 @@ for (const file of walkFiles(join(ROOT, "assets"))) {
 // ─── 5. release-cloudflare/ in sync with source ──────────────────────────────
 try {
     execSync("npm run build --silent", { cwd: ROOT, stdio: "pipe" });
+    const releaseHeadersPath = join(ROOT, "release-cloudflare", "_headers");
+    const releaseHeadersContent = existsSync(releaseHeadersPath) ? readFileSync(releaseHeadersPath, "utf8") : "";
+    const jsonLdHashes = collectJsonLdCspHashes(ROOT);
+
+    if (releaseHeadersContent.split(/\r?\n/).some((line) => line.length > 2000)) {
+        fail("HEADERS_LINE_LENGTH", "release-cloudflare/_headers has a line longer than Cloudflare's 2000-character limit.");
+    }
+
+    const globalHeadersBlock = releaseHeadersContent.match(/^\/\*\n(?:\s{2}.+\n)*/m)?.[0] || "";
+
+    if (/^\s{2}Content-Security-Policy:/m.test(globalHeadersBlock)) {
+        fail("GLOBAL_STATIC_CSP", "release-cloudflare/_headers must generate page-specific CSP rules so JSON-LD hashes stay under Cloudflare line limits.");
+    }
+
+    for (const hash of jsonLdHashes) {
+        if (!releaseHeadersContent.includes(hash)) {
+            fail("JSON_LD_CSP_HASH", `release-cloudflare/_headers is missing CSP hash ${hash} for inline JSON-LD.`);
+        }
+    }
+
     const dirty = execSync("git status --porcelain release-cloudflare/", { cwd: ROOT, encoding: "utf8" }).trim();
     if (dirty) {
         fail(

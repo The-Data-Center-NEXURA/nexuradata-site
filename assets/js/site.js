@@ -12,20 +12,184 @@
 const yearTarget = document.querySelector("[data-year]");
 const documentLanguage = document.documentElement.lang?.toLowerCase() || "fr-ca";
 const isEnglishDocument = documentLanguage.startsWith("en");
+const GA_MEASUREMENT_ID = "G-TC31YSS01P";
+const META_PIXEL_ID = "751859640106935";
+const CONSENT_STORAGE_KEY = "nexuradata_cookie_consent_v1";
+const CONSENT_VERSION = 1;
 
-// ── Meta Pixel ────────────────────────────────────────────────
-(function (f, b, e, v, n, t, s) {
-  if (f.fbq) return;
-  n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
-  if (!f._fbq) f._fbq = n;
-  n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
-  t = b.createElement(e); t.async = !0;
-  t.src = v;
-  s = b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t, s);
-}(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js"));
-fbq("init", "751859640106935");
-fbq("track", "PageView");
+const readCookieConsent = () => {
+  try {
+    const stored = localStorage.getItem(CONSENT_STORAGE_KEY);
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored);
+    if (parsed?.version !== CONSENT_VERSION) return null;
+
+    return {
+      version: CONSENT_VERSION,
+      analytics: parsed.analytics === true,
+      marketing: parsed.marketing === true,
+      updatedAt: parsed.updatedAt || ""
+    };
+  } catch {
+    return null;
+  }
+};
+
+let cookieConsent = readCookieConsent();
+let ga4Loaded = false;
+let metaPixelLoaded = false;
+
+const buildConsentModeState = (consent = cookieConsent) => ({
+  analytics_storage: consent?.analytics ? "granted" : "denied",
+  ad_storage: consent?.marketing ? "granted" : "denied",
+  ad_user_data: consent?.marketing ? "granted" : "denied",
+  ad_personalization: consent?.marketing ? "granted" : "denied"
+});
+
+const setGtagConsent = () => {
+  if (typeof gtag !== "function") return;
+  gtag("consent", "update", buildConsentModeState());
+};
+
+const loadGa4 = () => {
+  if (ga4Loaded || cookieConsent?.analytics !== true) return;
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  gtag("consent", "default", buildConsentModeState());
+
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  document.head.appendChild(script);
+
+  gtag("js", new Date());
+  gtag("config", GA_MEASUREMENT_ID, {
+    anonymize_ip: true,
+    allow_ad_personalization_signals: false
+  });
+  ga4Loaded = true;
+};
+
+const loadMetaPixel = () => {
+  if (metaPixelLoaded || cookieConsent?.marketing !== true) return;
+
+  (function (f, b, e, v, n, t, s) {
+    if (f.fbq) return;
+    n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+    if (!f._fbq) f._fbq = n;
+    n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
+    t = b.createElement(e); t.async = !0;
+    t.src = v;
+    s = b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t, s);
+  }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js"));
+
+  fbq("consent", "grant");
+  fbq("init", META_PIXEL_ID);
+  fbq("track", "PageView");
+  metaPixelLoaded = true;
+};
+
+const applyCookieConsent = () => {
+  setGtagConsent();
+  loadGa4();
+
+  if (typeof fbq === "function") {
+    fbq("consent", cookieConsent?.marketing ? "grant" : "revoke");
+  }
+  loadMetaPixel();
+};
+
+const saveCookieConsent = (choices) => {
+  cookieConsent = {
+    version: CONSENT_VERSION,
+    analytics: choices.analytics === true,
+    marketing: choices.marketing === true,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(cookieConsent));
+  } catch {
+    // Consent still applies for the current page even if localStorage is unavailable.
+  }
+
+  applyCookieConsent();
+};
+
+const cookieI18n = isEnglishDocument
+  ? {
+    title: "Privacy preferences",
+    copy: "Essential storage keeps the site working. Audience measurement and Meta marketing tools stay off unless you allow them.",
+    analytics: "Audience measurement (GA4)",
+    marketing: "Marketing measurement (Meta Pixel)",
+    privacy: "Privacy policy",
+    reject: "Reject all",
+    save: "Save choices",
+    accept: "Accept all"
+  }
+  : {
+    title: "Préférences de confidentialité",
+    copy: "Le stockage essentiel garde le site fonctionnel. La mesure d'audience et les outils marketing Meta restent désactivés sans votre accord.",
+    analytics: "Mesure d'audience (GA4)",
+    marketing: "Mesure marketing (Meta Pixel)",
+    privacy: "Politique de confidentialité",
+    reject: "Tout refuser",
+    save: "Enregistrer",
+    accept: "Tout accepter"
+  };
+
+const renderCookieConsent = (force = false) => {
+  if (window.location.pathname.startsWith("/operations")) return;
+
+  const existing = document.querySelector("[data-cookie-consent]");
+  if (existing) existing.remove();
+  if (cookieConsent && !force) return;
+
+  const privacyHref = isEnglishDocument ? "/en/politique-confidentialite.html" : "/politique-confidentialite.html";
+  const banner = document.createElement("section");
+  banner.className = "cookie-consent";
+  banner.setAttribute("data-cookie-consent", "");
+  banner.setAttribute("role", "dialog");
+  banner.setAttribute("aria-label", cookieI18n.title);
+  banner.innerHTML = `
+    <div class="cookie-consent-panel">
+      <div class="cookie-consent-copy">
+        <p class="cookie-kicker">NEXURADATA</p>
+        <h2>${cookieI18n.title}</h2>
+        <p>${cookieI18n.copy} <a href="${privacyHref}">${cookieI18n.privacy}</a>.</p>
+      </div>
+      <div class="cookie-consent-options">
+        <label><input type="checkbox" name="analytics" ${cookieConsent?.analytics ? "checked" : ""}> <span>${cookieI18n.analytics}</span></label>
+        <label><input type="checkbox" name="marketing" ${cookieConsent?.marketing ? "checked" : ""}> <span>${cookieI18n.marketing}</span></label>
+      </div>
+      <div class="cookie-consent-actions">
+        <button type="button" class="button button-outline" data-cookie-choice="reject">${cookieI18n.reject}</button>
+        <button type="button" class="button button-secondary" data-cookie-choice="save">${cookieI18n.save}</button>
+        <button type="button" class="button button-primary" data-cookie-choice="accept">${cookieI18n.accept}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  banner.querySelectorAll("[data-cookie-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const choice = button.dataset.cookieChoice;
+      const analyticsInput = banner.querySelector('input[name="analytics"]');
+      const marketingInput = banner.querySelector('input[name="marketing"]');
+      const choices = choice === "accept"
+        ? { analytics: true, marketing: true }
+        : choice === "reject"
+          ? { analytics: false, marketing: false }
+          : { analytics: analyticsInput.checked, marketing: marketingInput.checked };
+
+      saveCookieConsent(choices);
+      banner.remove();
+    });
+  });
+};
 
 const normalizeAnalyticsValue = (value, fallback = "unknown") => {
   const normalized = `${value || fallback}`
@@ -97,30 +261,523 @@ const trackSelfAssessmentIntent = (method, context = {}) => {
   });
 };
 
-// ── WhatsApp floating button ──────────────────────────────────
+const bindCookiePreferenceTriggers = () => {
+  document.querySelectorAll("[data-cookie-preferences]").forEach((button) => {
+    button.addEventListener("click", () => renderCookieConsent(true));
+  });
+};
+
+applyCookieConsent();
+renderCookieConsent();
+bindCookiePreferenceTriggers();
+
+// ── IBM square chatbot dock ───────────────────────────────────
 (function () {
   // Skip on operator console
   if (window.location.pathname.startsWith("/operations")) return;
 
   const waNumber = "14388130592"; // digits only, no +
-  const waLabel = isEnglishDocument ? "Chat on WhatsApp" : "Écrire sur WhatsApp";
-  const waAriaLabel = isEnglishDocument ? "Contact us on WhatsApp" : "Nous contacter sur WhatsApp";
-  const waMsg = isEnglishDocument
-    ? "Hello NEXURADATA, I want to open a case. Device: drive/SSD/RAID/phone. Symptoms: . Urgency: ."
-    : "Bonjour NEXURADATA, je veux ouvrir un dossier. Support: disque/SSD/RAID/telephone. Symptomes: . Urgence: .";
+  const labels = isEnglishDocument
+    ? {
+      aria: "NEXURADATA chatbot",
+      kicker: "NEXURA AI",
+      status: "DIAGNOSTIC",
+      title: "Diagnose before contact",
+      copy: "The assistant qualifies, routes and prepares the next action before direct communication.",
+      supportLabel: "Media",
+      symptomLabel: "Symptom",
+      urgencyLabel: "Urgency",
+      historyLabel: "Attempt",
+      valueLabel: "Value",
+      stateLabel: "State",
+      supportOptions: [["drive", "Hard drive"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Phone"], ["server", "Server"], ["removable", "USB / card"]],
+      symptomOptions: [["deleted", "Deleted files"], ["slow", "Slow / unstable"], ["not_detected", "Not detected"], ["physical", "Shock / noise"], ["water", "Liquid damage"], ["encrypted", "Encrypted / forensic"]],
+      urgencyOptions: [["standard", "Standard"], ["business", "Business impact"], ["critical", "Critical now"]],
+      historyOptions: [["no_attempt", "No attempt"], ["software", "Recovery app"], ["opened", "Opened device"], ["rebuild", "RAID rebuild"], ["powered_on", "Repeated power-on"]],
+      valueOptions: [["personal", "Personal"], ["business", "Business"], ["legal", "Legal"], ["medical", "Sensitive"]],
+      stateOptions: [["powered_off", "Powered off"], ["unplugged", "Unplugged"], ["running", "Still running"], ["unknown", "Unknown"]],
+      risk: "Risk",
+      confidence: "Confidence",
+      route: "Route",
+      avoid: "Avoid",
+      protocol: "Protocol",
+      cases: {
+        logical: ["Logical recovery", "Open a structured case with file type, last known location and timeline.", "Do not save new files on the same media."],
+        priority: ["Priority lab review", "Stop handling the media and send the diagnostic summary with the case.", "Do not run generic recovery tools again."],
+        high: ["High-risk recovery", "Keep the device powered down and wait for lab instructions before any restart.", "Do not open, rebuild, initialize or format."],
+        critical: ["Critical intervention", "Use the emergency channel only if operations are blocked right now.", "Do not power-cycle or attempt a RAID rebuild."]
+      },
+      protocols: {
+        logical: ["Preserve the original media.", "Open a case with the diagnostic summary.", "Prepare a destination drive if recovery is approved."],
+        priority: ["Stop recovery apps and writes.", "Document the timeline and last successful access.", "Use secure intake before any new attempt."],
+        high: ["Keep the device isolated and stable.", "Do not initialize, format or repair volumes.", "Send the case to lab review before powering on."],
+        critical: ["Freeze all manipulations now.", "Escalate only through the emergency channel.", "Wait for lab instructions before any rebuild or restart."]
+      },
+      case: "Open case",
+      service: "Service route",
+      reception: "Secure intake",
+      rates: "Rates",
+      statusLink: "Track",
+      payment: "Stripe payment",
+      emailSummary: "Email summary",
+      copySummary: "Copy summary",
+      copied: "Copied",
+      copyFailed: "Copy failed",
+      quickCase: "Autonomous case",
+      fieldName: "Name",
+      fieldEmail: "Email",
+      fieldPhone: "Phone",
+      consent: "Open and manage this case with the diagnostic summary.",
+      submitCase: "Create case",
+      openingCase: "Creating case...",
+      caseOpened: (caseId) => `Case ${caseId} created. Client and lab notifications are queued.`,
+      caseFallback: "Online creation is unavailable. The prepared email will open.",
+      caseError: "Case creation failed.",
+      emergency: "Urgent WhatsApp",
+      emailSubject: "NEXURADATA diagnostic summary",
+      waIntro: "Hello NEXURADATA, the diagnostic assistant classified this case as urgent."
+    }
+    : {
+      aria: "Chatbot NEXURADATA",
+      kicker: "NEXURA AI",
+      status: "DIAGNOSTIC",
+      title: "Diagnostiquer avant contact",
+      copy: "L'assistant qualifie, oriente et prépare la prochaine action avant tout contact direct.",
+      supportLabel: "Support",
+      symptomLabel: "Symptôme",
+      urgencyLabel: "Urgence",
+      historyLabel: "Tentative",
+      valueLabel: "Valeur",
+      stateLabel: "État",
+      supportOptions: [["drive", "Disque dur"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Téléphone"], ["server", "Serveur"], ["removable", "USB / carte"]],
+      symptomOptions: [["deleted", "Fichiers supprimés"], ["slow", "Lent / instable"], ["not_detected", "Non détecté"], ["physical", "Choc / bruit"], ["water", "Liquide"], ["encrypted", "Chiffré / forensique"]],
+      urgencyOptions: [["standard", "Standard"], ["business", "Impact entreprise"], ["critical", "Critique maintenant"]],
+      historyOptions: [["no_attempt", "Aucune"], ["software", "Logiciel tenté"], ["opened", "Support ouvert"], ["rebuild", "RAID reconstruit"], ["powered_on", "Redémarrages"]],
+      valueOptions: [["personal", "Personnel"], ["business", "Entreprise"], ["legal", "Juridique"], ["medical", "Sensible"]],
+      stateOptions: [["powered_off", "Éteint"], ["unplugged", "Débranché"], ["running", "Encore allumé"], ["unknown", "Inconnu"]],
+      risk: "Risque",
+      confidence: "Confiance",
+      route: "Parcours",
+      avoid: "À éviter",
+      protocol: "Protocole",
+      cases: {
+        logical: ["Récupération logique", "Ouvrez un dossier structuré avec type de fichiers, dernier emplacement connu et chronologie.", "N'enregistrez rien de nouveau sur le même support."],
+        priority: ["Révision prioritaire laboratoire", "Cessez toute manipulation et joignez le résumé diagnostic au dossier.", "Ne relancez pas d'outil de récupération générique."],
+        high: ["Récupération à haut risque", "Gardez l'appareil éteint et attendez les consignes du laboratoire avant tout redémarrage.", "N'ouvrez pas, ne reconstruisez pas, n'initialisez pas et ne formatez pas."],
+        critical: ["Intervention critique", "Utilisez le canal urgence seulement si les opérations sont bloquées maintenant.", "Ne redémarrez pas et ne tentez pas de reconstruction RAID."]
+      },
+      protocols: {
+        logical: ["Préservez le support original.", "Ouvrez un dossier avec le résumé diagnostic.", "Préparez un disque de destination si la récupération est approuvée."],
+        priority: ["Arrêtez les logiciels de récupération et toute écriture.", "Notez la chronologie et le dernier accès réussi.", "Passez par la réception sécurisée avant toute nouvelle tentative."],
+        high: ["Gardez l'appareil isolé et stable.", "N'initialisez pas, ne formatez pas et ne réparez pas les volumes.", "Envoyez le dossier au laboratoire avant toute remise sous tension."],
+        critical: ["Gelez toute manipulation maintenant.", "Escaladez seulement par le canal urgence.", "Attendez les consignes du laboratoire avant toute reconstruction ou redémarrage."]
+      },
+      case: "Ouvrir dossier",
+      service: "Parcours service",
+      reception: "Réception sécurisée",
+      rates: "Tarifs",
+      statusLink: "Suivi",
+      payment: "Paiement Stripe",
+      emailSummary: "Courriel résumé",
+      copySummary: "Copier résumé",
+      copied: "Copié",
+      copyFailed: "Échec copie",
+      quickCase: "Dossier autonome",
+      fieldName: "Nom",
+      fieldEmail: "Courriel",
+      fieldPhone: "Téléphone",
+      consent: "Ouvrir et gérer ce dossier avec le résumé diagnostic.",
+      submitCase: "Créer dossier",
+      openingCase: "Création du dossier...",
+      caseOpened: (caseId) => `Dossier ${caseId} créé. Les notifications client et labo sont lancées.`,
+      caseFallback: "Création en ligne indisponible. Le courriel préparé va s'ouvrir.",
+      caseError: "Création du dossier impossible.",
+      emergency: "WhatsApp urgence",
+      emailSubject: "Résumé diagnostic NEXURADATA",
+      waIntro: "Bonjour NEXURADATA, l'assistant diagnostic classe ce dossier comme urgent."
+    };
+  const homePrefix = isEnglishDocument ? "/en" : "";
+  const caseHref = `${homePrefix}/#contact`;
+  const statusHref = `${homePrefix}/suivi-dossier-client-montreal.html`;
+  const receptionHref = `${homePrefix}/reception-securisee-donnees-montreal.html`;
+  const ratesHref = `${homePrefix}/tarifs-recuperation-donnees-montreal.html`;
+  const serviceHref = (path) => `${homePrefix}/${path}`;
+  const whatsappHref = `https://wa.me/${waNumber}?text=${encodeURIComponent(labels.waIntro)}`;
+  const optionMarkup = (options) => options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  const optionLabel = (options, value) => options.find(([optionValue]) => optionValue === value)?.[1] || value;
+  const getServiceHref = (support, symptom, value) => {
+    if (symptom === "encrypted" || value === "legal") {
+      return serviceHref("forensique-numerique-montreal.html");
+    }
 
-  const btn = document.createElement("a");
-  btn.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMsg)}`;
-  btn.className = "whatsapp-fab";
-  btn.setAttribute("target", "_blank");
-  btn.setAttribute("rel", "noopener noreferrer");
-  btn.setAttribute("aria-label", waAriaLabel);
-  btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="28" height="28" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.558 4.12 1.533 5.849L.057 23.5a.5.5 0 0 0 .611.61l5.701-1.464A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.878 9.878 0 0 1-5.031-1.374l-.36-.214-3.733.959.987-3.64-.235-.374A9.868 9.868 0 0 1 2.1 12c0-5.468 4.432-9.9 9.9-9.9 5.467 0 9.9 4.432 9.9 9.9 0 5.467-4.433 9.9-9.9 9.9z"/></svg><span>${waLabel}</span>`;
-  document.body.appendChild(btn);
+    if (support === "raid" || support === "server" || support === "ssd") {
+      return serviceHref("recuperation-raid-ssd-montreal.html");
+    }
 
-  btn.addEventListener("click", function () {
-    trackContactIntent("whatsapp_floating_button");
+    if (support === "phone") {
+      return serviceHref("recuperation-telephone-montreal.html");
+    }
+
+    return serviceHref("recuperation-donnees-montreal.html");
+  };
+  const mapCaseSupport = (support, symptom, value) => {
+    if (symptom === "encrypted" || value === "legal") return "Forensique / preuve numérique";
+    if (support === "raid" || support === "server") return "RAID / NAS / serveur";
+    if (support === "phone") return "Téléphone / mobile";
+    if (support === "ssd") return "SSD";
+    if (support === "removable") return "USB / carte mémoire";
+    return "Disque dur";
+  };
+  const mapCaseUrgency = (urgency, symptom, value) => {
+    if (symptom === "encrypted" || value === "legal" || value === "medical") return "Très sensible";
+    if (urgency === "critical") return "Urgent";
+    if (urgency === "business") return "Rapide";
+    return "Standard";
+  };
+  const mapCaseProfile = (value) => {
+    if (value === "legal") return "Cabinet juridique";
+    if (value === "business" || value === "medical") return "Entreprise / TI";
+    return "Particulier";
+  };
+  const mapCaseImpact = (urgency, value) => {
+    if (value === "legal") return "Client, juridique ou assurance impliqué";
+    if (urgency === "critical" || urgency === "business") return "Opérations bloquées";
+    if (value === "business" || value === "medical") return "Données importantes";
+    return "Planifié / non urgent";
+  };
+  const mapCaseSensitivity = (symptom, value) => {
+    if (symptom === "encrypted" || value === "legal") return "Preuve / chaîne de possession";
+    if (value === "medical") return "Données sensibles";
+    if (value === "business") return "Confidentiel";
+    return "Standard";
+  };
+  const findActiveStripeCheckoutHref = () => {
+    const checkoutLink = document.querySelector('[data-stripe-checkout-link][href*="checkout.stripe.com"], .status-payment-actions a[href*="checkout.stripe.com"]');
+    return checkoutLink?.href || "";
+  };
+
+  const dock = document.createElement("aside");
+  dock.className = "chatbot-dock";
+  dock.id = "diagnostic-assistant";
+  dock.tabIndex = -1;
+  dock.setAttribute("aria-label", labels.aria);
+  dock.innerHTML = `
+    <div class="chatbot-dock-header">
+      <img class="chatbot-avatar" src="/assets/icons/chatbot-robot.svg" alt="" width="42" height="42" aria-hidden="true" decoding="async">
+      <span class="chatbot-mark" aria-hidden="true"></span>
+      <span class="chatbot-kicker">${labels.kicker}</span>
+      <span class="chatbot-status">${labels.status}</span>
+    </div>
+    <p class="chatbot-title">${labels.title}</p>
+    <p class="chatbot-copy">${labels.copy}</p>
+    <form class="chatbot-diagnostic" data-chatbot-diagnostic>
+      <label><span>${labels.supportLabel}</span><select name="support">${optionMarkup(labels.supportOptions)}</select></label>
+      <label><span>${labels.symptomLabel}</span><select name="symptom">${optionMarkup(labels.symptomOptions)}</select></label>
+      <label><span>${labels.urgencyLabel}</span><select name="urgency">${optionMarkup(labels.urgencyOptions)}</select></label>
+      <label><span>${labels.historyLabel}</span><select name="history">${optionMarkup(labels.historyOptions)}</select></label>
+      <label><span>${labels.valueLabel}</span><select name="value">${optionMarkup(labels.valueOptions)}</select></label>
+      <label><span>${labels.stateLabel}</span><select name="state">${optionMarkup(labels.stateOptions)}</select></label>
+    </form>
+    <div class="chatbot-result" data-chatbot-result aria-live="polite"></div>
+    <ul class="chatbot-protocol" data-chatbot-protocol aria-label="${labels.protocol}"></ul>
+    <form class="chatbot-case-form" data-chatbot-case-form data-intake-endpoint="/api/intake">
+      <p>${labels.quickCase}</p>
+      <label><span>${labels.fieldName}</span><input type="text" name="nom" autocomplete="name" required></label>
+      <label><span>${labels.fieldEmail}</span><input type="email" name="courriel" autocomplete="email" required></label>
+      <label><span>${labels.fieldPhone}</span><input type="tel" name="telephone" autocomplete="tel"></label>
+      <label class="chatbot-case-consent"><input type="checkbox" name="consentement" required><span>${labels.consent}</span></label>
+      <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>
+      <button type="submit" class="chatbot-execute" data-chatbot-case-submit>${labels.submitCase}</button>
+      <span class="chatbot-case-status" data-chatbot-case-status aria-live="polite"></span>
+    </form>
+    <div class="chatbot-actions">
+      <a class="chatbot-link chatbot-link-primary" href="${caseHref}" data-chatbot-action="case">${labels.case}</a>
+      <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-action="service_route" data-chatbot-service>${labels.service}</a>
+      <a class="chatbot-link" href="${receptionHref}" data-chatbot-action="secure_intake">${labels.reception}</a>
+      <a class="chatbot-link" href="${ratesHref}" data-chatbot-action="rates">${labels.rates}</a>
+      <a class="chatbot-link" href="${statusHref}" data-chatbot-action="stripe_payment" data-chatbot-payment>${labels.payment}</a>
+      <a class="chatbot-link" href="${statusHref}" data-chatbot-action="status">${labels.statusLink}</a>
+      <button type="button" class="chatbot-link" data-chatbot-action="copy_summary" data-chatbot-copy>${labels.copySummary}</button>
+      <a class="chatbot-link" href="mailto:contact@nexuradata.ca" data-chatbot-action="email_summary" data-chatbot-email>${labels.emailSummary}</a>
+      <a class="chatbot-link" href="${whatsappHref}" target="_blank" rel="noopener noreferrer" data-chatbot-action="urgent_whatsapp" data-chatbot-emergency hidden>${labels.emergency}</a>
+    </div>
+  `;
+  document.body.appendChild(dock);
+
+  const diagnosticForm = dock.querySelector("[data-chatbot-diagnostic]");
+  const result = dock.querySelector("[data-chatbot-result]");
+  const protocolTarget = dock.querySelector("[data-chatbot-protocol]");
+  const caseForm = dock.querySelector("[data-chatbot-case-form]");
+  const caseStatus = dock.querySelector("[data-chatbot-case-status]");
+  const caseSubmitButton = dock.querySelector("[data-chatbot-case-submit]");
+  const emergencyLink = dock.querySelector("[data-chatbot-emergency]");
+  const paymentLink = dock.querySelector("[data-chatbot-payment]");
+  const serviceLink = dock.querySelector("[data-chatbot-service]");
+  const statusLink = dock.querySelector('[data-chatbot-action="status"]');
+  const emailLink = dock.querySelector("[data-chatbot-email]");
+  const copyButton = dock.querySelector("[data-chatbot-copy]");
+  let latestDiagnosticSummary = "";
+  let latestServiceHref = serviceHref("recuperation-donnees-montreal.html");
+  let latestCasePayload = {
+    support: "Disque dur",
+    urgence: "Standard",
+    profil: "Particulier",
+    impact: "Planifié / non urgent",
+    sensibilite: "Standard"
+  };
+  const setCaseStatus = (state, message) => {
+    if (!caseStatus) return;
+    caseStatus.dataset.state = state || "";
+    caseStatus.textContent = message || "";
+  };
+  const parseBotJsonResponse = async (response) => {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  };
+  const syncSummaryActions = () => {
+    if (serviceLink) {
+      serviceLink.href = latestServiceHref;
+    }
+
+    if (emailLink) {
+      emailLink.href = `mailto:contact@nexuradata.ca?subject=${encodeURIComponent(labels.emailSubject)}&body=${encodeURIComponent(latestDiagnosticSummary)}`;
+    }
+  };
+  const syncPaymentLink = () => {
+    if (!paymentLink) return;
+
+    const checkoutHref = findActiveStripeCheckoutHref();
+    paymentLink.href = checkoutHref || statusHref;
+
+    if (checkoutHref) {
+      paymentLink.target = "_blank";
+      paymentLink.rel = "noopener noreferrer";
+    } else {
+      paymentLink.removeAttribute("target");
+      paymentLink.removeAttribute("rel");
+    }
+  };
+  const updateDiagnosis = () => {
+    const formData = new FormData(diagnosticForm);
+    const support = formData.get("support");
+    const symptom = formData.get("symptom");
+    const urgency = formData.get("urgency");
+    const history = formData.get("history");
+    const value = formData.get("value");
+    const state = formData.get("state");
+    const score =
+      ({ raid: 3, server: 3, ssd: 2, phone: 1, drive: 0, removable: 0 }[support] || 0) +
+      ({ water: 4, physical: 4, encrypted: 3, not_detected: 2, slow: 1, deleted: 0 }[symptom] || 0) +
+      ({ critical: 4, business: 2, standard: 0 }[urgency] || 0) +
+      ({ rebuild: 4, opened: 3, software: 2, powered_on: 2, no_attempt: 0 }[history] || 0) +
+      ({ legal: 2, medical: 2, business: 1, personal: 0 }[value] || 0) +
+      ({ running: 2, unknown: 1, powered_off: 0, unplugged: 0 }[state] || 0);
+    const level = score >= 13 ? "critical" : score >= 9 ? "high" : score >= 5 ? "priority" : "logical";
+    const isCritical = level === "critical";
+    const confidence = Math.min(96, 62 + (score * 3));
+    const [title, route, avoid] = labels.cases[level];
+    const selections = [
+      `${labels.supportLabel}: ${optionLabel(labels.supportOptions, support)}`,
+      `${labels.symptomLabel}: ${optionLabel(labels.symptomOptions, symptom)}`,
+      `${labels.urgencyLabel}: ${optionLabel(labels.urgencyOptions, urgency)}`,
+      `${labels.historyLabel}: ${optionLabel(labels.historyOptions, history)}`,
+      `${labels.valueLabel}: ${optionLabel(labels.valueOptions, value)}`,
+      `${labels.stateLabel}: ${optionLabel(labels.stateOptions, state)}`
+    ];
+
+    latestDiagnosticSummary = `${title}. ${selections.join(" | ")}. ${labels.risk}: ${score}. ${labels.confidence}: ${confidence}%. ${labels.route}: ${route} ${labels.avoid}: ${avoid}`;
+    result.innerHTML = `
+      <div class="chatbot-result-head">
+        <strong>${title}</strong>
+        <span>${labels.confidence} ${confidence}%</span>
+      </div>
+      <div class="chatbot-meter chatbot-meter-${level}" aria-hidden="true"><span></span></div>
+      <dl class="chatbot-decision">
+        <div><dt>${labels.risk}</dt><dd>${score}</dd></div>
+        <div><dt>${labels.route}</dt><dd>${route}</dd></div>
+        <div><dt>${labels.avoid}</dt><dd>${avoid}</dd></div>
+      </dl>
+    `;
+    const protocolItems = labels.protocols[level] || [];
+    protocolTarget.replaceChildren(...protocolItems.map((item) => {
+      const protocolItem = document.createElement("li");
+      protocolItem.textContent = item;
+      return protocolItem;
+    }));
+    latestServiceHref = getServiceHref(support, symptom, value);
+    latestCasePayload = {
+      support: mapCaseSupport(support, symptom, value),
+      urgence: mapCaseUrgency(urgency, symptom, value),
+      profil: mapCaseProfile(value),
+      impact: mapCaseImpact(urgency, value),
+      sensibilite: mapCaseSensitivity(symptom, value)
+    };
+    latestDiagnosticSummary = `${latestDiagnosticSummary} ${labels.protocol}: ${protocolItems.join(" / ")}`;
+    syncSummaryActions();
+    emergencyLink.hidden = !isCritical;
+    emergencyLink.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(`${labels.waIntro}\n${latestDiagnosticSummary}`)}`;
+  };
+
+  const copyDiagnosticSummary = async () => {
+    if (!copyButton || !latestDiagnosticSummary) return;
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(latestDiagnosticSummary);
+      } else {
+        const buffer = document.createElement("textarea");
+        buffer.className = "chatbot-copy-buffer";
+        buffer.value = latestDiagnosticSummary;
+        buffer.setAttribute("readonly", "");
+        document.body.appendChild(buffer);
+        buffer.select();
+        document.execCommand("copy");
+        buffer.remove();
+      }
+
+      copyButton.textContent = labels.copied;
+    } catch {
+      copyButton.textContent = labels.copyFailed;
+    }
+
+    setTimeout(() => {
+      copyButton.textContent = labels.copySummary;
+    }, 1400);
+  };
+
+  const submitAutonomousCase = async (event) => {
+    event.preventDefault();
+
+    if (!caseForm?.checkValidity()) {
+      caseForm?.reportValidity();
+      return;
+    }
+
+    const formData = new FormData(caseForm);
+    const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value || "";
+    const payload = {
+      nom: `${formData.get("nom") || ""}`.trim(),
+      courriel: `${formData.get("courriel") || ""}`.trim(),
+      telephone: `${formData.get("telephone") || ""}`.trim(),
+      support: latestCasePayload.support,
+      urgence: latestCasePayload.urgence,
+      profil: latestCasePayload.profil,
+      impact: latestCasePayload.impact,
+      sensibilite: latestCasePayload.sensibilite,
+      message: latestDiagnosticSummary,
+      consentement: formData.get("consentement") === "on",
+      website: `${formData.get("website") || ""}`.trim(),
+      "cf-turnstile-response": turnstileToken,
+      sourcePath: window.location.pathname
+    };
+
+    setCaseStatus("loading", labels.openingCase);
+
+    if (caseSubmitButton) {
+      caseSubmitButton.disabled = true;
+      caseSubmitButton.textContent = labels.openingCase;
+    }
+
+    try {
+      const response = await fetch(caseForm.getAttribute("data-intake-endpoint") || "/api/intake", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await parseBotJsonResponse(response);
+
+      if (response.ok && data?.ok) {
+        const caseId = data.caseId || "";
+        setCaseStatus("success", labels.caseOpened(caseId));
+
+        if (statusLink && caseId) {
+          statusLink.href = `${statusHref}?caseId=${encodeURIComponent(caseId)}`;
+        }
+
+        try {
+          sessionStorage.setItem("nexuradata_latest_case_id", caseId);
+          sessionStorage.setItem("nexuradata_diagnostic_summary", latestDiagnosticSummary);
+        } catch {
+          // Optional browser handoff only.
+        }
+
+        trackIntakeFormSubmit(data?.delivery?.client || "superbot");
+        trackContactIntent("chatbot_autonomous_case_created");
+        return;
+      }
+
+      if (data?.fallback === "mailto" || response.status >= 500) {
+        setCaseStatus("success", labels.caseFallback);
+        syncSummaryActions();
+        window.location.href = emailLink?.href || "mailto:contact@nexuradata.ca";
+        return;
+      }
+
+      setCaseStatus("error", data?.message || labels.caseError);
+    } catch {
+      setCaseStatus("success", labels.caseFallback);
+      syncSummaryActions();
+      window.location.href = emailLink?.href || "mailto:contact@nexuradata.ca";
+    } finally {
+      if (caseSubmitButton) {
+        caseSubmitButton.disabled = false;
+        caseSubmitButton.textContent = labels.submitCase;
+      }
+    }
+  };
+
+  diagnosticForm.addEventListener("change", () => {
+    updateDiagnosis();
+    trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "local_triage" });
   });
+  caseForm?.addEventListener("submit", submitAutonomousCase);
+  updateDiagnosis();
+  syncPaymentLink();
+
+  document.querySelectorAll('a[href="#diagnostic-assistant"]').forEach((trigger) => {
+    trigger.addEventListener("click", () => {
+      setTimeout(() => dock.focus({ preventScroll: true }), 0);
+    });
+  });
+
+  dock.querySelectorAll("[data-chatbot-action]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      if (link.dataset.chatbotAction === "copy_summary") {
+        event.preventDefault();
+        copyDiagnosticSummary();
+      }
+
+      if (link.dataset.chatbotAction === "stripe_payment") {
+        syncPaymentLink();
+      }
+
+      if (link.dataset.chatbotAction === "email_summary" || link.dataset.chatbotAction === "service_route") {
+        syncSummaryActions();
+      }
+
+      if (link.dataset.chatbotAction === "case") {
+        try {
+          sessionStorage.setItem("nexuradata_diagnostic_summary", latestDiagnosticSummary);
+        } catch {
+          // Optional handoff only.
+        }
+
+        const messageField = document.querySelector('[data-intake-form] textarea[name="message"]');
+        if (messageField && !messageField.value.trim()) {
+          messageField.value = latestDiagnosticSummary;
+        }
+      }
+      trackContactIntent(`chatbot_${link.dataset.chatbotAction || "open"}`);
+    });
+  });
+
+  document.addEventListener("nexuradata:payments-rendered", syncPaymentLink);
 }());
 
 document.querySelectorAll("[data-contact-intent]").forEach((link) => {
@@ -397,7 +1054,6 @@ document.querySelectorAll(".site-nav .brand-logo").forEach((logo) => {
 });
 
 const revealElements = document.querySelectorAll("[data-reveal]");
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const initializeMobileNav = () => {
   const navbars = document.querySelectorAll(".navbar, .site-nav");
@@ -485,104 +1141,15 @@ const showAllReveals = () => {
   revealElements.forEach((element) => element.classList.add("is-visible"));
 };
 
-if (!("IntersectionObserver" in window) || prefersReducedMotion.matches) {
-  showAllReveals();
-} else if (revealElements.length > 0) {
-  const observer = new IntersectionObserver(
-    (entries, activeObserver) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
+showAllReveals();
 
-        entry.target.classList.add("is-visible");
-
-        // Stagger direct children for grid containers
-        if (entry.target.classList.contains("stagger-parent")) {
-          Array.from(entry.target.children).forEach((child, i) => {
-            child.style.transitionDelay = `${i * 68}ms`;
-          });
-        }
-
-        activeObserver.unobserve(entry.target);
-      });
-    },
-    {
-      threshold: 0.12,
-      rootMargin: "0px 0px -40px 0px"
-    }
-  );
-
-  revealElements.forEach((element) => observer.observe(element));
-}
-
-// Counter animation for [data-count] elements (hero panel stats)
 const counterElements = document.querySelectorAll("[data-count]");
-if (counterElements.length > 0 && "IntersectionObserver" in window && !prefersReducedMotion.matches) {
-  const counterObserver = new IntersectionObserver(
-    (entries, obs) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const el = entry.target;
-        const target = parseInt(el.dataset.count, 10);
-        const suffix = el.dataset.countSuffix || "";
-        const locale = document.documentElement.lang?.startsWith("en") ? "en-CA" : "fr-CA";
-        const duration = 1400;
-        const startTime = performance.now();
-        const tick = (now) => {
-          const progress = Math.min((now - startTime) / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3);
-          el.textContent = Math.floor(eased * target).toLocaleString(locale) + suffix;
-          if (progress < 1) {
-            requestAnimationFrame(tick);
-          } else {
-            el.textContent = target.toLocaleString(locale) + suffix;
-          }
-        };
-        requestAnimationFrame(tick);
-        obs.unobserve(el);
-      });
-    },
-    { threshold: 0.6 }
-  );
-  counterElements.forEach((el) => counterObserver.observe(el));
-}
-
-// Smooth FAQ open/close animation via Web Animations API
-document.querySelectorAll(".faq-item").forEach((details) => {
-  const summary = details.querySelector("summary");
-  const content = details.querySelector("p");
-  if (!summary || !content) return;
-
-  summary.addEventListener("click", (e) => {
-    if (prefersReducedMotion.matches) return;
-    e.preventDefault();
-
-    if (!details.open) {
-      details.open = true;
-      const h = content.scrollHeight;
-      content.animate(
-        [
-          { maxHeight: "0", opacity: "0", paddingBottom: "0" },
-          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" }
-        ],
-        { duration: 300, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
-      );
-    } else {
-      const h = content.scrollHeight;
-      const anim = content.animate(
-        [
-          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" },
-          { maxHeight: "0", opacity: "0", paddingBottom: "0" }
-        ],
-        { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
-      );
-      anim.onfinish = () => {
-        details.open = false;
-        anim.cancel();
-      };
-    }
-  });
+counterElements.forEach((element) => {
+  const target = parseInt(element.dataset.count, 10);
+  if (Number.isNaN(target)) return;
+  const suffix = element.dataset.countSuffix || "";
+  const locale = document.documentElement.lang?.startsWith("en") ? "en-CA" : "fr-CA";
+  element.textContent = target.toLocaleString(locale) + suffix;
 });
 
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
@@ -602,7 +1169,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     event.preventDefault();
 
     target.scrollIntoView({
-      behavior: prefersReducedMotion.matches ? "auto" : "smooth",
+      behavior: "auto",
       block: "start"
     });
   });
@@ -934,6 +1501,7 @@ const createStatusPayment = (payment) => {
     link.href = payment.checkoutUrl;
     link.target = "_blank";
     link.rel = "noreferrer";
+    link.dataset.stripeCheckoutLink = "";
     link.textContent = publicI18n.paymentAction;
 
     actions.append(link);
@@ -1176,8 +1744,10 @@ const renderStatusRecord = (record, statusPanel) => {
 
     if (payments.length > 0) {
       paymentsTarget.replaceChildren(...payments.map(createStatusPayment));
+      document.dispatchEvent(new CustomEvent("nexuradata:payments-rendered"));
     } else {
       paymentsTarget.replaceChildren();
+      document.dispatchEvent(new CustomEvent("nexuradata:payments-rendered"));
     }
   }
 

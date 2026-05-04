@@ -79,6 +79,7 @@ describe("_middleware — dynamic response hardening", () => {
         expect(res.headers.get("cross-origin-resource-policy")).toBe("same-site");
         expect(res.headers.get("origin-agent-cluster")).toBe("?1");
         expect(res.headers.get("referrer-policy")).toBe("strict-origin-when-cross-origin");
+        expect(res.headers.get("permissions-policy")).toContain("autoplay=()");
         expect(res.headers.get("permissions-policy")).toContain("camera=()");
         expect(res.headers.get("x-content-type-options")).toBe("nosniff");
         expect(res.headers.get("x-frame-options")).toBe("DENY");

@@ -24,13 +24,13 @@ Never stretch, compress, recolor, re-typeset, or rearrange internal logo blocks.
   --os-dim: rgba(232, 228, 220, 0.22);
   --os-ghost: rgba(232, 228, 220, 0.08);
   --rule: 0.5px solid rgba(232, 228, 220, 0.1);
-  --serif: 'Georgia', 'Times New Roman', serif;
+  --serif: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --tracking-wide: 0.35em;
   --tracking-xwide: 0.55em;
 }
 ```
 
-These values are fixed — no color substitution, no typographic replacement, no framework override.
+These values are fixed — no color substitution, no non-IBM typographic replacement, no framework override.
 
 ## Locked Header
 

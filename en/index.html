@@ -37,7 +37,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/site.css?v=20260504a">
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260504f">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -165,10 +165,7 @@
       "url": "https://nexuradata.ca/en/"
     }
   </script>
-  <script src="../assets/js/site.js" defer></script>
-  <!-- Google Analytics 4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TC31YSS01P"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TC31YSS01P');</script>
+  <script src="../assets/js/site.js?v=20260504f" defer></script>
 </head>
 
 <body>
@@ -207,8 +204,7 @@
 
           <div class="hero-actions">
             <a href="#contact" class="button button-primary">Open a case</a>
-            <a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-              class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_hero">Direct WhatsApp</a>
+            <a href="#diagnostic-assistant" class="button button-secondary" data-contact-intent="diagnostic_hero">AI diagnosis</a>
             <a href="tel:+14388130592" class="button button-outline" data-contact-intent="phone_hero">Call now</a>
           </div>
 
@@ -218,23 +214,17 @@
             <li>Confidential follow-up, secure intake and clear next steps.</li>
           </ul>
           <div class="trust-tags">
-            <span>Direct WhatsApp</span>
+            <span>AI diagnosis</span>
             <span>Fast prequalification</span>
+            <span>Post-quantum</span>
             <span>Free assessment</span>
             <span>Emergencies 24/7</span>
           </div>
         </div>
 
         <aside class="hero-panel hero-lab-panel" aria-label="Laboratory commitment">
-          <div class="cinematic-loop" aria-hidden="true">
-            <div class="cinematic-loop-stage">
-              <span class="cinematic-scan-line"></span>
-              <span class="cinematic-data-node node-one"></span>
-              <span class="cinematic-data-node node-two"></span>
-              <span class="cinematic-data-node node-three"></span>
-              <span class="cinematic-data-node node-four"></span>
-            </div>
-            <dl class="cinematic-readout">
+          <div class="lab-snapshot" aria-hidden="true">
+            <dl class="lab-snapshot-grid">
               <div>
                 <dt>Analyze</dt>
                 <dd>84%</dd>
@@ -289,21 +279,21 @@
       </div>
     </section>
 
-    <section class="motion-story" aria-labelledby="motion-story-title">
-      <div class="container motion-story-grid">
-        <div class="motion-story-copy">
+    <section class="critical-story" aria-labelledby="critical-story-title">
+      <div class="container critical-story-grid">
+        <div class="critical-story-copy">
           <p class="eyebrow">Critical moment</p>
-          <h2 id="motion-story-title">Failure does not warn you.</h2>
+          <h2 id="critical-story-title">Failure does not warn you.</h2>
           <p>When files disappear, every move matters. The right protocol keeps the case recoverable.</p>
         </div>
-        <div class="motion-failure-visual" aria-hidden="true">
-          <span class="failure-frame frame-one"></span>
-          <span class="failure-frame frame-two"></span>
-          <span class="failure-frame frame-three"></span>
-          <span class="failure-fragment fragment-one"></span>
-          <span class="failure-fragment fragment-two"></span>
-          <span class="failure-fragment fragment-three"></span>
-          <span class="failure-fragment fragment-four"></span>
+        <div class="critical-story-panel" aria-hidden="true">
+          <span class="critical-frame frame-one"></span>
+          <span class="critical-frame frame-two"></span>
+          <span class="critical-frame frame-three"></span>
+          <span class="critical-fragment fragment-one"></span>
+          <span class="critical-fragment fragment-two"></span>
+          <span class="critical-fragment fragment-three"></span>
+          <span class="critical-fragment fragment-four"></span>
         </div>
       </div>
     </section>
@@ -591,6 +581,12 @@
             <a class="service-link" href="/en/politique-confidentialite.html">Privacy policy</a>
           </div>
           <div class="page-card cert-card">
+            <p class="cert-kicker">Post-quantum</p>
+            <h3>Cryptographic readiness</h3>
+            <p>The topic is now everywhere in the news. NEXURADATA keeps a long-term posture for secrets, archives and trust mechanisms.</p>
+            <a class="service-link" href="/en/resilience-donnees-entreprise-montreal.html">Data resilience</a>
+          </div>
+          <div class="page-card cert-card">
             <p class="cert-kicker">Insurance</p>
             <h3>Professional liability E&amp;O</h3>
             <p>Active Errors &amp; Omissions coverage for technical and forensic engagements.</p>
@@ -772,7 +768,7 @@
               <div class="form-actions">
                 <button type="submit" class="button button-primary">Open a case</button>
                 <a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-                  class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_contact">Direct WhatsApp</a>
+                  class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_emergency_contact">Emergency WhatsApp</a>
                 <a href="tel:+14388130592" class="button button-outline" data-contact-intent="phone_contact">Call +1 438 813-0592</a>
                 <a href="mailto:contact@nexuradata.ca?subject=Urgent%20NEXURADATA%20request"
                   class="button button-outline" data-contact-intent="email_contact">Urgent email</a>
@@ -787,12 +783,12 @@
 
             <div class="contact-rail">
               <article class="contact-card contact-card-channels">
-                <h3>Fast channels</h3>
-                <div class="channel-list" aria-label="Fast contact channels">
+                <h3>Emergency channels</h3>
+                <div class="channel-list" aria-label="Emergency channels">
                   <a class="channel-link channel-link-whatsapp" href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-                    target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_channel">
-                    <span>Direct WhatsApp</span>
-                    <strong>Describe the case</strong>
+                    target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_emergency_channel">
+                    <span>Emergency WhatsApp</span>
+                    <strong>Critical cases only</strong>
                   </a>
                   <a class="channel-link" href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer" data-contact-intent="facebook_channel">
                     <span>Facebook</span>
@@ -825,7 +821,7 @@
                 <a href="tel:+14388130592" data-contact-intent="phone_rail">+1 438 813-0592</a>
                 <a href="mailto:contact@nexuradata.ca" data-contact-intent="email_rail">contact@nexuradata.ca</a>
                 <a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-                  rel="noopener noreferrer" target="_blank" class="whatsapp-inline-link" data-contact-intent="whatsapp_rail">WhatsApp +1 438 813-0592</a>
+                  rel="noopener noreferrer" target="_blank" class="whatsapp-inline-link" data-contact-intent="whatsapp_emergency_rail">Emergency WhatsApp +1 438 813-0592</a>
                 <a href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer" data-contact-intent="facebook_rail">NEXURADATA Facebook</a>
                 <a href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer" data-contact-intent="google_rail">Google / reviews</a>
                 <p class="service-area">
@@ -866,7 +862,7 @@
 
         <div class="footer-block">
           <small>CHANNELS</small>
-          <p><a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20." target="_blank" rel="noopener noreferrer">WhatsApp</a></p>
+          <p><a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20." target="_blank" rel="noopener noreferrer">Emergency WhatsApp</a></p>
           <p><a href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer">Facebook</a></p>
           <p><a href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer">Google</a></p>
         </div>
@@ -874,6 +870,7 @@
         <div class="footer-block">
           <small>PRIVACY</small>
           <p><a href="mailto:privacy@nexuradata.ca">privacy@nexuradata.ca</a></p>
+          <p><button type="button" class="footer-cookie-button" data-cookie-preferences>Cookie preferences</button></p>
         </div>
       </section>
 

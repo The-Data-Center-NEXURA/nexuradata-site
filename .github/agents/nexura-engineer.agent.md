@@ -132,9 +132,9 @@ When thinking about the business or content:
 - Semantic HTML: `<main>`, `<section>`, `<nav>`, `<footer>` — no unnecessary `<div>`
 - Single CSS file: `assets/css/site.css`. No frameworks, no inline styles
 - No JS except `assets/js/site.js`
-- Typography: IBM Plex Sans (headings/UI), IBM Plex Mono (labels/eyebrows), Georgia body via `var(--serif)`
+- Typography: IBM Plex Sans (body/headings/UI), IBM Plex Mono (labels/eyebrows/technical readouts)
 - Asymmetric button radius: `1rem 1rem 1rem 0.35rem` — the brand signature shape
-- All transitions use `var(--ease-out)`: `cubic-bezier(0.22, 1, 0.36, 1)`
+- No automatic motion: no autoplay media, CSS animations, smooth scrolling, scroll reveal, animated counters, or hover lifts
 
 ### Locked Branding Tokens (never change)
 
@@ -144,7 +144,7 @@ When thinking about the business or content:
 --os-dim: rgba(232, 228, 220, 0.22);
 --os-ghost: rgba(232, 228, 220, 0.08);
 --rule: 0.5px solid rgba(232, 228, 220, 0.1);
---serif: 'Georgia', 'Times New Roman', serif;
+--serif: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 --tracking-wide: 0.35em;
 --tracking-xwide: 0.55em;
 ```
