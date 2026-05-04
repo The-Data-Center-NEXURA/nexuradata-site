@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { blockBots, secureFunctionResponses } from "../functions/_middleware.js";
 
-function makeContext(ua) {
+function makeContext(ua, url = "https://nexuradata.ca/api/intake") {
     return {
-        request: new Request("https://nexuradata.ca/api/intake", {
+        request: new Request(url, {
             headers: ua ? { "user-agent": ua } : {},
         }),
         next: () => new Response("ok", { status: 200 }),
@@ -88,6 +88,7 @@ describe("_middleware — dynamic response hardening", () => {
 
     it("does not overwrite explicit response headers", async () => {
         const res = await secureFunctionResponses({
+            request: new Request("https://nexuradata.ca/api/intake"),
             next: () => new Response("ok", {
                 headers: {
                     "cache-control": "private",
@@ -99,5 +100,20 @@ describe("_middleware — dynamic response hardening", () => {
         expect(res.headers.get("cache-control")).toBe("private");
         expect(res.headers.get("x-robots-tag")).toBe("none");
         expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    });
+
+    it("does not add noindex headers to public static pages", async () => {
+        const res = await secureFunctionResponses({
+            request: new Request("https://nexuradata.ca/"),
+            next: () => new Response("ok", {
+                status: 200,
+                headers: { "cache-control": "public, max-age=0, must-revalidate" }
+            })
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+        expect(res.headers.get("x-robots-tag")).toBeNull();
+        expect(res.headers.get("x-content-type-options")).toBeNull();
     });
 });

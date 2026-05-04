@@ -39,6 +39,15 @@ const BLOCKED_UA_FRAGMENTS = [
     "ccbot",
 ];
 
+const FUNCTION_SECURITY_PATHS = ["/api", "/operations"];
+
+const shouldHardenFunctionResponse = (request) => {
+    if (!request?.url) return true;
+
+    const { pathname } = new URL(request.url);
+    return FUNCTION_SECURITY_PATHS.some((pathPrefix) => pathname === pathPrefix || pathname.startsWith(`${pathPrefix}/`));
+};
+
 export const withFunctionSecurityHeaders = (response) => {
     const headers = new Headers(response.headers);
 
@@ -67,7 +76,15 @@ export const blockBots = async (context) => {
     return context.next();
 };
 
-export const secureFunctionResponses = async (context) => withFunctionSecurityHeaders(await context.next());
+export const secureFunctionResponses = async (context) => {
+    const response = await context.next();
+
+    if (!shouldHardenFunctionResponse(context.request)) {
+        return response;
+    }
+
+    return withFunctionSecurityHeaders(response);
+};
 
 export const onRequest = [
     blockBots,
