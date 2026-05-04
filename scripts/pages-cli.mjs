@@ -12,8 +12,9 @@ const releaseDir = path.join(projectRoot, "release-cloudflare");
 const wranglerBin = path.join(
   projectRoot,
   "node_modules",
-  ".bin",
-  process.platform === "win32" ? "wrangler.cmd" : "wrangler"
+  "wrangler",
+  "bin",
+  "wrangler.js"
 );
 
 const productionBranch = "main";
@@ -49,8 +50,8 @@ const runWrangler = async (args, options = {}) => {
   await ensurePath(wranglerBin, "Wrangler binary");
 
   return new Promise((resolve, reject) => {
-    const command = wranglerBin;
-    const commandArgs = args;
+    const command = process.execPath;
+    const commandArgs = [wranglerBin, ...args];
 
     const child = spawn(command, commandArgs, {
       cwd: projectRoot,
