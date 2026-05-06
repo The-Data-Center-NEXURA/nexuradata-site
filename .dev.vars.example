@@ -1,10 +1,10 @@
-DATABASE_URL=postgres://user:password@host.neon.tech/dbname?sslmode=require
-RESEND_API_KEY=re_xxxxxxxxx
+DATABASE_URL=<neon-postgres-url>
+RESEND_API_KEY=<resend-api-key>
 RESEND_FROM_EMAIL=NEXURADATA <dossiers@nexuradata.ca>
 LAB_INBOX_EMAIL=dossiers@nexuradata.ca
 PUBLIC_SITE_ORIGIN=https://nexuradata.ca
-ACCESS_CODE_SECRET=replace-with-a-long-random-secret
-STRIPE_SECRET_KEY=sk_test_xxxxxxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxx
+ACCESS_CODE_SECRET=<long-random-secret>
+STRIPE_SECRET_KEY=<stripe-secret-key>
+STRIPE_WEBHOOK_SECRET=<stripe-webhook-secret>
 OPS_ACCESS_ALLOWED_EMAILS=admin@nexuradata.ca
 OPS_ACCESS_ALLOWED_DOMAIN=nexuradata.ca

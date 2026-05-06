@@ -15,11 +15,38 @@ NEXURADATA uses a small Node.js dependency surface for the public site, Cloudfla
 - Do not hand-edit `package-lock.json`; regenerate it with npm.
 - Do not commit `node_modules/` or generated package caches.
 
+## Registry And Feed Hygiene
+
+- `.npmrc` pins npm installs to `https://registry.npmjs.org/` and explicitly maps the `@neondatabase` scope to the same public registry.
+- Do not add private or mirror registries without documenting the owner, authentication model, and allowed package scopes.
+- Keep audit sources and install sources aligned unless there is a documented incident-response reason to separate them.
+- Run `npm run audit:signatures` to verify registry signatures and attestations for packages that publish them.
+
 ## Automated Updates
 
 - Dependabot checks npm and GitHub Actions weekly.
 - Security updates should be reviewed first, then patch/minor updates, then major updates.
 - Keep dependency PRs small unless a coordinated major upgrade requires grouped changes.
+
+## Pull Request Gates
+
+- Every pull request to `main` must pass CI: `npm ci`, `npm run secret:scan`, `npm run audit`, `npm run audit:signatures`, `npm run check`, `npm run test:coverage`, and `npm run build`.
+- Dependency Review blocks pull requests that introduce moderate-or-higher known vulnerabilities.
+- Dependency Review blocks strong copyleft or server-side copyleft licenses unless leadership approves a documented exception.
+- Secret Scan checks tracked files and git history without printing matched values.
+- CodeQL and njsscan provide static application security scanning and publish findings to GitHub code scanning.
+
+## Branch Protection
+
+Configure `main` in GitHub repository settings with these required checks:
+
+- `Tests + build`
+- `Secret scan`
+- `Dependency review`
+- `Analyze JavaScript`
+- `njsscan code scanning`
+
+Also require pull requests before merge, at least one reviewer, conversation resolution, and no force pushes.
 
 ## Audit And Triage
 
@@ -30,9 +57,11 @@ NEXURADATA uses a small Node.js dependency surface for the public site, Cloudfla
 ## Review Checklist
 
 - `npm ci`
+- `npm run secret:scan`
 - `npm run audit`
+- `npm run audit:signatures`
 - `npm run check`
-- `npm test`
+- `npm run test:coverage`
 - `npm run build`
 
 For Cloudflare-facing dependency changes, also confirm that Pages Functions still use ESM and that no secrets are logged or exposed.

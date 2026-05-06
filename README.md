@@ -71,7 +71,9 @@ Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md).
 - `npm run cf:check`
 - `npm run cf:deploy`
 - `npm run cf:deploy:staging`
+- `npm run secret:scan`
 - `npm test`
+- `npm run test:coverage`
 
 `release-cloudflare/` est regenere a chaque build pour les assets statiques. Les `functions/` restent a la racine du projet pour Cloudflare Pages Functions.
 

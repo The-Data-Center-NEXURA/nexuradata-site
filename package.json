@@ -19,13 +19,18 @@
     "cf:pages:deploy:prod": "npm run build && node ./scripts/pages-cli.mjs deploy-prod",
     "cf:pages:deploy:staging": "npm run build && node ./scripts/pages-cli.mjs deploy-staging",
     "cf:whoami": "wrangler whoami",
+    "secret:scan": "node ./scripts/secret-scan.mjs",
+    "secret:scan:history": "node ./scripts/secret-scan.mjs --history",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "audit": "npm audit --audit-level=moderate",
+    "audit:signatures": "npm audit signatures",
     "check": "node ./scripts/check.mjs",
     "prepare": "node ./scripts/setup-hooks.mjs"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.4",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",
     "vitest": "^4.1.4",
