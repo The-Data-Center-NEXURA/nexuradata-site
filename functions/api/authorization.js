@@ -1,5 +1,6 @@
 import { approveCaseAuthorization } from "../_lib/cases.js";
 import { json, methodNotAllowed, onOptions, parsePayload } from "../_lib/http.js";
+import { logError } from "../_lib/observability.js";
 import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 
 const genericErrorMessage = "L'autorisation n'a pas pu être confirmée. Vérifiez le dossier ou demandez une mise à jour.";
@@ -35,7 +36,7 @@ export const onRequestPost = async (context) => {
       authorization: detail.authorization
     });
   } catch (error) {
-    console.error("authorization approval error:", error);
+    logError(context, "api.authorization.approval_error", error);
     return json(
       {
         ok: false,

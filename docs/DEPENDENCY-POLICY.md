@@ -2,6 +2,8 @@
 
 NEXURADATA uses a small Node.js dependency surface for the public site, Cloudflare Pages Functions, build scripts, and tests. The goal is to keep dependency changes explicit, reproducible, and easy to review.
 
+The repo-wide sequencing for dependency, security, quality and observability work is maintained in [`PLATFORM-HARDENING-TIMELINE.md`](PLATFORM-HARDENING-TIMELINE.md).
+
 ## Runtime Baseline
 
 - Node.js is pinned with `.node-version` and `package.json` `engines.node`.
@@ -30,7 +32,7 @@ NEXURADATA uses a small Node.js dependency surface for the public site, Cloudfla
 
 ## Pull Request Gates
 
-- Every pull request to `main` must pass CI: `npm ci`, `npm run secret:scan`, `npm run audit`, `npm run audit:signatures`, `npm run check`, `npm run test:coverage`, and `npm run build`.
+- Every pull request to `main` must pass CI: `npm ci`, `npm run secret:scan`, `npm run audit`, `npm run audit:signatures`, `npm run check`, `npm run ui:smoke`, `npm run test:coverage`, and `npm run build`.
 - Dependency Review blocks pull requests that introduce moderate-or-higher known vulnerabilities.
 - Dependency Review blocks strong copyleft or server-side copyleft licenses unless leadership approves a documented exception.
 - Secret Scan checks tracked files and git history without printing matched values.
@@ -61,6 +63,7 @@ Also require pull requests before merge, at least one reviewer, conversation res
 - `npm run audit`
 - `npm run audit:signatures`
 - `npm run check`
+- `npm run ui:smoke`
 - `npm run test:coverage`
 - `npm run build`
 

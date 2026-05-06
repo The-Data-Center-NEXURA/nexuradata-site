@@ -45,6 +45,9 @@ jobs:
       - name: Run quality gate
         run: npm run check
 
+      - name: Run UI smoke checks
+        run: npm run ui:smoke
+
       - name: Run tests with coverage
         run: npm run test:coverage
 

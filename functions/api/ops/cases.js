@@ -15,6 +15,7 @@ import {
 } from "../../_lib/cases.js";
 import { sendClientAccessEmail, sendClientPaymentLinkEmail, sendClientStatusEmail } from "../../_lib/email.js";
 import { authorizeOrReject, json, methodNotAllowed, onOptions, parsePayload } from "../../_lib/http.js";
+import { logError } from "../../_lib/observability.js";
 
 export const onRequestOptions = (context) => onOptions(context.env, "GET, POST, OPTIONS");
 
@@ -65,7 +66,7 @@ export const onRequestGet = async (context) => {
       items
     });
   } catch (error) {
-    console.error("ops/cases GET error:", error);
+    logError(context, "api.ops.cases.get_error", error);
     return json(
       {
         ok: false,
@@ -211,7 +212,7 @@ export const onRequestPost = async (context) => {
 
     throw new Error("Action opérateur inconnue.");
   } catch (error) {
-    console.error("ops/cases POST error:", error);
+    logError(context, "api.ops.cases.post_error", error);
     return json(
       {
         ok: false,

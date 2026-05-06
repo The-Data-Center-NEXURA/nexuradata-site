@@ -60,7 +60,7 @@ Avant d'ajouter une page, verifier cette carte et renforcer la page canonique ex
 6. Verifier le domaine d'envoi dans Resend et fournir `RESEND_API_KEY`.
 7. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
 
-Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md). Voir aussi [`docs/`](docs/) pour la checklist de lancement, le guide de deploiement rapide et les notes de recherche concurrentielle / tarifaire.
+Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md). Voir aussi [`docs/PLATFORM-HARDENING-TIMELINE.md`](docs/PLATFORM-HARDENING-TIMELINE.md) et [`docs/`](docs/) pour la checklist de lancement, le guide de deploiement rapide, les baselines qualite / observabilite et les notes de recherche concurrentielle / tarifaire.
 
 ## Commandes
 
@@ -72,6 +72,7 @@ Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md).
 - `npm run cf:deploy`
 - `npm run cf:deploy:staging`
 - `npm run secret:scan`
+- `npm run ui:smoke`
 - `npm test`
 - `npm run test:coverage`
 

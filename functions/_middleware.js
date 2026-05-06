@@ -2,9 +2,12 @@
  * Cloudflare Pages Middleware — runs before every Pages Function.
  *
  * Order matters:
- *   1. UA blocker (rejects known scanners, scrapers, AI bots)
- *   2. Security headers for dynamic Function responses
+ *   1. Observability for API / operations requests
+ *   2. UA blocker (rejects known scanners, scrapers, AI bots)
+ *   3. Security headers for dynamic Function responses
  */
+
+import { observeRequest } from "./_lib/observability.js";
 
 const FUNCTION_SECURITY_HEADERS = {
     "Cache-Control": "no-store",
@@ -86,7 +89,16 @@ export const secureFunctionResponses = async (context) => {
     return withFunctionSecurityHeaders(response);
 };
 
+export const observeFunctionRequests = (context) => {
+    if (!shouldHardenFunctionResponse(context.request)) {
+        return context.next();
+    }
+
+    return observeRequest(context);
+};
+
 export const onRequest = [
+    observeFunctionRequests,
     blockBots,
     secureFunctionResponses,
 ];

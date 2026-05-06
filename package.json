@@ -27,6 +27,7 @@
     "audit": "npm audit --audit-level=moderate",
     "audit:signatures": "npm audit signatures",
     "check": "node ./scripts/check.mjs",
+    "ui:smoke": "node ./scripts/ui-smoke.mjs",
     "prepare": "node ./scripts/setup-hooks.mjs"
   },
   "devDependencies": {
