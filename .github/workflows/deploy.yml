@@ -20,19 +20,17 @@ jobs:
           git fetch --no-tags --depth=1 origin ${{ github.ref }}
           git checkout --detach FETCH_HEAD
 
-      - name: Use preinstalled Node.js 22
-        run: |
-          NODE_22_BIN="$(find /opt/hostedtoolcache/node -path '*/x64/bin/node' -type f | grep '/22\.' | sort -V | tail -n 1)"
-          if [ -z "$NODE_22_BIN" ]; then
-            echo "Node.js 22 was not found in the GitHub Actions tool cache."
-            exit 1
-          fi
-          NODE_22_DIR="$(dirname "$NODE_22_BIN")"
-          echo "$NODE_22_DIR" >> "$GITHUB_PATH"
-          "$NODE_22_BIN" --version
+      - name: Use pinned Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run dependency audit
+        run: npm run audit
 
       - name: Run quality gate
         run: npm run check

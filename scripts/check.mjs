@@ -23,8 +23,8 @@ import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SITE_CSS_VERSION = "20260504g";
-const SITE_JS_VERSION = "20260504g";
+const SITE_CSS_VERSION = "20260506b";
+const SITE_JS_VERSION = "20260506b";
 const errors = [];
 
 function fail(rule, detail) {

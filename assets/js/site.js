@@ -447,6 +447,8 @@ initKineticCanvas();
   const labels = isEnglishDocument
     ? {
       aria: "NEXURADATA chatbot",
+      openLabel: "Open diagnostic assistant",
+      closeLabel: "Close diagnostic assistant",
       kicker: "NEXURA AI",
       status: "DIAGNOSTIC",
       title: "Diagnose before contact",
@@ -463,6 +465,7 @@ initKineticCanvas();
       historyOptions: [["no_attempt", "No attempt"], ["software", "Recovery app"], ["opened", "Opened device"], ["rebuild", "RAID rebuild"], ["powered_on", "Repeated power-on"]],
       valueOptions: [["personal", "Personal"], ["business", "Business"], ["legal", "Legal"], ["medical", "Sensitive"]],
       stateOptions: [["powered_off", "Powered off"], ["unplugged", "Unplugged"], ["running", "Still running"], ["unknown", "Unknown"]],
+      resultAction: "Get diagnosis",
       risk: "Risk",
       confidence: "Confidence",
       route: "Route",
@@ -506,6 +509,8 @@ initKineticCanvas();
     }
     : {
       aria: "Chatbot NEXURADATA",
+      openLabel: "Ouvrir l'assistant diagnostic",
+      closeLabel: "Fermer l'assistant diagnostic",
       kicker: "NEXURA AI",
       status: "DIAGNOSTIC",
       title: "Diagnostiquer avant contact",
@@ -522,6 +527,7 @@ initKineticCanvas();
       historyOptions: [["no_attempt", "Aucune"], ["software", "Logiciel tenté"], ["opened", "Support ouvert"], ["rebuild", "RAID reconstruit"], ["powered_on", "Redémarrages"]],
       valueOptions: [["personal", "Personnel"], ["business", "Entreprise"], ["legal", "Juridique"], ["medical", "Sensible"]],
       stateOptions: [["powered_off", "Éteint"], ["unplugged", "Débranché"], ["running", "Encore allumé"], ["unknown", "Inconnu"]],
+      resultAction: "Obtenir diagnostic",
       risk: "Risque",
       confidence: "Confiance",
       route: "Parcours",
@@ -627,50 +633,64 @@ initKineticCanvas();
   dock.className = "chatbot-dock";
   dock.id = "diagnostic-assistant";
   dock.tabIndex = -1;
+  dock.dataset.chatbotOpen = "false";
   dock.setAttribute("aria-label", labels.aria);
   dock.innerHTML = `
-    <div class="chatbot-dock-header">
+    <button type="button" class="chatbot-toggle" data-chatbot-toggle aria-expanded="false" aria-controls="chatbot-panel" aria-label="${labels.openLabel}" title="${labels.openLabel}">
       <img class="chatbot-avatar" src="/assets/icons/chatbot-robot.svg" alt="" width="42" height="42" aria-hidden="true" decoding="async">
-      <span class="chatbot-mark" aria-hidden="true"></span>
-      <span class="chatbot-kicker">${labels.kicker}</span>
-      <span class="chatbot-status">${labels.status}</span>
-    </div>
-    <p class="chatbot-title">${labels.title}</p>
-    <p class="chatbot-copy">${labels.copy}</p>
-    <form class="chatbot-diagnostic" data-chatbot-diagnostic>
-      <label><span>${labels.supportLabel}</span><select name="support">${optionMarkup(labels.supportOptions)}</select></label>
-      <label><span>${labels.symptomLabel}</span><select name="symptom">${optionMarkup(labels.symptomOptions)}</select></label>
-      <label><span>${labels.urgencyLabel}</span><select name="urgency">${optionMarkup(labels.urgencyOptions)}</select></label>
-      <label><span>${labels.historyLabel}</span><select name="history">${optionMarkup(labels.historyOptions)}</select></label>
-      <label><span>${labels.valueLabel}</span><select name="value">${optionMarkup(labels.valueOptions)}</select></label>
-      <label><span>${labels.stateLabel}</span><select name="state">${optionMarkup(labels.stateOptions)}</select></label>
-    </form>
-    <div class="chatbot-result" data-chatbot-result aria-live="polite"></div>
-    <ul class="chatbot-protocol" data-chatbot-protocol aria-label="${labels.protocol}"></ul>
-    <form class="chatbot-case-form" data-chatbot-case-form data-intake-endpoint="/api/intake">
-      <p>${labels.quickCase}</p>
-      <label><span>${labels.fieldName}</span><input type="text" name="nom" autocomplete="name" required></label>
-      <label><span>${labels.fieldEmail}</span><input type="email" name="courriel" autocomplete="email" required></label>
-      <label><span>${labels.fieldPhone}</span><input type="tel" name="telephone" autocomplete="tel"></label>
-      <label class="chatbot-case-consent"><input type="checkbox" name="consentement" required><span>${labels.consent}</span></label>
-      <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>
-      <button type="submit" class="chatbot-execute" data-chatbot-case-submit>${labels.submitCase}</button>
-      <span class="chatbot-case-status" data-chatbot-case-status aria-live="polite"></span>
-    </form>
-    <div class="chatbot-actions">
-      <a class="chatbot-link chatbot-link-primary" href="${caseHref}" data-chatbot-action="case">${labels.case}</a>
-      <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-action="service_route" data-chatbot-service>${labels.service}</a>
-      <a class="chatbot-link" href="${receptionHref}" data-chatbot-action="secure_intake">${labels.reception}</a>
-      <a class="chatbot-link" href="${ratesHref}" data-chatbot-action="rates">${labels.rates}</a>
-      <a class="chatbot-link" href="${statusHref}" data-chatbot-action="stripe_payment" data-chatbot-payment>${labels.payment}</a>
-      <a class="chatbot-link" href="${statusHref}" data-chatbot-action="status">${labels.statusLink}</a>
-      <button type="button" class="chatbot-link" data-chatbot-action="copy_summary" data-chatbot-copy>${labels.copySummary}</button>
-      <a class="chatbot-link" href="mailto:contact@nexuradata.ca" data-chatbot-action="email_summary" data-chatbot-email>${labels.emailSummary}</a>
-      <a class="chatbot-link" href="${whatsappHref}" target="_blank" rel="noopener noreferrer" data-chatbot-action="urgent_whatsapp" data-chatbot-emergency hidden>${labels.emergency}</a>
-    </div>
+      <span class="chatbot-toggle-copy" aria-hidden="true">
+        <span class="chatbot-kicker">${labels.kicker}</span>
+        <span class="chatbot-status">${labels.status}</span>
+      </span>
+    </button>
+    <section class="chatbot-panel" id="chatbot-panel" data-chatbot-panel hidden>
+      <div class="chatbot-dock-header">
+        <span class="chatbot-mark" aria-hidden="true"></span>
+        <span class="chatbot-kicker">${labels.kicker}</span>
+        <span class="chatbot-status">${labels.status}</span>
+        <button type="button" class="chatbot-close" data-chatbot-close aria-label="${labels.closeLabel}">X</button>
+      </div>
+      <p class="chatbot-title">${labels.title}</p>
+      <p class="chatbot-copy">${labels.copy}</p>
+      <form class="chatbot-diagnostic" data-chatbot-diagnostic>
+        <label><span>${labels.supportLabel}</span><select name="support">${optionMarkup(labels.supportOptions)}</select></label>
+        <label><span>${labels.symptomLabel}</span><select name="symptom">${optionMarkup(labels.symptomOptions)}</select></label>
+        <label><span>${labels.urgencyLabel}</span><select name="urgency">${optionMarkup(labels.urgencyOptions)}</select></label>
+        <label><span>${labels.historyLabel}</span><select name="history">${optionMarkup(labels.historyOptions)}</select></label>
+        <label><span>${labels.valueLabel}</span><select name="value">${optionMarkup(labels.valueOptions)}</select></label>
+        <label><span>${labels.stateLabel}</span><select name="state">${optionMarkup(labels.stateOptions)}</select></label>
+        <button type="submit" class="chatbot-diagnostic-submit" data-chatbot-diagnostic-submit>${labels.resultAction}</button>
+      </form>
+      <div class="chatbot-result" data-chatbot-result aria-live="polite" tabindex="-1"></div>
+      <ul class="chatbot-protocol" data-chatbot-protocol aria-label="${labels.protocol}"></ul>
+      <form class="chatbot-case-form" data-chatbot-case-form data-intake-endpoint="/api/intake">
+        <p>${labels.quickCase}</p>
+        <label><span>${labels.fieldName}</span><input type="text" name="nom" autocomplete="name" required></label>
+        <label><span>${labels.fieldEmail}</span><input type="email" name="courriel" autocomplete="email" required></label>
+        <label><span>${labels.fieldPhone}</span><input type="tel" name="telephone" autocomplete="tel"></label>
+        <label class="chatbot-case-consent"><input type="checkbox" name="consentement" required><span>${labels.consent}</span></label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>
+        <button type="submit" class="chatbot-execute" data-chatbot-case-submit>${labels.submitCase}</button>
+        <span class="chatbot-case-status" data-chatbot-case-status aria-live="polite"></span>
+      </form>
+      <div class="chatbot-actions">
+        <a class="chatbot-link chatbot-link-primary" href="${caseHref}" data-chatbot-action="case">${labels.case}</a>
+        <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-action="service_route" data-chatbot-service>${labels.service}</a>
+        <a class="chatbot-link" href="${receptionHref}" data-chatbot-action="secure_intake">${labels.reception}</a>
+        <a class="chatbot-link" href="${ratesHref}" data-chatbot-action="rates">${labels.rates}</a>
+        <a class="chatbot-link" href="${statusHref}" data-chatbot-action="stripe_payment" data-chatbot-payment>${labels.payment}</a>
+        <a class="chatbot-link" href="${statusHref}" data-chatbot-action="status">${labels.statusLink}</a>
+        <button type="button" class="chatbot-link" data-chatbot-action="copy_summary" data-chatbot-copy>${labels.copySummary}</button>
+        <a class="chatbot-link" href="mailto:contact@nexuradata.ca" data-chatbot-action="email_summary" data-chatbot-email>${labels.emailSummary}</a>
+        <a class="chatbot-link" href="${whatsappHref}" target="_blank" rel="noopener noreferrer" data-chatbot-action="urgent_whatsapp" data-chatbot-emergency hidden>${labels.emergency}</a>
+      </div>
+    </section>
   `;
   document.body.appendChild(dock);
 
+  const toggleButton = dock.querySelector("[data-chatbot-toggle]");
+  const panel = dock.querySelector("[data-chatbot-panel]");
+  const closeButton = dock.querySelector("[data-chatbot-close]");
   const diagnosticForm = dock.querySelector("[data-chatbot-diagnostic]");
   const result = dock.querySelector("[data-chatbot-result]");
   const protocolTarget = dock.querySelector("[data-chatbot-protocol]");
@@ -691,6 +711,22 @@ initKineticCanvas();
     profil: "Particulier",
     impact: "Planifié / non urgent",
     sensibilite: "Standard"
+  };
+  const setDockOpen = (open, restoreFocus = false) => {
+    const isOpen = Boolean(open);
+    dock.dataset.chatbotOpen = isOpen ? "true" : "false";
+    toggleButton?.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    if (panel) panel.hidden = !isOpen;
+
+    if (!restoreFocus) return;
+
+    window.setTimeout(() => {
+      if (isOpen) {
+        diagnosticForm?.querySelector("select")?.focus({ preventScroll: true });
+      } else {
+        toggleButton?.focus({ preventScroll: true });
+      }
+    }, 0);
   };
   const setCaseStatus = (state, message) => {
     if (!caseStatus) return;
@@ -786,6 +822,12 @@ initKineticCanvas();
     syncSummaryActions();
     emergencyLink.hidden = !isCritical;
     emergencyLink.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(`${labels.waIntro}\n${latestDiagnosticSummary}`)}`;
+  };
+
+  const showDiagnosisResult = () => {
+    updateDiagnosis();
+    result?.scrollIntoView({ block: "nearest" });
+    result?.focus({ preventScroll: true });
   };
 
   const copyDiagnosticSummary = async () => {
@@ -899,16 +941,39 @@ initKineticCanvas();
     }
   };
 
+  diagnosticForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    showDiagnosisResult();
+    trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "result_button" });
+  });
   diagnosticForm.addEventListener("change", () => {
     updateDiagnosis();
     trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "local_triage" });
   });
   caseForm?.addEventListener("submit", submitAutonomousCase);
+  toggleButton?.addEventListener("click", () => {
+    setDockOpen(dock.dataset.chatbotOpen !== "true", true);
+  });
+  closeButton?.addEventListener("click", () => {
+    setDockOpen(false, true);
+  });
+  dock.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && dock.dataset.chatbotOpen === "true") {
+      event.preventDefault();
+      setDockOpen(false, true);
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (dock.dataset.chatbotOpen !== "true" || dock.contains(event.target)) return;
+    setDockOpen(false);
+  });
   updateDiagnosis();
   syncPaymentLink();
 
   document.querySelectorAll('a[href="#diagnostic-assistant"]').forEach((trigger) => {
-    trigger.addEventListener("click", () => {
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      setDockOpen(true, true);
       setTimeout(() => dock.focus({ preventScroll: true }), 0);
     });
   });

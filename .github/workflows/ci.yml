@@ -21,8 +21,17 @@ jobs:
           git fetch --no-tags --depth=1 origin ${{ github.ref }}
           git checkout --detach FETCH_HEAD
 
+      - name: Use pinned Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Run dependency audit
+        run: npm run audit
 
       - name: Run quality gate
         run: npm run check
