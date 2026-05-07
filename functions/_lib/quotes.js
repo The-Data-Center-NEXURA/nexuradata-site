@@ -1,3 +1,7 @@
+import { z } from "zod";
+import { getDb } from "./db.js";
+import { hashAccessCode, normalizeText as normalizeCaseId } from "./cases.js";
+
 const normalizeText = (value, maxLength = 500) => {
   if (typeof value !== "string") return "";
   return value.trim().replace(/\s+/g, " ").slice(0, maxLength);
@@ -184,4 +188,137 @@ export const quotePdfBase64 = (document) => {
   for (const byte of bytes) binary += String.fromCharCode(byte);
   if (typeof btoa === "function") return btoa(binary);
   return Buffer.from(binary, "binary").toString("base64");
+};
+// ============================================================
+// Phase 0004: opportunity → quote → client accept/decline
+// ============================================================
+
+const toHex = (buffer) =>
+  Array.from(new Uint8Array(buffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+const makeQuoteId = () => {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return `quote_${toHex(bytes.buffer)}`;
+};
+
+export const quoteRequestSchema = z.object({
+  amountCad: z.number().int().positive().optional(),
+  title: z.string().trim().min(2).max(160).optional(),
+  expiresInDays: z.number().int().min(1).max(90).optional(),
+  lineItems: z.array(z.object({
+    label: z.string().trim().min(1).max(160),
+    amountCad: z.number().int().nonnegative(),
+    quantity: z.number().int().positive().default(1)
+  })).max(20).optional(),
+  notes: z.string().trim().max(800).optional()
+}).strict();
+
+const opportunityToLineItems = (opportunity, override) => {
+  if (override && override.length) return override;
+  const amountCad = Math.max(
+    Number(opportunity.estimated_value_min || 0),
+    Number(opportunity.estimated_value_max || 0)
+  ) || Number(opportunity.estimated_value_min || 0) || 199;
+  return [{
+    label: opportunity.recommended_service || opportunity.title || "Service NEXURA",
+    amountCad,
+    quantity: 1
+  }];
+};
+
+const sumLineItems = (items) =>
+  items.reduce((acc, item) => acc + Number(item.amountCad || 0) * Number(item.quantity || 1), 0);
+
+export const createQuoteFromOpportunity = async (env, opportunityId, payload = {}) => {
+  const sql = getDb(env);
+  const rows = await sql`select id, case_id, client_id, title, recommended_service,
+    estimated_value_min, estimated_value_max, status
+    from service_opportunities where id = ${opportunityId} limit 1`;
+  if (!rows.length) return null;
+  const opp = rows[0];
+
+  const lineItems = opportunityToLineItems(opp, payload.lineItems);
+  const amountCad = Number(payload.amountCad) > 0 ? Number(payload.amountCad) : sumLineItems(lineItems);
+  const title = (payload.title || opp.title || `Soumission ${opp.recommended_service || "NEXURA"}`).slice(0, 160);
+  const expiresInDays = Number(payload.expiresInDays) > 0 ? Number(payload.expiresInDays) : 14;
+  const expiresAt = new Date(Date.now() + expiresInDays * 86400000).toISOString();
+  const id = makeQuoteId();
+
+  await sql`insert into quotes (
+      id, case_id, opportunity_id, client_id, title, amount_cad, status,
+      line_items, sent_at, expires_at
+    ) values (
+      ${id}, ${opp.case_id || null}, ${opp.id}, ${opp.client_id || null},
+      ${title}, ${amountCad}, 'sent', ${JSON.stringify(lineItems)}::jsonb,
+      now(), ${expiresAt}
+    )`;
+  await sql`update service_opportunities set status = 'quoted', updated_at = now()
+            where id = ${opportunityId} and status = 'open'`;
+
+  return {
+    quote: { id, caseId: opp.case_id, opportunityId: opp.id, title, amountCad, status: "sent", lineItems, expiresAt }
+  };
+};
+
+const verifyClientCredentials = async (env, caseId, accessCode) => {
+  const sql = getDb(env);
+  const id = normalizeCaseId(caseId, 40).toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  if (!id) return null;
+  const rows = await sql`select case_id, access_code_hash from cases where case_id = ${id} limit 1`;
+  if (!rows.length) return null;
+  const hashed = await hashAccessCode(accessCode, env);
+  if (hashed !== rows[0].access_code_hash) return null;
+  return rows[0].case_id;
+};
+
+export const quoteClientActionSchema = z.object({
+  accessCode: z.string().trim().min(4).max(20)
+}).strict();
+
+export const listClientQuotes = async (env, caseId, accessCode) => {
+  const verified = await verifyClientCredentials(env, caseId, accessCode);
+  if (!verified) return null;
+  const sql = getDb(env);
+  const rows = await sql`select id, title, amount_cad, status, line_items,
+      sent_at, approved_at, paid_at, expires_at, created_at
+    from quotes where case_id = ${verified} order by created_at desc limit 20`;
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    amountCad: Number(row.amount_cad || 0),
+    status: row.status,
+    lineItems: row.line_items || [],
+    sentAt: row.sent_at,
+    approvedAt: row.approved_at,
+    paidAt: row.paid_at,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at
+  }));
+};
+
+export const setClientQuoteStatus = async (env, caseId, accessCode, quoteId, action) => {
+  if (action !== "approved" && action !== "declined") {
+    throw new Error("Action invalide.");
+  }
+  const verified = await verifyClientCredentials(env, caseId, accessCode);
+  if (!verified) return { error: "unauthorized" };
+  const sql = getDb(env);
+  const rows = await sql`select id, status, expires_at from quotes
+    where id = ${quoteId} and case_id = ${verified} limit 1`;
+  if (!rows.length) return { error: "not_found" };
+  const current = rows[0];
+  if (current.status !== "sent") {
+    return { error: "invalid_state", currentStatus: current.status };
+  }
+  if (current.expires_at && new Date(current.expires_at).getTime() < Date.now()) {
+    await sql`update quotes set status = 'expired', updated_at = now() where id = ${quoteId}`;
+    return { error: "expired" };
+  }
+  if (action === "approved") {
+    await sql`update quotes set status = 'approved', approved_at = now(), updated_at = now() where id = ${quoteId}`;
+  } else {
+    await sql`update quotes set status = 'declined', updated_at = now() where id = ${quoteId}`;
+  }
+  return { ok: true, quoteId, status: action };
 };

@@ -14,7 +14,7 @@ Legend: ✅ live · 🟡 partial · 🟠 wired but pending DB migration · ⛔ s
 | 5 | Consent | ✅ | Intake form `consentement` boolean; RemoteFix `remoteFixConsentSchema` + `/api/remotefix/consent` | — |
 | 6 | Email link | ✅ | Resend via [functions/_lib/email.js](../functions/_lib/email.js) (intake confirmation + status link) | — |
 | 7 | Case creation | ✅ | `intake.js` → `cases` table (`0001_full_schema.sql`) | — |
-| 8 | Quote generation | 🟠 | Operator: [functions/api/ops/quotes.js](../functions/api/ops/quotes.js), [functions/api/ops/quote-pdf.js](../functions/api/ops/quote-pdf.js). Auto from opportunities: [functions/_lib/quotes.js](../functions/_lib/quotes.js), [functions/api/opportunities/\[opportunityId\]/quote.js](../functions/api/opportunities/[opportunityId]/quote.js), rebuild trigger: [functions/api/cases/\[caseId\]/opportunities/rebuild.js](../functions/api/cases/[caseId]/opportunities/rebuild.js) | Pending migration `0004` (gracefully 503s); no client-portal accept/decline route yet |
+| 8 | Quote generation | 🟠 | Operator: [functions/api/ops/quotes.js](../functions/api/ops/quotes.js), [functions/api/ops/quote-pdf.js](../functions/api/ops/quote-pdf.js). Auto from opportunities: [functions/_lib/quotes.js](../functions/_lib/quotes.js), [functions/api/opportunities/\[opportunityId\]/quote.js](../functions/api/opportunities/[opportunityId]/quote.js), rebuild trigger: [functions/api/cases/\[caseId\]/opportunities/rebuild.js](../functions/api/cases/[caseId]/opportunities/rebuild.js). Client portal: [functions/api/cases/\[caseId\]/quotes.js](../functions/api/cases/[caseId]/quotes.js), [accept](../functions/api/cases/[caseId]/quotes/[quoteId]/accept.js) / [decline](../functions/api/cases/[caseId]/quotes/[quoteId]/decline.js) | Pending migration `0004` (gracefully 503s) |
 | 9 | Payment | ✅ | [functions/api/stripe-webhook.js](../functions/api/stripe-webhook.js), [functions/api/ops/payments.js](../functions/api/ops/payments.js), [functions/_lib/stripe.js](../functions/_lib/stripe.js) | — |
 | 10 | Report generation | 🟠 | [functions/_lib/reports.js](../functions/_lib/reports.js), [functions/api/reports/cases/\[caseId\].js](../functions/api/reports/cases/[caseId].js), [functions/api/reports/\[reportId\].js](../functions/api/reports/[reportId].js) | Pending migration `0004` (`generated_reports` table) |
 | 11 | Lab escalation | 🟡 | `automation.js` emits `lab_required` flag in case timeline; ops console renders it | No dedicated `cases.status='lab_required'` workflow endpoint or escalation email template |
@@ -34,17 +34,14 @@ Legend: ✅ live · 🟡 partial · 🟠 wired but pending DB migration · ⛔ s
 
 1. Apply migration `0004` to Neon — flips 8 / 10 / 12 / 13 from 🟠 to ✅ with
    no further code changes (endpoints already shipped and unit-tested).
-2. Stage 8 client-side: add `/api/cases/[caseId]/quotes/[quoteId]/accept` and
-   `…/decline` for the client portal so customers can act on opportunity-driven
-   quotes without operator intervention.
-3. Stage 11: dedicated lab-escalation workflow — promote the `lab_required`
+2. Stage 11: dedicated lab-escalation workflow — promote the `lab_required`
    timeline flag to a real `cases.status` transition with a Resend template
    and an `/api/ops/cases/[id]/escalate` action.
-4. Stage 12: register a Stripe subscription product for Monitor plans and wire
+3. Stage 12: register a Stripe subscription product for Monitor plans and wire
    `/api/monitoring/accounts` signup → Stripe checkout → recurring webhook in
    `stripe-webhook.js`. Publish the agent binaries (signed) under `/downloads/`
    only when (a) Authenticode/notarization done, (b) checksums published.
-5. Optional: build the React `apps/remotelab-portal/` workspace and serve it
+4. Optional: build the React `apps/remotelab-portal/` workspace and serve it
    at `/remotelab/*`; until then the vanilla [remotefix.html](../remotefix.html)
    and [nexura-recovery-desk-montreal.html](../nexura-recovery-desk-montreal.html)
    remain canonical.
