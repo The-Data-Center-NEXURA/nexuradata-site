@@ -1,47 +1,53 @@
 # NEXURA pipeline status — 13-stage audit
 
 Stage-by-stage map of the canonical client funnel against what is shipped today
-(Cloudflare Pages Functions + Neon `0001`–`0003` schemas) versus what only
-exists as a spec under `apps/` and `migrations/neon/0004_remotelab_platform.sql`.
+(Cloudflare Pages Functions + Neon `0001`–`0004` schemas).
 
-Legend: ✅ live · 🟡 partial · ⛔ spec only (not wired) · 🚫 blocked.
+Legend: ✅ live · 🟡 partial · 🟠 wired but pending DB migration · ⛔ spec only · 🚫 blocked.
 
 | # | Stage | Status | Where it lives | Gap |
 |---|-------|--------|----------------|-----|
 | 1 | Client intake | ✅ | [functions/api/intake.js](../functions/api/intake.js), [functions/_lib/cases.js](../functions/_lib/cases.js) (Turnstile + consent gate) | — |
-| 2 | AI / rules triage | ✅ | [functions/api/diagnostic.js](../functions/api/diagnostic.js), [functions/api/concierge.js](../functions/api/concierge.js) (gpt-4o-mini + tool call), [functions/_lib/automation.js](../functions/_lib/automation.js) | — |
-| 3 | Risk score | ✅ | `automation.js` `riskLevel ∈ {standard, priority, critical, high}`; surfaced as `priorityIntake` in concierge | — |
+| 2 | AI / rules triage | ✅ | [functions/api/diagnostic.js](../functions/api/diagnostic.js), [functions/api/concierge.js](../functions/api/concierge.js) (gpt-4o-mini + tool call), [functions/_lib/automation.js](../functions/_lib/automation.js); public surface: [nexura-recovery-desk-montreal.html](../nexura-recovery-desk-montreal.html) + [assets/js/recovery-desk.js](../assets/js/recovery-desk.js) | — |
+| 3 | Risk score | ✅ | `automation.js` `riskLevel ∈ {standard, intermediate, elevated, critical}`; surfaced in Recovery Desk 3-bar meter and concierge `priorityIntake` | — |
 | 4 | Secure session | ✅ | `intake.js` issues case number + access code (HMAC, [functions/_lib/access-code.js](../functions/_lib/access-code.js)); RemoteFix sessions in [functions/_lib/remotefix.js](../functions/_lib/remotefix.js) | — |
 | 5 | Consent | ✅ | Intake form `consentement` boolean; RemoteFix `remoteFixConsentSchema` + `/api/remotefix/consent` | — |
 | 6 | Email link | ✅ | Resend via [functions/_lib/email.js](../functions/_lib/email.js) (intake confirmation + status link) | — |
 | 7 | Case creation | ✅ | `intake.js` → `cases` table (`0001_full_schema.sql`) | — |
-| 8 | Quote generation | 🟡 | [functions/api/ops/quotes.js](../functions/api/ops/quotes.js), [functions/api/ops/quote-pdf.js](../functions/api/ops/quote-pdf.js) (operator-driven, Cloudflare Access) | No client-portal accept/decline route; no `service_opportunities → quote` auto-generation (spec in 0004) |
+| 8 | Quote generation | 🟠 | Operator: [functions/api/ops/quotes.js](../functions/api/ops/quotes.js), [functions/api/ops/quote-pdf.js](../functions/api/ops/quote-pdf.js). Auto from opportunities: [functions/_lib/quotes.js](../functions/_lib/quotes.js), [functions/api/opportunities/\[opportunityId\]/quote.js](../functions/api/opportunities/[opportunityId]/quote.js), rebuild trigger: [functions/api/cases/\[caseId\]/opportunities/rebuild.js](../functions/api/cases/[caseId]/opportunities/rebuild.js) | Pending migration `0004` (gracefully 503s); no client-portal accept/decline route yet |
 | 9 | Payment | ✅ | [functions/api/stripe-webhook.js](../functions/api/stripe-webhook.js), [functions/api/ops/payments.js](../functions/api/ops/payments.js), [functions/_lib/stripe.js](../functions/_lib/stripe.js) | — |
-| 10 | Report generation | ⛔ | Spec only: `generated_reports` table in `0004`. `apps/remotelab-api` defines `POST /api/reports/cases/:caseId` | Migration 0004 not applied; no Pages Function. Need port from spec |
+| 10 | Report generation | 🟠 | [functions/_lib/reports.js](../functions/_lib/reports.js), [functions/api/reports/cases/\[caseId\].js](../functions/api/reports/cases/[caseId].js), [functions/api/reports/\[reportId\].js](../functions/api/reports/[reportId].js) | Pending migration `0004` (`generated_reports` table) |
 | 11 | Lab escalation | 🟡 | `automation.js` emits `lab_required` flag in case timeline; ops console renders it | No dedicated `cases.status='lab_required'` workflow endpoint or escalation email template |
-| 12 | Monitoring upsell | ⛔ | Spec only: `monitoring_*` + `health_alerts` tables in `0004`. `apps/remotelab-portal` + admin console UI | No agent ingestion endpoint, no plan signup, no Stripe subscription wiring |
-| 13 | Admin dashboard | 🟡 | [operations/index.html](../operations/index.html) + [functions/api/ops/cases.js](../functions/api/ops/cases.js) (Cloudflare Access). React reference: [apps/remotelab-portal/src/NexuraAdminConsole.jsx](../apps/remotelab-portal/src/NexuraAdminConsole.jsx) | No `/api/admin/dashboard` or `/api/admin/opportunities` Pages Functions yet (only spec in `apps/remotelab-api`) |
+| 12 | Monitoring upsell | 🟠 | [functions/_lib/monitor.js](../functions/_lib/monitor.js), [functions/api/monitoring/health.js](../functions/api/monitoring/health.js), [functions/api/monitoring/accounts.js](../functions/api/monitoring/accounts.js), [functions/api/monitoring/accounts/\[accountId\]/dashboard.js](../functions/api/monitoring/accounts/[accountId]/dashboard.js), [functions/api/monitoring/agents/register.js](../functions/api/monitoring/agents/register.js), [functions/api/monitoring/alerts/\[alertId\]/convert-to-case.js](../functions/api/monitoring/alerts/[alertId]/convert-to-case.js) | Pending migration `0004`; Stripe subscription product not yet wired; agent binary not in repo |
+| 13 | Admin dashboard | 🟠 | [functions/_lib/admin-dashboard.js](../functions/_lib/admin-dashboard.js), [functions/api/admin/dashboard.js](../functions/api/admin/dashboard.js), [functions/api/admin/opportunities.js](../functions/api/admin/opportunities.js), [functions/api/admin/opportunities/\[opportunityId\].js](../functions/api/admin/opportunities/[opportunityId].js); UI: [operations/index.html](../operations/index.html) behind Cloudflare Access | Pending migration `0004`; React `NexuraAdminConsole.jsx` reference is not consumed |
 
 ## Blockers
 
 - 🚫 **Migration `0004_remotelab_platform.sql`** is committed but NOT applied to
   Neon (local `.dev.vars` `DATABASE_URL` returns `password authentication failed`).
-  Stages 10 / 12 / parts of 8 + 13 cannot be wired until the migration runs.
-  Apply via Neon web console or refresh the local credential and run
+  Stages 8 / 10 / 12 / 13 endpoints are wired and tested; they gracefully
+  return `503` until the schema is in place. Apply via Neon web console or
+  refresh the local credential and run
   `psql "$DATABASE_URL" -f migrations/neon/0004_remotelab_platform.sql`.
 
 ## Recommended next moves (scoped, in order)
 
-1. Apply migration `0004` to Neon (unblocks 10 / 12 / 13).
-2. Port `apps/remotelab-api` admin endpoints to Pages Functions under
-   `functions/api/admin/` (`dashboard.js`, `opportunities/index.js`,
-   `opportunities/[id].js`), all behind Cloudflare Access.
-3. Add `functions/api/reports/cases/[id].js` for stage 10 (markdown report from
-   case + automation plan; archive in `generated_reports`).
-4. Add Monitor agent ingest (`functions/api/monitoring/agents/[id]/heartbeat.js`)
-   + Stripe subscription product for stages 12 + 9 recurring.
-5. Wire the React `NexuraAdminConsole` reference into a built `apps/` workspace
-   only when stages 1–4 above are live. Until then it stays an unbuilt spec.
+1. Apply migration `0004` to Neon — flips 8 / 10 / 12 / 13 from 🟠 to ✅ with
+   no further code changes (endpoints already shipped and unit-tested).
+2. Stage 8 client-side: add `/api/cases/[caseId]/quotes/[quoteId]/accept` and
+   `…/decline` for the client portal so customers can act on opportunity-driven
+   quotes without operator intervention.
+3. Stage 11: dedicated lab-escalation workflow — promote the `lab_required`
+   timeline flag to a real `cases.status` transition with a Resend template
+   and an `/api/ops/cases/[id]/escalate` action.
+4. Stage 12: register a Stripe subscription product for Monitor plans and wire
+   `/api/monitoring/accounts` signup → Stripe checkout → recurring webhook in
+   `stripe-webhook.js`. Publish the agent binaries (signed) under `/downloads/`
+   only when (a) Authenticode/notarization done, (b) checksums published.
+5. Optional: build the React `apps/remotelab-portal/` workspace and serve it
+   at `/remotelab/*`; until then the vanilla [remotefix.html](../remotefix.html)
+   and [nexura-recovery-desk-montreal.html](../nexura-recovery-desk-montreal.html)
+   remain canonical.
 
 ## RemoteLab browser-portal flow
 
