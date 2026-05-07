@@ -51,6 +51,13 @@ Le depot couvre:
 - `release-cloudflare/` est regenere par `npm run build`; modifier uniquement les sources suivies.
 - Les pages FR racine et leurs versions `en/` doivent rester synchronisees pour le SEO bilingue.
 
+## Architecture references (not wired)
+
+- [apps/remotelab-portal/](apps/remotelab-portal/) — React/Vite/Tailwind/shadcn client portal reference (`NexuraClientPortal.jsx`). v2 UI track, not built or deployed.
+- [apps/remotelab-api/](apps/remotelab-api/) — Node/Express + Neon TypeScript API reference (`src/server.ts`). Source-of-truth specification for porting into Cloudflare Pages Functions; not built or deployed.
+
+These trees document the canonical product spec and are intentionally excluded from `npm run build`, CI, and the live site.
+
 ## Carte canonique du site
 
 Cette carte evite d'empiler une nouvelle version du site quand un bon element existe deja.

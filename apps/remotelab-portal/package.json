@@ -1,0 +1,14 @@
+{
+  "name": "@nexuradata/remotelab-portal",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NEXURA RemoteLab customer-facing React portal. Reference source — build pipeline not yet wired (see README.md).",
+  "type": "module",
+  "main": "src/NexuraClientPortal.jsx",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.400.0"
+  }
+}
