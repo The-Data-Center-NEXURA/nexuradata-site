@@ -1,8 +1,8 @@
 import { ZodError } from "zod";
 
-import { json, methodNotAllowed, onOptions, parsePayload } from "../../../../_lib/http.js";
-import { opportunityStatusSchema, updateOpportunityStatus } from "../../../../_lib/opportunities.js";
-import { requireRemoteFixPermission } from "../../../../_lib/remotefix.js";
+import { json, methodNotAllowed, onOptions, parsePayload } from "../../../_lib/http.js";
+import { opportunityStatusSchema, updateOpportunityStatus } from "../../../_lib/opportunities.js";
+import { requireRemoteFixPermission } from "../../../_lib/remotefix.js";
 
 export const onRequestOptions = (context) => onOptions(context.env, "PATCH, OPTIONS");
 

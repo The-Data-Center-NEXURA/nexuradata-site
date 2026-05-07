@@ -8,7 +8,7 @@
     "pagesProjectName": "nexuradata"
   },
   "scripts": {
-    "build": "node ./scripts/sync-release.mjs",
+    "build": "node ./scripts/update-sitemap-lastmod.mjs && node ./scripts/sync-release.mjs",
     "sitemap:refresh": "node ./scripts/update-sitemap-lastmod.mjs",
     "cf:sync": "npm run build",
     "cf:check": "npm run build && node ./scripts/pages-cli.mjs check",

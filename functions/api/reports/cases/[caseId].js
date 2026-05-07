@@ -1,6 +1,6 @@
-import { json, methodNotAllowed, onOptions } from "../../../../_lib/http.js";
-import { persistGeneratedReport } from "../../../../_lib/reports.js";
-import { requireRemoteFixPermission } from "../../../../_lib/remotefix.js";
+import { json, methodNotAllowed, onOptions } from "../../../_lib/http.js";
+import { persistGeneratedReport } from "../../../_lib/reports.js";
+import { requireRemoteFixPermission } from "../../../_lib/remotefix.js";
 
 export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
