@@ -5,7 +5,8 @@ import {
   quoteClientActionSchema,
   createQuoteFromOpportunity,
   setClientQuoteStatus,
-  listClientQuotes
+  listClientQuotes,
+  createCheckoutForApprovedQuote
 } from "../../functions/_lib/quotes.js";
 
 // ─── schemas ─────────────────────────────────────────────────
@@ -123,6 +124,28 @@ describe("listClientQuotes", () => {
     const sql = makeSqlMock([[]]);
     const env = { DATABASE_URL: "x", ACCESS_CODE_SECRET: "shhh", __sql: sql };
     const result = await listClientQuotes(env, "ND-1", "ABCD");
+    expect(result).toBeNull();
+  });
+});
+
+describe("createCheckoutForApprovedQuote", () => {
+  it("returns null when STRIPE_SECRET_KEY is missing", async () => {
+    const env = { DATABASE_URL: "x", __sql: makeSqlMock([]) };
+    const result = await createCheckoutForApprovedQuote(env, "ND-1", "quote_x", "https://nexuradata.ca/");
+    expect(result).toBeNull();
+  });
+
+  it("returns null when no approved quote row exists", async () => {
+    const sql = makeSqlMock([[]]);
+    const env = { DATABASE_URL: "x", STRIPE_SECRET_KEY: "sk_test_x", __sql: sql };
+    const result = await createCheckoutForApprovedQuote(env, "ND-1", "quote_missing", "https://nexuradata.ca/");
+    expect(result).toBeNull();
+  });
+
+  it("returns null when amount_cad is zero or invalid", async () => {
+    const sql = makeSqlMock([[{ id: "quote_x", title: "T", amount_cad: 0 }]]);
+    const env = { DATABASE_URL: "x", STRIPE_SECRET_KEY: "sk_test_x", __sql: sql };
+    const result = await createCheckoutForApprovedQuote(env, "ND-1", "quote_x", "https://nexuradata.ca/");
     expect(result).toBeNull();
   });
 });

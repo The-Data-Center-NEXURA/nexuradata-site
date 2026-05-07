@@ -1,7 +1,7 @@
 import { ZodError } from "zod";
 
 import { json, methodNotAllowed, onOptions, parsePayload } from "../../../../../_lib/http.js";
-import { quoteClientActionSchema, setClientQuoteStatus } from "../../../../../_lib/quotes.js";
+import { createCheckoutForApprovedQuote, quoteClientActionSchema, setClientQuoteStatus } from "../../../../../_lib/quotes.js";
 
 export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
@@ -23,7 +23,14 @@ export const onRequestPost = async (context) => {
     if (result.error === "expired") return json({ ok: false, message: "Soumission expirée." }, { status: 409 });
     if (result.error === "invalid_state") return json({ ok: false, message: `Statut actuel: ${result.currentStatus}.` }, { status: 409 });
 
-    return json({ ok: true, quoteId: result.quoteId, status: result.status });
+    const checkout = await createCheckoutForApprovedQuote(context.env, caseId, quoteId, context.request.url);
+    return json({
+      ok: true,
+      quoteId: result.quoteId,
+      status: result.status,
+      checkoutUrl: checkout?.checkoutUrl || null,
+      paymentRequestId: checkout?.paymentRequestId || null
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       return json({ ok: false, message: "Charge utile invalide.", issues: error.issues }, { status: 400 });

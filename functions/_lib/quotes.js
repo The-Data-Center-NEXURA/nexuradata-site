@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getDb } from "./db.js";
-import { hashAccessCode, normalizeText as normalizeCaseId } from "./cases.js";
+import { createCasePaymentRequest, hashAccessCode, normalizeText as normalizeCaseId } from "./cases.js";
 
 const normalizeText = (value, maxLength = 500) => {
   if (typeof value !== "string") return "";
@@ -321,4 +321,44 @@ export const setClientQuoteStatus = async (env, caseId, accessCode, quoteId, act
     await sql`update quotes set status = 'declined', updated_at = now() where id = ${quoteId}`;
   }
   return { ok: true, quoteId, status: action };
+};
+
+// Mint a Stripe Checkout session for a freshly approved client quote.
+// Safe to call only after setClientQuoteStatus(...) returns { ok: true, status: "approved" }.
+// Returns null if the env is missing Stripe config or the quote/case has insufficient data.
+export const createCheckoutForApprovedQuote = async (env, caseId, quoteId, requestUrl) => {
+  if (!env?.STRIPE_SECRET_KEY) return null;
+  const sql = getDb(env);
+  const rows = await sql`select id, title, amount_cad from quotes
+    where id = ${quoteId} and case_id = ${caseId} and status = 'approved' limit 1`;
+  if (!rows.length) return null;
+  const quote = rows[0];
+  const amountCad = Number(quote.amount_cad || 0);
+  if (!Number.isFinite(amountCad) || amountCad <= 0) return null;
+
+  const label = normalizeText(quote.title, 120) || `Soumission ${quoteId}`;
+  const description = `Soumission acceptée par le client (${quoteId}) — dossier ${caseId}.`;
+
+  try {
+    const payment = await createCasePaymentRequest(
+      env,
+      {
+        caseId,
+        paymentKind: "custom",
+        label,
+        description,
+        amount: amountCad,
+        currency: "cad",
+        sendEmail: false
+      },
+      "client-portal",
+      requestUrl
+    );
+    return {
+      paymentRequestId: payment?.paymentRequestId || null,
+      checkoutUrl: payment?.checkoutUrl || null
+    };
+  } catch {
+    return null;
+  }
 };
