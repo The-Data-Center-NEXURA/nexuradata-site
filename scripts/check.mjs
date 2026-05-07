@@ -487,6 +487,11 @@ for (const file of walkFiles(ROOT)) {
 
 // ─── Report ───────────────────────────────────────────────────────────────────
 if (errors.length === 0) {
+    try {
+        execSync("node ./scripts/check-imports.mjs", { cwd: ROOT, stdio: "inherit" });
+    } catch {
+        process.exit(1);
+    }
     console.log("✓ All checks passed.");
     process.exit(0);
 } else {
