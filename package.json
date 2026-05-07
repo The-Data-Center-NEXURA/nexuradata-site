@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "node ./scripts/sync-release.mjs",
+    "sitemap:refresh": "node ./scripts/update-sitemap-lastmod.mjs",
     "cf:sync": "npm run build",
     "cf:check": "npm run build && node ./scripts/pages-cli.mjs check",
     "cf:deploy": "npm run cf:pages:deploy:prod",
