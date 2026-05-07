@@ -1886,10 +1886,163 @@ initKineticCanvas();
     }
   };
 
+  // ── CONCIERGE: multi-turn LLM-backed concierge ──────────────
+  // Conversation history kept in-memory only; never persisted client-side.
+  const conciergeEndpoint = "/api/concierge";
+  const conciergeLocale = isEnglishDocument ? "en" : "fr";
+  const conciergeMaxHistory = 12;
+  const conciergeMaxChars = 1800;
+  const conciergeState = {
+    history: [],
+    busy: false,
+    greeted: false,
+    disabled: false
+  };
+  const conciergeCopy = isEnglishDocument
+    ? {
+      greeting:
+        "Hi, this is NEXURADATA. Tell me what happened to the device — what kind of media it is, what it does or doesn't do right now, and how urgent this is for you. I read everything before suggesting anything.",
+      thinking: "Reading…",
+      networkError: "I lost the connection for a moment. Send your message again — I'll pick it up.",
+      placeholder: "Describe the device, what changed, and the files you need.",
+      submitDefault: "Send",
+      submitBusy: "Reading…"
+    }
+    : {
+      greeting:
+        "Bonjour, ici NEXURADATA. Décrivez-moi ce qui est arrivé à l'appareil — quel type de support, ce qu'il fait ou ne fait plus, et l'urgence pour vous. Je lis tout avant de suggérer quoi que ce soit.",
+      thinking: "Lecture…",
+      networkError: "J'ai perdu la connexion un instant. Renvoyez votre message — je le reprends.",
+      placeholder: "Décrivez l'appareil, ce qui a changé et les fichiers dont vous avez besoin.",
+      submitDefault: "Envoyer",
+      submitBusy: "Lecture…"
+    };
+  const submitButton = diagnosticForm.querySelector("[data-chatbot-diagnostic-submit]");
+  const contextField = diagnosticForm.querySelector('textarea[name="context"]');
+  if (contextField) {
+    contextField.placeholder = conciergeCopy.placeholder;
+    contextField.required = false;
+  }
+  if (submitButton) {
+    submitButton.textContent = conciergeCopy.submitDefault;
+  }
+  const scrollThreadToBottom = () => {
+    if (!panel) return;
+    window.requestAnimationFrame(() => {
+      panel.scrollTop = panel.scrollHeight;
+    });
+  };
+  const appendChatBubble = (role, text) => {
+    if (!thread || !text) return null;
+    const node = document.createElement("p");
+    node.className = `chatbot-conversation-line is-${role === "user" ? "user" : "assistant"}`;
+    node.textContent = text;
+    thread.appendChild(node);
+    scrollThreadToBottom();
+    return node;
+  };
+  const renderConciergeSuggestions = (suggestions = []) => {
+    if (!quickActions) return;
+    quickActions.replaceChildren();
+    if (!Array.isArray(suggestions) || suggestions.length === 0) return;
+    suggestions.slice(0, 3).forEach((label) => {
+      const text = `${label || ""}`.trim().slice(0, 80);
+      if (!text) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chatbot-quick-choice";
+      button.textContent = text;
+      button.addEventListener("click", () => {
+        if (conciergeState.busy || !contextField) return;
+        contextField.value = text;
+        diagnosticForm.requestSubmit?.() || diagnosticForm.dispatchEvent(new Event("submit", { cancelable: true }));
+      });
+      quickActions.appendChild(button);
+    });
+  };
+  const ensureConciergeGreeting = () => {
+    if (conciergeState.greeted || !thread) return;
+    conciergeState.greeted = true;
+    appendChatBubble("assistant", conciergeCopy.greeting);
+  };
+  const setConciergeBusy = (busy) => {
+    conciergeState.busy = busy;
+    if (submitButton) {
+      submitButton.disabled = busy;
+      submitButton.textContent = busy ? conciergeCopy.submitBusy : conciergeCopy.submitDefault;
+    }
+    if (contextField) contextField.disabled = busy;
+  };
+  const pushConciergeMessage = (role, content) => {
+    if (!content) return;
+    conciergeState.history.push({ role, content: `${content}`.slice(0, conciergeMaxChars) });
+    if (conciergeState.history.length > conciergeMaxHistory) {
+      conciergeState.history.splice(0, conciergeState.history.length - conciergeMaxHistory);
+    }
+  };
+  const handleConciergeTurn = async (rawInput) => {
+    const userText = `${rawInput || ""}`.trim().slice(0, conciergeMaxChars);
+    if (!userText || conciergeState.busy) return;
+    ensureConciergeGreeting();
+    appendChatBubble("user", userText);
+    pushConciergeMessage("user", userText);
+    if (contextField) contextField.value = "";
+    setConciergeBusy(true);
+    if (quickActions) quickActions.replaceChildren();
+
+    let data = null;
+    try {
+      const response = await fetch(conciergeEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ locale: conciergeLocale, messages: conciergeState.history })
+      });
+      data = await parseBotJsonResponse(response);
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.message || "concierge-unavailable");
+      }
+    } catch {
+      appendChatBubble("assistant", conciergeCopy.networkError);
+      setConciergeBusy(false);
+      return;
+    }
+
+    const reply = `${data.reply || ""}`.trim();
+    if (reply) {
+      appendChatBubble("assistant", reply);
+      pushConciergeMessage("assistant", reply);
+    }
+    renderConciergeSuggestions(data.suggestions || []);
+
+    if (data.triage) {
+      latestServerDiagnostic = data.triage;
+      showDiagnosisResult();
+      applyServerDiagnostic(data.triage);
+      trackGaEvent("chatbot_concierge_triage", {
+        event_category: "diagnostic",
+        method: data.provider || "openai"
+      });
+    } else {
+      trackGaEvent("chatbot_concierge_turn", {
+        event_category: "diagnostic",
+        method: data.provider || "openai"
+      });
+    }
+    setConciergeBusy(false);
+  };
+  toggleButton?.addEventListener("click", () => {
+    if (dock.dataset.chatbotOpen === "true") ensureConciergeGreeting();
+  });
   diagnosticForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    showDiagnosisResult();
-    trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "result_button" });
+    const value = contextField ? contextField.value : "";
+    if (`${value || ""}`.trim().length === 0) {
+      // Empty submit falls back to the legacy local renderer so the dock
+      // never feels frozen if the model isn't called yet.
+      showDiagnosisResult();
+      return;
+    }
+    handleConciergeTurn(value);
   });
   diagnosticForm.addEventListener("change", () => {
     const scenario = updateDiagnosis();
