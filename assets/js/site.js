@@ -3037,6 +3037,131 @@ const createStatusPayment = (payment) => {
 
 let currentStatusCredentials = null;
 
+const renderQuotesSection = (record, statusPanel) => {
+  const section = statusPanel?.querySelector("[data-status-quotes-section]");
+  const list = statusPanel?.querySelector("[data-status-quotes]");
+  const messageTarget = statusPanel?.querySelector("[data-status-quotes-message]");
+  if (!section || !list) return;
+  const quotes = Array.isArray(record.quotes) ? record.quotes : [];
+  if (messageTarget) messageTarget.textContent = "";
+  if (quotes.length === 0) {
+    section.hidden = true;
+    list.replaceChildren();
+    return;
+  }
+  section.hidden = false;
+  list.replaceChildren(...quotes.map((quote) => createStatusQuote(quote, record, messageTarget)));
+};
+
+const quoteStatusLabel = (status) => {
+  const fr = { sent: "Envoyée", approved: "Approuvée", declined: "Refusée", expired: "Expirée", paid: "Payée", draft: "Brouillon" };
+  const en = { sent: "Sent", approved: "Approved", declined: "Declined", expired: "Expired", paid: "Paid", draft: "Draft" };
+  const map = isEnglishDocument ? en : fr;
+  return map[status] || status || "—";
+};
+
+const createStatusQuote = (quote, record, messageTarget) => {
+  const article = document.createElement("article");
+  article.className = "status-payment status-quote";
+
+  const head = document.createElement("div");
+  head.className = "status-payment-head";
+
+  const title = document.createElement("p");
+  title.className = "status-payment-title";
+  title.textContent = quote.title || (isEnglishDocument ? "Quote" : "Soumission");
+
+  const badge = document.createElement("span");
+  badge.className = `status-payment-badge is-${quote.status || "sent"}`;
+  badge.textContent = quoteStatusLabel(quote.status);
+  head.append(title, badge);
+
+  const meta = document.createElement("p");
+  meta.className = "status-payment-meta";
+  meta.textContent = formatCurrency((Number(quote.amountCad) || 0) * 100, "CAD");
+
+  article.append(head, meta);
+
+  if (Array.isArray(quote.lineItems) && quote.lineItems.length > 0) {
+    const list = document.createElement("ul");
+    list.className = "status-quote-items";
+    quote.lineItems.forEach((item) => {
+      const li = document.createElement("li");
+      const qty = Number(item.quantity || 1);
+      const sub = formatCurrency((Number(item.amountCad) || 0) * 100 * qty, "CAD");
+      li.textContent = `${item.label} — ${qty} × ${sub}`;
+      list.append(li);
+    });
+    article.append(list);
+  }
+
+  if (quote.expiresAt) {
+    const exp = document.createElement("p");
+    exp.className = "status-payment-meta";
+    exp.textContent = (isEnglishDocument ? "Valid until " : "Valide jusqu'au ") + formatTimestamp(quote.expiresAt);
+    article.append(exp);
+  }
+
+  if (quote.status === "sent") {
+    const actions = document.createElement("div");
+    actions.className = "status-payment-actions";
+    const approveBtn = document.createElement("button");
+    approveBtn.type = "button";
+    approveBtn.className = "button button-primary button-small";
+    approveBtn.textContent = isEnglishDocument ? "Approve" : "Approuver";
+    const declineBtn = document.createElement("button");
+    declineBtn.type = "button";
+    declineBtn.className = "button button-secondary button-small";
+    declineBtn.textContent = isEnglishDocument ? "Decline" : "Refuser";
+
+    const submit = async (action) => {
+      if (!currentStatusCredentials) return;
+      approveBtn.disabled = true;
+      declineBtn.disabled = true;
+      if (messageTarget) {
+        messageTarget.textContent = isEnglishDocument ? "Sending decision…" : "Envoi de la décision…";
+      }
+      try {
+        const url = `/api/cases/${encodeURIComponent(currentStatusCredentials.caseId)}/quotes/${encodeURIComponent(quote.id)}/${action}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessCode: currentStatusCredentials.accessCode })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || (isEnglishDocument ? "Decision failed." : "Décision échouée."));
+        }
+        if (messageTarget) {
+          messageTarget.textContent = isEnglishDocument
+            ? `Quote ${action === "accept" ? "approved" : "declined"}.`
+            : `Soumission ${action === "accept" ? "approuvée" : "refusée"}.`;
+        }
+        const statusForm = document.querySelector("[data-status-form]");
+        if (statusForm) {
+          statusForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+        }
+      } catch (error) {
+        approveBtn.disabled = false;
+        declineBtn.disabled = false;
+        if (messageTarget) messageTarget.textContent = error.message;
+      }
+    };
+
+    approveBtn.addEventListener("click", () => submit("accept"));
+    declineBtn.addEventListener("click", () => submit("decline"));
+    actions.append(approveBtn, declineBtn);
+    article.append(actions);
+  } else if (quote.status === "approved" && quote.approvedAt) {
+    const stamp = document.createElement("p");
+    stamp.className = "status-payment-meta";
+    stamp.textContent = (isEnglishDocument ? "Approved on " : "Approuvée le ") + formatTimestamp(quote.approvedAt);
+    article.append(stamp);
+  }
+
+  return article;
+};
+
 const renderAuthorizationState = (record, statusPanel) => {
   const section = statusPanel?.querySelector("[data-authorization-section]");
 
@@ -3273,6 +3398,8 @@ const renderStatusRecord = (record, statusPanel) => {
       document.dispatchEvent(new CustomEvent("nexuradata:payments-rendered"));
     }
   }
+
+  renderQuotesSection(record, statusPanel);
 
   if (timelineTarget) {
     timelineTarget.replaceChildren(...(record.steps || []).map(createStatusStep));

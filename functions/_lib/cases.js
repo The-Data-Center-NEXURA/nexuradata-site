@@ -1097,6 +1097,7 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
   }
 
   const payments = await listCasePayments(env, row.case_id);
+  const quotes = await listPublicQuotesByCaseId(env, row.case_id);
 
   return {
     caseId: row.case_id,
@@ -1110,8 +1111,39 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
     summary: row.client_summary,
     steps: await getVisibleTimeline(env, row.case_id),
     payments: payments.map(mapPublicPayment),
+    quotes,
     authorization: mapPublicAuthorization(row)
   };
+};
+
+// Best-effort fetch of opportunity-derived quotes (Stage 8 client portal).
+// Returns [] when migration 0004 hasn't been applied (table missing) so that
+// the public status endpoint stays backward compatible.
+const listPublicQuotesByCaseId = async (env, caseId) => {
+  try {
+    const sql = getDb(env);
+    const rows = await sql`select id, title, amount_cad, status, line_items,
+        sent_at, approved_at, paid_at, expires_at, created_at
+      from quotes
+      where case_id = ${caseId}
+        and status in ('sent', 'approved', 'declined', 'expired')
+      order by created_at desc
+      limit 10`;
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      amountCad: Number(row.amount_cad || 0),
+      status: row.status,
+      lineItems: Array.isArray(row.line_items) ? row.line_items : [],
+      sentAt: row.sent_at,
+      approvedAt: row.approved_at,
+      paidAt: row.paid_at,
+      expiresAt: row.expires_at,
+      createdAt: row.created_at
+    }));
+  } catch {
+    return [];
+  }
 };
 
 export const approveCaseAuthorization = async (env, payload) => {

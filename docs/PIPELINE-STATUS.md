@@ -17,7 +17,7 @@ Legend: ✅ live · 🟡 partial · 🟠 wired but pending DB migration · ⛔ s
 | 8 | Quote generation | 🟠 | Operator: [functions/api/ops/quotes.js](../functions/api/ops/quotes.js), [functions/api/ops/quote-pdf.js](../functions/api/ops/quote-pdf.js). Auto from opportunities: [functions/_lib/quotes.js](../functions/_lib/quotes.js), [functions/api/opportunities/\[opportunityId\]/quote.js](../functions/api/opportunities/[opportunityId]/quote.js), rebuild trigger: [functions/api/cases/\[caseId\]/opportunities/rebuild.js](../functions/api/cases/[caseId]/opportunities/rebuild.js). Client portal: [functions/api/cases/\[caseId\]/quotes.js](../functions/api/cases/[caseId]/quotes.js), [accept](../functions/api/cases/[caseId]/quotes/[quoteId]/accept.js) / [decline](../functions/api/cases/[caseId]/quotes/[quoteId]/decline.js) | Pending migration `0004` (gracefully 503s) |
 | 9 | Payment | ✅ | [functions/api/stripe-webhook.js](../functions/api/stripe-webhook.js), [functions/api/ops/payments.js](../functions/api/ops/payments.js), [functions/_lib/stripe.js](../functions/_lib/stripe.js) | — |
 | 10 | Report generation | 🟠 | [functions/_lib/reports.js](../functions/_lib/reports.js), [functions/api/reports/cases/\[caseId\].js](../functions/api/reports/cases/[caseId].js), [functions/api/reports/\[reportId\].js](../functions/api/reports/[reportId].js) | Pending migration `0004` (`generated_reports` table) |
-| 11 | Lab escalation | 🟡 | `automation.js` emits `lab_required` flag in case timeline; ops console renders it | No dedicated `cases.status='lab_required'` workflow endpoint or escalation email template |
+| 11 | Lab escalation | ✅ | `automation.js` emits `lab_required` flag; operator endpoint [functions/api/ops/cases/\[caseId\]/escalate.js](../functions/api/ops/cases/[caseId]/escalate.js) flips status to `Escalation laboratoire`, records audit + notification outbox row | Optional: build a Resend template once `LAB_ESCALATION_INBOX` is published |
 | 12 | Monitoring upsell | 🟠 | [functions/_lib/monitor.js](../functions/_lib/monitor.js), [functions/api/monitoring/health.js](../functions/api/monitoring/health.js), [functions/api/monitoring/accounts.js](../functions/api/monitoring/accounts.js), [functions/api/monitoring/accounts/\[accountId\]/dashboard.js](../functions/api/monitoring/accounts/[accountId]/dashboard.js), [functions/api/monitoring/agents/register.js](../functions/api/monitoring/agents/register.js), [functions/api/monitoring/alerts/\[alertId\]/convert-to-case.js](../functions/api/monitoring/alerts/[alertId]/convert-to-case.js) | Pending migration `0004`; Stripe subscription product not yet wired; agent binary not in repo |
 | 13 | Admin dashboard | 🟠 | [functions/_lib/admin-dashboard.js](../functions/_lib/admin-dashboard.js), [functions/api/admin/dashboard.js](../functions/api/admin/dashboard.js), [functions/api/admin/opportunities.js](../functions/api/admin/opportunities.js), [functions/api/admin/opportunities/\[opportunityId\].js](../functions/api/admin/opportunities/[opportunityId].js); UI: [operations/index.html](../operations/index.html) behind Cloudflare Access | Pending migration `0004`; React `NexuraAdminConsole.jsx` reference is not consumed |
 
@@ -34,14 +34,11 @@ Legend: ✅ live · 🟡 partial · 🟠 wired but pending DB migration · ⛔ s
 
 1. Apply migration `0004` to Neon — flips 8 / 10 / 12 / 13 from 🟠 to ✅ with
    no further code changes (endpoints already shipped and unit-tested).
-2. Stage 11: dedicated lab-escalation workflow — promote the `lab_required`
-   timeline flag to a real `cases.status` transition with a Resend template
-   and an `/api/ops/cases/[id]/escalate` action.
-3. Stage 12: register a Stripe subscription product for Monitor plans and wire
+2. Stage 12: register a Stripe subscription product for Monitor plans and wire
    `/api/monitoring/accounts` signup → Stripe checkout → recurring webhook in
    `stripe-webhook.js`. Publish the agent binaries (signed) under `/downloads/`
    only when (a) Authenticode/notarization done, (b) checksums published.
-4. Optional: build the React `apps/remotelab-portal/` workspace and serve it
+3. Optional: build the React `apps/remotelab-portal/` workspace and serve it
    at `/remotelab/*`; until then the vanilla [remotefix.html](../remotefix.html)
    and [nexura-recovery-desk-montreal.html](../nexura-recovery-desk-montreal.html)
    remain canonical.

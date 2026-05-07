@@ -44,6 +44,7 @@ export const onRequestPost = async (context) => {
       summary: detail.summary,
       steps: detail.steps,
       payments: detail.payments,
+      quotes: detail.quotes,
       authorization: detail.authorization
     });
   } catch (error) {

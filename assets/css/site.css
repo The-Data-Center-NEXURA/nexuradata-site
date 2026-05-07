@@ -3003,6 +3003,21 @@ select {
   margin-top: 0.85rem;
 }
 
+.status-quote-items {
+  list-style: disc;
+  padding-left: 1.2rem;
+  margin: 0.55rem 0 0;
+  color: var(--color-text-soft);
+  font-size: 0.85rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.status-quote-list {
+  display: grid;
+  gap: 1rem;
+}
+
 .status-payment-badge {
   display: inline-flex;
   align-items: center;
