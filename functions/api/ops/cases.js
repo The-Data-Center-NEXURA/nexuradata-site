@@ -1,5 +1,6 @@
 import {
   authorizeOpsRequest,
+  buildAndApplyAutomationDraft,
   buildAndLogConciergeDraft,
   createCasePaymentRequest,
   getCaseDetail,
@@ -207,6 +208,16 @@ export const onRequestPost = async (context) => {
         ok: true,
         case: result.detail,
         concierge: result.draft
+      });
+    }
+
+    if (action === "apply-automation") {
+      const result = await buildAndApplyAutomationDraft(context.env, payload.caseId, auth.actor);
+
+      return json({
+        ok: true,
+        case: result.detail,
+        automation: result.draft
       });
     }
 

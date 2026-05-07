@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { onRequestPost as intakeHandler, onRequestOptions as intakeOptions } from "../../functions/api/intake.js";
+import { onRequestPost as diagnosticHandler, onRequestOptions as diagnosticOptions, onRequest as diagnosticFallback } from "../../functions/api/diagnostic.js";
 import { onRequestPost as statusHandler, onRequestOptions as statusOptions, onRequest as statusFallback } from "../../functions/api/status.js";
 import { onRequestPost as authorizationHandler, onRequestOptions as authorizationOptions, onRequest as authorizationFallback } from "../../functions/api/authorization.js";
 import { isAllowedStripeWebhookEvent, onRequestPost as webhookHandler } from "../../functions/api/stripe-webhook.js";
@@ -47,6 +48,53 @@ describe("POST /api/intake", () => {
   it("OPTIONS handler returns 204", () => {
     const res = intakeOptions({ env: {} });
     expect(res.status).toBe(204);
+  });
+});
+
+// ─── diagnostic endpoint ────────────────────────────────────
+
+describe("POST /api/diagnostic", () => {
+  it("returns a server-side automation plan without creating a case", async () => {
+    const ctx = makeContext({
+      support: "drive",
+      symptom: "deleted",
+      urgency: "standard",
+      history: "software",
+      value: "personal",
+      state: "powered_off",
+      context: "NAS Synology payroll down. CHKDSK and rebuild already attempted. BitLocker recovery key not confirmed. Insurance evidence may be needed."
+    });
+    ctx.request = new Request("https://nexuradata.ca/api/diagnostic", {
+      method: "POST",
+      headers: { "content-type": "application/json", "cf-connecting-ip": "203.0.113.55" },
+      body: JSON.stringify(await ctx.request.json())
+    });
+
+    const res = await diagnosticHandler(ctx);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(body.diagnostic.servicePath).toBe("/forensique-numerique-montreal.html");
+    expect(body.diagnostic.brief.recommendedPath).toBe("Mandat probatoire ou incident sensible");
+    expect(body.diagnostic.brief.operatorFocus.length).toBeGreaterThan(0);
+    expect(body.diagnostic.brief.boundary).toContain("Aucune");
+    expect(body.diagnostic.expertSignals.signals).toEqual(expect.arrayContaining([
+      "support-context-mismatch",
+      "repair-tool-attempted",
+      "credential-dependent",
+      "forensic-context-hidden"
+    ]));
+    expect(body.diagnostic.automationActions).toContain("expert-signal-layer-applied");
+  });
+
+  it("OPTIONS handler returns 204", () => {
+    const res = diagnosticOptions({ env: {} });
+    expect(res.status).toBe(204);
+  });
+
+  it("fallback handler returns 405", async () => {
+    const res = diagnosticFallback();
+    expect(res.status).toBe(405);
   });
 });
 

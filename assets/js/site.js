@@ -449,28 +449,120 @@ initKineticCanvas();
       aria: "NEXURADATA chatbot",
       openLabel: "Open diagnostic assistant",
       closeLabel: "Close diagnostic assistant",
-      kicker: "NEXURA AI",
-      status: "DIAGNOSTIC",
-      title: "Diagnose before contact",
-      copy: "The assistant qualifies, routes and prepares the next action before direct communication.",
+      kicker: "NEXURA GUIDE",
+      status: "LAB TRIAGE",
+      title: "Fix the intake path before recovery",
+      copy: "Answer six questions. The assistant blocks unsafe next steps, selects the route, prepares missing details, prefills the case and arms escalation when needed.",
+      placeholder: "Generate a plan before handling the device again.",
       supportLabel: "Media",
       symptomLabel: "Symptom",
       urgencyLabel: "Urgency",
       historyLabel: "Attempt",
       valueLabel: "Value",
       stateLabel: "State",
+      contextLabel: "What happened / what matters",
+      contextPlaceholder: "Payroll server down, family photos, legal evidence, liquid damage, previous recovery attempts...",
       supportOptions: [["drive", "Hard drive"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Phone"], ["server", "Server"], ["removable", "USB / card"]],
       symptomOptions: [["deleted", "Deleted files"], ["slow", "Slow / unstable"], ["not_detected", "Not detected"], ["physical", "Shock / noise"], ["water", "Liquid damage"], ["encrypted", "Encrypted / forensic"]],
       urgencyOptions: [["standard", "Standard"], ["business", "Business impact"], ["critical", "Critical now"]],
       historyOptions: [["no_attempt", "No attempt"], ["software", "Recovery app"], ["opened", "Opened device"], ["rebuild", "RAID rebuild"], ["powered_on", "Repeated power-on"]],
       valueOptions: [["personal", "Personal"], ["business", "Business"], ["legal", "Legal"], ["medical", "Sensitive"]],
       stateOptions: [["powered_off", "Powered off"], ["unplugged", "Unplugged"], ["running", "Still running"], ["unknown", "Unknown"]],
-      resultAction: "Get diagnosis",
+      resultAction: "Generate plan",
       risk: "Risk",
       confidence: "Confidence",
       route: "Route",
       avoid: "Avoid",
       protocol: "Protocol",
+      fixed: "Fixed automatically",
+      expert: "Expert alerts",
+      brief: "Lab handoff",
+      why: "Why this route",
+      missing: "Prepare these details",
+      need: "Client need",
+      signal: "Signal",
+      proposal: "Proposal",
+      serverVerified: "Server verified",
+      serviceLevel: "Service",
+      nextAction: "Next action",
+      quoteReadiness: "Quote",
+      operatorFocus: "Operator focus",
+      guardrail: "Human review remains required before recovery, forensic conclusions, payment or physical intervention.",
+      autoFillStatus: "The full case form was updated from this diagnosis.",
+      needLabels: {
+        personal_memory: "Personal memories to preserve",
+        business_continuity: "Business continuity",
+        legal_or_insurance: "Legal, evidence or insurance",
+        privacy_sensitive: "High confidentiality",
+        urgent_stabilization: "Urgent technical stabilization",
+        technical_recovery: "Targeted technical recovery"
+      },
+      signalLabels: {
+        distressed: "Client distress",
+        frustrated: "Frustration",
+        business_pressure: "Operational pressure",
+        legal_anxiety: "Legal or insurance concern",
+        neutral: "Neutral"
+      },
+      empathyLines: {
+        distressed: "I understand this may be more than a technical loss. The priority is to preserve what still exists without adding risk.",
+        frustrated: "This has already taken enough energy. The safest move is to put the case back into a clear, controlled path.",
+        business_pressure: "When operations are affected, the priority is stabilization first, then a short decision path.",
+        legal_anxiety: "When evidence or insurance is involved, every manipulation should stay limited and documented.",
+        neutral: "The case can be qualified methodically before any intervention."
+      },
+      proposals: {
+        personal_memory: ["Preserve the memories and avoid new recovery attempts.", "Open a personal-memory priority case focused on essential files."],
+        business_continuity: ["Treat this as a continuity case and stop uncontrolled manipulation.", "Prepare an urgent review with a short recovery plan and quote after scope validation."],
+        legal_or_insurance: ["Move to human review before detailed technical instructions.", "Frame the legal or insurance scope, then confirm secure transmission."],
+        privacy_sensitive: ["Use a confidential path with only the minimum necessary details.", "Open a secure case and keep the summary technically useful but restrained."],
+        urgent_stabilization: ["Stabilize the device before any new attempt.", "Prepare lab review, secure intake and quote path after risk validation."],
+        technical_recovery: ["Open a targeted recovery case with the useful minimum details.", "Prepare a standard evaluation and confirm target files before work starts."]
+      },
+      fixes: {
+        safe: "Unsafe next actions converted into stop-handling instructions.",
+        route: "Service route, urgency, profile, impact and sensitivity selected.",
+        intake: "Main case form prefilled with the diagnostic summary.",
+        missing: "Missing details checklist prepared for lab review.",
+        emergency: "Emergency WhatsApp escalation armed for this critical case.",
+        expert: "Hidden risks and contradictions converted into operator tasks.",
+        handoff: "Email, copy, tracking and payment handoff links prepared."
+      },
+      expertSignals: {
+        supportMismatch: "Context overrides the selected media: infrastructure or RAID review required.",
+        urgencyUnderstated: "Urgency appears understated compared with the operational impact.",
+        physicalHidden: "Hardware risk is detected from context even if the selected symptom is softer.",
+        forensicHidden: "Legal, insurance or evidence language detected; evidence-safe human review required.",
+        repairAttempted: "Repair, rebuild or system command already attempted; further writes must stop.",
+        credentialDependent: "Feasibility may depend on a passcode, account, password or encryption key.",
+        contamination: "Liquid, opening, rice, heat or freezing history may change the lab path."
+      },
+      reasons: {
+        infrastructure: "RAID, NAS or server cases depend on disk order, controller state and previous rebuild attempts.",
+        ssd: "SSD failures can degrade quickly when powered repeatedly.",
+        phone: "Phones need model, lock state and damage history before any risky handling.",
+        physical: "Shock, noise or liquid damage raises hardware risk with every restart.",
+        encrypted: "Encrypted or legal data needs evidence-safe handling and access details.",
+        notDetected: "A non-detected device should not be initialized, formatted or repaired by the OS.",
+        urgent: "Business or critical impact changes the route from advice to controlled intake.",
+        attempted: "Prior software, opening or rebuild attempts increase overwrite and evidence risks.",
+        sensitive: "Business, legal or medical data needs a stricter confidentiality path.",
+        running: "A device still running may contain the last readable state; do not restart it without a plan.",
+        default: "The safest next step is to preserve the original media and document the timeline."
+      },
+      questions: {
+        default: "Device brand/model, capacity, last successful access and target files.",
+        raid: "RAID/NAS model, number of disks, disk labels/order and last rebuild action.",
+        phone: "Phone model, passcode availability, backup status and damage history.",
+        physical: "Noise, shock, liquid, smell, heat and whether the device was powered again.",
+        deleted: "File types, folders, deletion date and what has been written since.",
+        encrypted: "Encryption type, passwords/keys available and legal preservation needs.",
+        attempted: "Exact recovery tools, repairs, rebuilds or commands already attempted.",
+        credentials: "Available passwords, recovery keys, cloud accounts and who is authorized to use them.",
+        contamination: "Exposure history: liquid, opening, rice, heat, freezing and power-on attempts.",
+        contradiction: "Which description is correct if the selected options and written context disagree.",
+        impact: "Systems affected, business deadline, responsible contact and acceptable intervention window."
+      },
       cases: {
         logical: ["Logical recovery", "Open a structured case with file type, last known location and timeline.", "Do not save new files on the same media."],
         priority: ["Priority lab review", "Stop handling the media and send the diagnostic summary with the case.", "Do not run generic recovery tools again."],
@@ -483,8 +575,8 @@ initKineticCanvas();
         high: ["Keep the device isolated and stable.", "Do not initialize, format or repair volumes.", "Send the case to lab review before powering on."],
         critical: ["Freeze all manipulations now.", "Escalate only through the emergency channel.", "Wait for lab instructions before any rebuild or restart."]
       },
-      case: "Open case",
-      service: "Service route",
+      case: "Review full form",
+      service: "Open route",
       reception: "Secure intake",
       rates: "Rates",
       statusLink: "Track",
@@ -500,7 +592,9 @@ initKineticCanvas();
       consent: "Open and manage this case with the diagnostic summary.",
       submitCase: "Create case",
       openingCase: "Creating case...",
-      caseOpened: (caseId) => `Case ${caseId} created. Client and lab notifications are queued.`,
+      caseOpened: (caseId, plan) => plan?.recommendedPath
+        ? `Case ${caseId} created. Automation applied: ${plan.recommendedPath}. ${plan.sla || "Operator review is queued."}`
+        : `Case ${caseId} created. Client and lab notifications are queued.`,
       caseFallback: "Online creation is unavailable. The prepared email will open.",
       caseError: "Case creation failed.",
       emergency: "Urgent WhatsApp",
@@ -511,28 +605,120 @@ initKineticCanvas();
       aria: "Chatbot NEXURADATA",
       openLabel: "Ouvrir l'assistant diagnostic",
       closeLabel: "Fermer l'assistant diagnostic",
-      kicker: "NEXURA AI",
-      status: "DIAGNOSTIC",
-      title: "Diagnostiquer avant contact",
-      copy: "L'assistant qualifie, oriente et prépare la prochaine action avant tout contact direct.",
+      kicker: "NEXURA GUIDE",
+      status: "TRIAGE LAB",
+      title: "Corriger le parcours avant récupération",
+      copy: "Répondez à six questions. L'assistant bloque les gestes risqués, choisit le parcours, prépare les infos manquantes, préremplit le dossier et arme l'escalade au besoin.",
+      placeholder: "Générez un plan avant de manipuler le support à nouveau.",
       supportLabel: "Support",
       symptomLabel: "Symptôme",
       urgencyLabel: "Urgence",
       historyLabel: "Tentative",
       valueLabel: "Valeur",
       stateLabel: "État",
+      contextLabel: "Ce qui s'est passé / ce qui compte",
+      contextPlaceholder: "Serveur paie bloqué, photos de famille, preuve légale, liquide, logiciel déjà tenté...",
       supportOptions: [["drive", "Disque dur"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Téléphone"], ["server", "Serveur"], ["removable", "USB / carte"]],
       symptomOptions: [["deleted", "Fichiers supprimés"], ["slow", "Lent / instable"], ["not_detected", "Non détecté"], ["physical", "Choc / bruit"], ["water", "Liquide"], ["encrypted", "Chiffré / forensique"]],
       urgencyOptions: [["standard", "Standard"], ["business", "Impact entreprise"], ["critical", "Critique maintenant"]],
       historyOptions: [["no_attempt", "Aucune"], ["software", "Logiciel tenté"], ["opened", "Support ouvert"], ["rebuild", "RAID reconstruit"], ["powered_on", "Redémarrages"]],
       valueOptions: [["personal", "Personnel"], ["business", "Entreprise"], ["legal", "Juridique"], ["medical", "Sensible"]],
       stateOptions: [["powered_off", "Éteint"], ["unplugged", "Débranché"], ["running", "Encore allumé"], ["unknown", "Inconnu"]],
-      resultAction: "Obtenir diagnostic",
+      resultAction: "Générer plan",
       risk: "Risque",
       confidence: "Confiance",
       route: "Parcours",
       avoid: "À éviter",
       protocol: "Protocole",
+      fixed: "Corrigé automatiquement",
+      expert: "Alertes expertes",
+      brief: "Transfert labo",
+      why: "Pourquoi ce parcours",
+      missing: "À préparer",
+      need: "Besoin client",
+      signal: "Signal",
+      proposal: "Proposition",
+      serverVerified: "Vérifié serveur",
+      serviceLevel: "Service",
+      nextAction: "Prochaine action",
+      quoteReadiness: "Soumission",
+      operatorFocus: "Focus opérateur",
+      guardrail: "La revue humaine reste obligatoire avant récupération, conclusion probatoire, paiement ou intervention physique.",
+      autoFillStatus: "Le formulaire complet a été mis à jour avec ce diagnostic.",
+      needLabels: {
+        personal_memory: "Souvenirs personnels à préserver",
+        business_continuity: "Continuité d'activité",
+        legal_or_insurance: "Preuve, litige ou assurance",
+        privacy_sensitive: "Confidentialité élevée",
+        urgent_stabilization: "Stabilisation technique urgente",
+        technical_recovery: "Récupération technique ciblée"
+      },
+      signalLabels: {
+        distressed: "Détresse client",
+        frustrated: "Frustration",
+        business_pressure: "Pression opérationnelle",
+        legal_anxiety: "Crainte légale ou assurance",
+        neutral: "Neutre"
+      },
+      empathyLines: {
+        distressed: "Je comprends que ce peut être plus qu'une perte technique. La priorité est de préserver ce qui existe encore sans ajouter de risque.",
+        frustrated: "La situation a déjà pris trop d'énergie. Le plus sûr est de remettre le dossier dans un parcours clair et contrôlé.",
+        business_pressure: "Quand les opérations sont touchées, la priorité est la stabilisation, puis une décision courte et structurée.",
+        legal_anxiety: "Quand une preuve ou une assurance est en jeu, chaque manipulation doit rester limitée et documentée.",
+        neutral: "Le dossier peut être qualifié méthodiquement avant toute intervention."
+      },
+      proposals: {
+        personal_memory: ["Préserver les souvenirs et éviter tout nouvel essai de récupération.", "Ouvrir un dossier souvenir prioritaire centré sur les fichiers essentiels."],
+        business_continuity: ["Traiter comme un dossier de continuité et arrêter les manipulations non contrôlées.", "Préparer une revue urgente avec plan court et soumission après cadrage."],
+        legal_or_insurance: ["Basculer en revue humaine avant toute consigne technique détaillée.", "Cadrer le contexte légal ou assurance, puis confirmer la transmission sécurisée."],
+        privacy_sensitive: ["Utiliser un parcours confidentiel avec seulement les détails nécessaires.", "Ouvrir un dossier sécurisé et garder le résumé utile mais limité."],
+        urgent_stabilization: ["Stabiliser le support avant toute nouvelle tentative.", "Préparer la revue labo, la réception sécurisée et la soumission après validation du risque."],
+        technical_recovery: ["Ouvrir un dossier ciblé avec les informations minimales utiles.", "Préparer une évaluation standard et confirmer les fichiers visés avant intervention."]
+      },
+      fixes: {
+        safe: "Gestes dangereux convertis en consignes d'arrêt.",
+        route: "Parcours, urgence, profil, impact et sensibilité sélectionnés.",
+        intake: "Formulaire principal prérempli avec le résumé diagnostic.",
+        missing: "Liste d'informations manquantes préparée pour le laboratoire.",
+        emergency: "Escalade WhatsApp urgence armée pour ce cas critique.",
+        expert: "Risques cachés et contradictions convertis en tâches opérateur.",
+        handoff: "Liens courriel, copie, suivi et paiement préparés."
+      },
+      expertSignals: {
+        supportMismatch: "Le contexte corrige le support choisi: revue infrastructure ou RAID requise.",
+        urgencyUnderstated: "L'urgence semble sous-estimée par rapport à l'impact opérationnel.",
+        physicalHidden: "Risque matériel détecté dans le contexte même si le symptôme choisi est plus doux.",
+        forensicHidden: "Langage preuve, assurance ou juridique détecté; revue humaine compatible preuve requise.",
+        repairAttempted: "Réparation, reconstruction ou commande système déjà tentée; arrêter toute écriture.",
+        credentialDependent: "La faisabilité peut dépendre d'un code, compte, mot de passe ou clé de chiffrement.",
+        contamination: "Liquide, ouverture, riz, chaleur ou congélation peuvent changer le parcours labo."
+      },
+      reasons: {
+        infrastructure: "Les cas RAID, NAS ou serveur dépendent de l'ordre des disques, du contrôleur et des reconstructions déjà tentées.",
+        ssd: "Un SSD peut se dégrader rapidement après des remises sous tension répétées.",
+        phone: "Un téléphone exige le modèle, l'état du verrouillage et l'historique des dommages avant toute manipulation risquée.",
+        physical: "Choc, bruit ou liquide augmentent le risque matériel à chaque redémarrage.",
+        encrypted: "Les données chiffrées ou juridiques exigent un parcours compatible avec la preuve et les accès disponibles.",
+        notDetected: "Un support non détecté ne doit pas être initialisé, formaté ou réparé par le système.",
+        urgent: "Un impact entreprise ou critique déplace le dossier vers une réception contrôlée plutôt qu'un simple conseil.",
+        attempted: "Les logiciels, ouvertures ou reconstructions déjà tentés augmentent les risques d'écrasement et de preuve.",
+        sensitive: "Les données entreprise, juridiques ou médicales exigent un parcours de confidentialité plus strict.",
+        running: "Un appareil encore allumé peut contenir le dernier état lisible; ne le redémarrez pas sans plan.",
+        default: "La prochaine étape la plus sûre consiste à préserver l'original et documenter la chronologie."
+      },
+      questions: {
+        default: "Marque/modèle, capacité, dernier accès réussi et fichiers visés.",
+        raid: "Modèle RAID/NAS, nombre de disques, étiquettes/ordre et dernière reconstruction.",
+        phone: "Modèle du téléphone, code disponible, sauvegardes et historique des dommages.",
+        physical: "Bruit, choc, liquide, odeur, chaleur et remise sous tension déjà faite.",
+        deleted: "Types de fichiers, dossiers, date de suppression et écritures depuis l'incident.",
+        encrypted: "Type de chiffrement, mots de passe/clés disponibles et besoin de préservation juridique.",
+        attempted: "Outils, réparations, reconstructions ou commandes déjà tentés.",
+        credentials: "Mots de passe, clés de récupération, comptes cloud disponibles et personne autorisée.",
+        contamination: "Historique d'exposition: liquide, ouverture, riz, chaleur, congélation et remise sous tension.",
+        contradiction: "Quelle description est correcte si les options choisies et le contexte écrit se contredisent.",
+        impact: "Systèmes touchés, échéance d'affaires, contact responsable et fenêtre d'intervention acceptable."
+      },
       cases: {
         logical: ["Récupération logique", "Ouvrez un dossier structuré avec type de fichiers, dernier emplacement connu et chronologie.", "N'enregistrez rien de nouveau sur le même support."],
         priority: ["Révision prioritaire laboratoire", "Cessez toute manipulation et joignez le résumé diagnostic au dossier.", "Ne relancez pas d'outil de récupération générique."],
@@ -545,8 +731,8 @@ initKineticCanvas();
         high: ["Gardez l'appareil isolé et stable.", "N'initialisez pas, ne formatez pas et ne réparez pas les volumes.", "Envoyez le dossier au laboratoire avant toute remise sous tension."],
         critical: ["Gelez toute manipulation maintenant.", "Escaladez seulement par le canal urgence.", "Attendez les consignes du laboratoire avant toute reconstruction ou redémarrage."]
       },
-      case: "Ouvrir dossier",
-      service: "Parcours service",
+      case: "Réviser formulaire",
+      service: "Ouvrir parcours",
       reception: "Réception sécurisée",
       rates: "Tarifs",
       statusLink: "Suivi",
@@ -562,7 +748,9 @@ initKineticCanvas();
       consent: "Ouvrir et gérer ce dossier avec le résumé diagnostic.",
       submitCase: "Créer dossier",
       openingCase: "Création du dossier...",
-      caseOpened: (caseId) => `Dossier ${caseId} créé. Les notifications client et labo sont lancées.`,
+      caseOpened: (caseId, plan) => plan?.recommendedPath
+        ? `Dossier ${caseId} créé. Automation appliquée: ${plan.recommendedPath}. ${plan.sla || "Revue opérateur en file."}`
+        : `Dossier ${caseId} créé. Les notifications client et labo sont lancées.`,
       caseFallback: "Création en ligne indisponible. Le courriel préparé va s'ouvrir.",
       caseError: "Création du dossier impossible.",
       emergency: "WhatsApp urgence",
@@ -574,6 +762,7 @@ initKineticCanvas();
   const statusHref = `${homePrefix}/suivi-dossier-client-montreal.html`;
   const receptionHref = `${homePrefix}/reception-securisee-donnees-montreal.html`;
   const ratesHref = `${homePrefix}/tarifs-recuperation-donnees-montreal.html`;
+  const diagnosticEndpoint = "/api/diagnostic";
   const serviceHref = (path) => `${homePrefix}/${path}`;
   const whatsappHref = `https://wa.me/${waNumber}?text=${encodeURIComponent(labels.waIntro)}`;
   const optionMarkup = (options) => options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
@@ -637,7 +826,9 @@ initKineticCanvas();
   dock.setAttribute("aria-label", labels.aria);
   dock.innerHTML = `
     <button type="button" class="chatbot-toggle" data-chatbot-toggle aria-expanded="false" aria-controls="chatbot-panel" aria-label="${labels.openLabel}" title="${labels.openLabel}">
-      <img class="chatbot-avatar" src="/assets/icons/chatbot-robot.svg" alt="" width="42" height="42" aria-hidden="true" decoding="async">
+      <span class="chatbot-brand-tile" aria-hidden="true">
+        <img class="chatbot-brand-logo" src="/assets/nexuradata-master.svg" alt="" width="164" height="20" aria-hidden="true" decoding="async">
+      </span>
       <span class="chatbot-toggle-copy" aria-hidden="true">
         <span class="chatbot-kicker">${labels.kicker}</span>
         <span class="chatbot-status">${labels.status}</span>
@@ -645,7 +836,7 @@ initKineticCanvas();
     </button>
     <section class="chatbot-panel" id="chatbot-panel" data-chatbot-panel hidden>
       <div class="chatbot-dock-header">
-        <span class="chatbot-mark" aria-hidden="true"></span>
+        <img class="chatbot-mark" src="/assets/nexuradata-icon.png" alt="" width="24" height="24" aria-hidden="true" decoding="async">
         <span class="chatbot-kicker">${labels.kicker}</span>
         <span class="chatbot-status">${labels.status}</span>
         <button type="button" class="chatbot-close" data-chatbot-close aria-label="${labels.closeLabel}">X</button>
@@ -659,11 +850,38 @@ initKineticCanvas();
         <label><span>${labels.historyLabel}</span><select name="history">${optionMarkup(labels.historyOptions)}</select></label>
         <label><span>${labels.valueLabel}</span><select name="value">${optionMarkup(labels.valueOptions)}</select></label>
         <label><span>${labels.stateLabel}</span><select name="state">${optionMarkup(labels.stateOptions)}</select></label>
+        <label class="chatbot-context-field"><span>${labels.contextLabel}</span><textarea name="context" rows="3" maxlength="420" placeholder="${labels.contextPlaceholder}"></textarea></label>
         <button type="submit" class="chatbot-diagnostic-submit" data-chatbot-diagnostic-submit>${labels.resultAction}</button>
       </form>
-      <div class="chatbot-result" data-chatbot-result aria-live="polite" tabindex="-1"></div>
-      <ul class="chatbot-protocol" data-chatbot-protocol aria-label="${labels.protocol}"></ul>
-      <form class="chatbot-case-form" data-chatbot-case-form data-intake-endpoint="/api/intake">
+      <div class="chatbot-result" data-chatbot-result aria-live="polite" tabindex="-1" hidden>
+        <p class="chatbot-placeholder">${labels.placeholder}</p>
+      </div>
+      <section class="chatbot-brief" data-chatbot-brief hidden aria-labelledby="chatbot-brief-title">
+        <h3 id="chatbot-brief-title">${labels.brief}</h3>
+        <dl data-chatbot-brief-fields></dl>
+        <ul data-chatbot-brief-focus></ul>
+      </section>
+      <section class="chatbot-fixed" data-chatbot-fixed hidden aria-labelledby="chatbot-fixed-title">
+        <h3 id="chatbot-fixed-title">${labels.fixed}</h3>
+        <ul data-chatbot-fixes></ul>
+      </section>
+      <section class="chatbot-expert" data-chatbot-expert hidden aria-labelledby="chatbot-expert-title">
+        <h3 id="chatbot-expert-title">${labels.expert}</h3>
+        <ul data-chatbot-expert-signals></ul>
+        <p>${labels.guardrail}</p>
+      </section>
+      <div class="chatbot-insight" data-chatbot-insight hidden>
+        <section class="chatbot-insight-block" aria-labelledby="chatbot-why-title">
+          <h3 id="chatbot-why-title">${labels.why}</h3>
+          <ul data-chatbot-reasons></ul>
+        </section>
+        <section class="chatbot-insight-block" aria-labelledby="chatbot-missing-title">
+          <h3 id="chatbot-missing-title">${labels.missing}</h3>
+          <ul data-chatbot-questions></ul>
+        </section>
+      </div>
+      <ul class="chatbot-protocol" data-chatbot-protocol aria-label="${labels.protocol}" hidden></ul>
+      <form class="chatbot-case-form" data-chatbot-case-form data-intake-endpoint="/api/intake" hidden>
         <p>${labels.quickCase}</p>
         <label><span>${labels.fieldName}</span><input type="text" name="nom" autocomplete="name" required></label>
         <label><span>${labels.fieldEmail}</span><input type="email" name="courriel" autocomplete="email" required></label>
@@ -673,7 +891,7 @@ initKineticCanvas();
         <button type="submit" class="chatbot-execute" data-chatbot-case-submit>${labels.submitCase}</button>
         <span class="chatbot-case-status" data-chatbot-case-status aria-live="polite"></span>
       </form>
-      <div class="chatbot-actions">
+      <div class="chatbot-actions" data-chatbot-actions hidden>
         <a class="chatbot-link chatbot-link-primary" href="${caseHref}" data-chatbot-action="case">${labels.case}</a>
         <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-action="service_route" data-chatbot-service>${labels.service}</a>
         <a class="chatbot-link" href="${receptionHref}" data-chatbot-action="secure_intake">${labels.reception}</a>
@@ -693,8 +911,19 @@ initKineticCanvas();
   const closeButton = dock.querySelector("[data-chatbot-close]");
   const diagnosticForm = dock.querySelector("[data-chatbot-diagnostic]");
   const result = dock.querySelector("[data-chatbot-result]");
+  const brief = dock.querySelector("[data-chatbot-brief]");
+  const briefFields = dock.querySelector("[data-chatbot-brief-fields]");
+  const briefFocus = dock.querySelector("[data-chatbot-brief-focus]");
+  const fixed = dock.querySelector("[data-chatbot-fixed]");
+  const fixesTarget = dock.querySelector("[data-chatbot-fixes]");
+  const expert = dock.querySelector("[data-chatbot-expert]");
+  const expertSignalsTarget = dock.querySelector("[data-chatbot-expert-signals]");
+  const insight = dock.querySelector("[data-chatbot-insight]");
+  const reasonsTarget = dock.querySelector("[data-chatbot-reasons]");
+  const questionsTarget = dock.querySelector("[data-chatbot-questions]");
   const protocolTarget = dock.querySelector("[data-chatbot-protocol]");
   const caseForm = dock.querySelector("[data-chatbot-case-form]");
+  const actions = dock.querySelector("[data-chatbot-actions]");
   const caseStatus = dock.querySelector("[data-chatbot-case-status]");
   const caseSubmitButton = dock.querySelector("[data-chatbot-case-submit]");
   const emergencyLink = dock.querySelector("[data-chatbot-emergency]");
@@ -712,6 +941,10 @@ initKineticCanvas();
     impact: "Planifié / non urgent",
     sensibilite: "Standard"
   };
+  let latestServerDiagnostic = null;
+  let diagnosticRequestId = 0;
+  let serverDiagnosticTimer = null;
+  let diagnosisShown = false;
   const setDockOpen = (open, restoreFocus = false) => {
     const isOpen = Boolean(open);
     dock.dataset.chatbotOpen = isOpen ? "true" : "false";
@@ -740,6 +973,227 @@ initKineticCanvas();
       return null;
     }
   };
+  const localizeExpertSignalKeys = (keys = []) => {
+    const map = {
+      "support-context-mismatch": "supportMismatch",
+      "urgency-understated": "urgencyUnderstated",
+      "physical-risk-hidden": "physicalHidden",
+      "forensic-context-hidden": "forensicHidden",
+      "repair-tool-attempted": "repairAttempted",
+      "credential-dependent": "credentialDependent",
+      "contamination-risk": "contamination"
+    };
+    return keys.map((key) => labels.expertSignals?.[map[key]]).filter(Boolean);
+  };
+  const setDiagnosisVisibility = (visible) => {
+    [result, brief, fixed, expert, insight, protocolTarget, caseForm, actions].forEach((element) => {
+      if (element) element.hidden = !visible;
+    });
+  };
+  const renderList = (target, items) => {
+    if (!target) return;
+    target.replaceChildren(...items.map((item) => {
+      const listItem = document.createElement("li");
+      listItem.textContent = item;
+      return listItem;
+    }));
+  };
+  const uniqueItems = (items) => [...new Set(items.filter(Boolean))];
+  const renderBrief = (diagnostic) => {
+    const handoff = diagnostic?.brief;
+    if (!brief || !briefFields || !briefFocus || !handoff) return;
+
+    brief.hidden = !diagnosisShown;
+    const fieldRows = [
+      [labels.serverVerified, handoff.recommendedPath || diagnostic.recommendedPath],
+      [labels.serviceLevel, `${handoff.serviceLevelLabel || diagnostic.serviceLevelLabel || ""} ${handoff.sla || diagnostic.sla || ""}`.trim()],
+      [labels.nextAction, handoff.nextStep],
+      [labels.quoteReadiness, handoff.quoteLabel || handoff.quoteReadiness]
+    ].filter(([, value]) => value);
+
+    briefFields.replaceChildren(...fieldRows.flatMap(([term, description]) => {
+      const dt = document.createElement("dt");
+      dt.textContent = term;
+      const dd = document.createElement("dd");
+      dd.textContent = description;
+      return [dt, dd];
+    }));
+    renderList(briefFocus, uniqueItems([handoff.clientAction, ...(handoff.operatorFocus || []), ...(handoff.missingInfo || []).map((item) => `${labels.missing}: ${item}`)]).slice(0, 5));
+  };
+  const appendServerBriefToSummary = (diagnostic) => {
+    const handoff = diagnostic?.brief;
+    if (!handoff || latestDiagnosticSummary.includes(`${labels.brief}:`)) return;
+    latestDiagnosticSummary = `${latestDiagnosticSummary} ${labels.brief}: ${handoff.recommendedPath || diagnostic.recommendedPath}. ${labels.serviceLevel}: ${handoff.serviceLevelLabel || diagnostic.serviceLevelLabel || ""}. ${labels.nextAction}: ${handoff.nextStep || ""}. ${labels.operatorFocus}: ${(handoff.operatorFocus || []).join(" / ")}.`;
+    syncSummaryActions();
+    if (diagnosisShown) applyDiagnosisToMainForm();
+  };
+  const normalizeSignalText = (...values) => values
+    .filter((value) => typeof value === "string")
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const hasSignal = (text, words) => words.some((word) => text.includes(word));
+  const buildExpertSignals = ({ support, symptom, urgency, value, state, context }) => {
+    const text = normalizeSignalText(context, support, symptom, urgency, value, state);
+    const keys = [];
+    const add = (key) => {
+      if (!keys.includes(key)) keys.push(key);
+    };
+    const mentionsInfrastructure = hasSignal(text, ["raid", "nas", "synology", "qnap", "server", "serveur", "rebuild", "reconstruction"]);
+    const mentionsPhone = hasSignal(text, ["iphone", "android", "samsung", "passcode", "icloud", "google account", "verrouille", "locked"]);
+    const mentionsForensic = hasSignal(text, ["preuve", "evidence", "legal", "juridique", "avocat", "lawyer", "court", "tribunal", "assurance", "insurer", "claim", "litige"]);
+    const mentionsBusinessImpact = hasSignal(text, ["operations blocked", "operations bloquees", "payroll", "paie", "production", "client waiting", "client attend", "server down", "serveur down", "revenue loss", "perte de revenu"]);
+    const routeOverride = mentionsForensic ? "forensic" : mentionsInfrastructure ? "infrastructure" : mentionsPhone ? "phone" : "";
+
+    if (mentionsInfrastructure && !["raid", "server"].includes(support)) add("supportMismatch");
+    if (mentionsBusinessImpact && urgency === "standard") add("urgencyUnderstated");
+    if (hasSignal(text, ["click", "clique", "bruit", "noise", "drop", "tombe", "liquid", "liquide", "eau", "water", "not detected", "non detecte", "overheat", "chauffe"]) && !["physical", "water", "not_detected"].includes(symptom)) add("physicalHidden");
+    if (mentionsForensic && value !== "legal") add("forensicHidden");
+    if (hasSignal(text, ["chkdsk", "fsck", "first aid", "disk utility", "utilitaire de disque", "repair", "reparer", "repare", "rebuild", "reconstruction", "initialize", "initialiser", "format", "factory reset"])) add("repairAttempted");
+    if (hasSignal(text, ["bitlocker", "filevault", "veracrypt", "password", "mot de passe", "recovery key", "cle de recuperation", "passcode", "icloud", "google account", "locked", "verrouille"])) add("credentialDependent");
+    if (hasSignal(text, ["rice", "riz", "hair dryer", "seche cheveux", "freezer", "congel", "opened", "ouvert", "liquid", "liquide", "water", "eau", "isopropyl", "alcool"])) add("contamination");
+
+    const labelsByKey = labels.expertSignals || {};
+    const hiddenHazards = keys.filter((key) => !["supportMismatch", "urgencyUnderstated"].includes(key));
+    const contradictions = keys.filter((key) => ["supportMismatch", "urgencyUnderstated"].includes(key));
+
+    return {
+      keys,
+      hiddenHazards,
+      contradictions,
+      routeOverride,
+      scoreBoost: hiddenHazards.length + (contradictions.length * 2),
+      labels: keys.map((key) => labelsByKey[key] || key),
+      has: (key) => keys.includes(key)
+    };
+  };
+  const applyExpertOverrides = ({ support, symptom, urgency, value }, expertSignals) => ({
+    support: expertSignals.routeOverride === "infrastructure" ? "raid" : expertSignals.routeOverride === "phone" ? "phone" : support,
+    symptom: expertSignals.has("physicalHidden") ? "physical" : symptom,
+    urgency: expertSignals.has("urgencyUnderstated") ? "business" : urgency,
+    value: expertSignals.routeOverride === "forensic" ? "legal" : value
+  });
+  const buildClientIntelligence = ({ support, symptom, urgency, value, context }) => {
+    const text = normalizeSignalText(context, support, symptom, urgency, value);
+    let needKey = "technical_recovery";
+    let signalKey = "neutral";
+
+    if (hasSignal(text, ["photo", "video", "souvenir", "famille", "family", "father", "mother", "mere", "pere", "decede", "passed away", "wedding", "mariage", "baby", "bebe"])) {
+      needKey = "personal_memory";
+    } else if (hasSignal(text, ["preuve", "evidence", "legal", "juridique", "avocat", "lawyer", "court", "tribunal", "litige", "assurance", "insurer", "claim", "rh", "hr"]) || value === "legal") {
+      needKey = "legal_or_insurance";
+    } else if (hasSignal(text, ["payroll", "paie", "accounting", "comptabil", "quickbooks", "server", "serveur", "operations bloquees", "operations blocked", "production", "client waiting", "client attend", "invoice", "facture", "nas", "raid"]) || support === "raid" || support === "server" || value === "business") {
+      needKey = "business_continuity";
+    } else if (hasSignal(text, ["medical", "patient", "confidentiel", "confidential", "client list", "liste client", "employee", "employe"]) || value === "medical") {
+      needKey = "privacy_sensitive";
+    } else if (hasSignal(text, ["click", "clique", "bruit", "noise", "eau", "liquid", "drop", "tombe", "non detecte", "not detected", "redemarrage", "rebuild", "reconstruction"]) || ["physical", "water", "not_detected"].includes(symptom)) {
+      needKey = "urgent_stabilization";
+    }
+
+    if (hasSignal(text, ["panique", "panic", "desespere", "desperate", "pleure", "crying", "devast", "decede", "passed away", "irreplaceable", "irremplacable"])) {
+      signalKey = "distressed";
+    } else if (hasSignal(text, ["frustre", "frustrated", "fache", "angry", "tanne", "exhausted", "epuise", "personne repond"])) {
+      signalKey = "frustrated";
+    } else if (needKey === "business_continuity" || hasSignal(text, ["operations blocked", "operations bloquees", "payroll", "paie", "production", "server down", "serveur down"])) {
+      signalKey = "business_pressure";
+    } else if (needKey === "legal_or_insurance") {
+      signalKey = "legal_anxiety";
+    }
+
+    const [primary, nextStep] = labels.proposals[needKey] || labels.proposals.technical_recovery;
+    const scoreBoost = (signalKey === "distressed" ? 3 : ["business_pressure", "legal_anxiety"].includes(signalKey) ? 2 : 0) + (["personal_memory", "business_continuity", "legal_or_insurance", "urgent_stabilization"].includes(needKey) ? 2 : 0);
+
+    return {
+      needKey,
+      signalKey,
+      needLabel: labels.needLabels[needKey],
+      signalLabel: labels.signalLabels[signalKey],
+      empathy: labels.empathyLines[signalKey],
+      proposal: { primary, nextStep },
+      scoreBoost
+    };
+  };
+  const buildReasons = ({ support, symptom, urgency, history, value, state }, expertSignals = {}) => {
+    const items = uniqueItems([
+      ...(expertSignals.labels || []),
+      (support === "raid" || support === "server") && labels.reasons.infrastructure,
+      support === "ssd" && labels.reasons.ssd,
+      support === "phone" && labels.reasons.phone,
+      (symptom === "physical" || symptom === "water") && labels.reasons.physical,
+      symptom === "encrypted" && labels.reasons.encrypted,
+      symptom === "not_detected" && labels.reasons.notDetected,
+      (urgency === "critical" || urgency === "business") && labels.reasons.urgent,
+      history !== "no_attempt" && labels.reasons.attempted,
+      (value === "business" || value === "legal" || value === "medical") && labels.reasons.sensitive,
+      (state === "running" || state === "unknown") && labels.reasons.running,
+      labels.reasons.default
+    ]);
+    return items.slice(0, 5);
+  };
+  const buildQuestions = ({ support, symptom, history }, expertSignals = {}) => {
+    const items = uniqueItems([
+      (expertSignals.contradictions || []).length > 0 && labels.questions.contradiction,
+      expertSignals.has?.("urgencyUnderstated") && labels.questions.impact,
+      expertSignals.has?.("repairAttempted") && labels.questions.attempted,
+      expertSignals.has?.("credentialDependent") && labels.questions.credentials,
+      expertSignals.has?.("contamination") && labels.questions.contamination,
+      (support === "raid" || support === "server") && labels.questions.raid,
+      support === "phone" && labels.questions.phone,
+      (symptom === "physical" || symptom === "water" || symptom === "not_detected") && labels.questions.physical,
+      symptom === "deleted" && labels.questions.deleted,
+      symptom === "encrypted" && labels.questions.encrypted,
+      history !== "no_attempt" && labels.questions.attempted,
+      labels.questions.default
+    ]);
+    return items.slice(0, 5);
+  };
+  const buildFixes = ({ isCritical, expertSignals }) => uniqueItems([
+    labels.fixes.safe,
+    labels.fixes.route,
+    labels.fixes.intake,
+    labels.fixes.missing,
+    isCritical && labels.fixes.emergency,
+    (expertSignals?.keys || []).length > 0 && labels.fixes.expert,
+    labels.fixes.handoff
+  ]);
+  const setSelectValue = (form, name, value) => {
+    const field = form?.elements?.[name];
+    if (!field || !value) return false;
+    field.value = value;
+    return field.value === value;
+  };
+  const applyDiagnosisToMainForm = () => {
+    const intakeForm = document.querySelector("[data-intake-form]");
+    if (!intakeForm) return false;
+
+    setSelectValue(intakeForm, "support", latestCasePayload.support);
+    setSelectValue(intakeForm, "urgence", latestCasePayload.urgence);
+    setSelectValue(intakeForm, "profil", latestCasePayload.profil);
+    setSelectValue(intakeForm, "impact", latestCasePayload.impact);
+    setSelectValue(intakeForm, "sensibilite", latestCasePayload.sensibilite);
+
+    const messageField = intakeForm.elements?.message;
+    if (messageField && (!messageField.value.trim() || messageField.dataset.chatbotFilled === "true")) {
+      messageField.value = latestDiagnosticSummary;
+      messageField.dataset.chatbotFilled = "true";
+    }
+
+    const status = intakeForm.querySelector("[data-form-status]") || document.querySelector("[data-form-status]");
+    if (status && diagnosisShown) {
+      status.dataset.state = "success";
+      status.textContent = labels.autoFillStatus;
+    }
+
+    try {
+      sessionStorage.setItem("nexuradata_diagnostic_summary", latestDiagnosticSummary);
+      sessionStorage.setItem("nexuradata_diagnostic_payload", JSON.stringify(latestCasePayload));
+    } catch {
+      // Optional browser handoff only.
+    }
+
+    return true;
+  };
   const syncSummaryActions = () => {
     if (serviceLink) {
       serviceLink.href = latestServiceHref;
@@ -748,6 +1202,60 @@ initKineticCanvas();
     if (emailLink) {
       emailLink.href = `mailto:contact@nexuradata.ca?subject=${encodeURIComponent(labels.emailSubject)}&body=${encodeURIComponent(latestDiagnosticSummary)}`;
     }
+  };
+  const applyServerDiagnostic = (diagnostic) => {
+    if (!diagnostic) return;
+    latestServerDiagnostic = diagnostic;
+    renderBrief(diagnostic);
+    appendServerBriefToSummary(diagnostic);
+
+    if (diagnostic.servicePath && serviceLink) {
+      latestServiceHref = `${homePrefix}${diagnostic.servicePath}`;
+      serviceLink.href = latestServiceHref;
+    }
+
+    const serverExpertLabels = localizeExpertSignalKeys(diagnostic.expertSignals?.signals || []);
+    if (serverExpertLabels.length > 0) {
+      renderList(expertSignalsTarget, serverExpertLabels);
+      if (expert && diagnosisShown) expert.hidden = false;
+    }
+
+    const serverQuestions = diagnostic.missingInfoLabels || [];
+    if (serverQuestions.length > 0) {
+      renderList(questionsTarget, uniqueItems([...serverQuestions, ...[...questionsTarget.querySelectorAll("li")].map((item) => item.textContent)]).slice(0, 5));
+    }
+
+    if (diagnostic.clientActions?.length) {
+      renderList(protocolTarget, uniqueItems([...diagnostic.clientActions, ...[...protocolTarget.querySelectorAll("li")].map((item) => item.textContent)]).slice(0, 5));
+    }
+
+    try {
+      sessionStorage.setItem("nexuradata_server_diagnostic", JSON.stringify(diagnostic));
+    } catch {
+      // Optional browser handoff only.
+    }
+  };
+  const requestServerDiagnostic = async (scenario) => {
+    const requestId = ++diagnosticRequestId;
+
+    try {
+      const response = await fetch(diagnosticEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify(scenario)
+      });
+      const data = await parseBotJsonResponse(response);
+
+      if (requestId !== diagnosticRequestId || !response.ok || !data?.ok) return;
+      applyServerDiagnostic(data.diagnostic);
+    } catch {
+      // Static previews and offline sessions keep the local diagnostic.
+    }
+  };
+  const scheduleServerDiagnostic = (scenario) => {
+    if (!diagnosisShown) return;
+    window.clearTimeout(serverDiagnosticTimer);
+    serverDiagnosticTimer = window.setTimeout(() => requestServerDiagnostic(scenario), 320);
   };
   const syncPaymentLink = () => {
     if (!paymentLink) return;
@@ -771,13 +1279,22 @@ initKineticCanvas();
     const history = formData.get("history");
     const value = formData.get("value");
     const state = formData.get("state");
+    const context = `${formData.get("context") || ""}`.trim().slice(0, 420);
+    const scenario = { support, symptom, urgency, history, value, state, context };
+    latestServerDiagnostic = null;
+    if (brief) brief.hidden = true;
+    const expertSignals = buildExpertSignals(scenario);
+    const effectiveScenario = { ...scenario, ...applyExpertOverrides(scenario, expertSignals) };
+    const clientIntelligence = buildClientIntelligence(effectiveScenario);
     const score =
-      ({ raid: 3, server: 3, ssd: 2, phone: 1, drive: 0, removable: 0 }[support] || 0) +
-      ({ water: 4, physical: 4, encrypted: 3, not_detected: 2, slow: 1, deleted: 0 }[symptom] || 0) +
-      ({ critical: 4, business: 2, standard: 0 }[urgency] || 0) +
+      ({ raid: 3, server: 3, ssd: 2, phone: 1, drive: 0, removable: 0 }[effectiveScenario.support] || 0) +
+      ({ water: 4, physical: 4, encrypted: 3, not_detected: 2, slow: 1, deleted: 0 }[effectiveScenario.symptom] || 0) +
+      ({ critical: 4, business: 2, standard: 0 }[effectiveScenario.urgency] || 0) +
       ({ rebuild: 4, opened: 3, software: 2, powered_on: 2, no_attempt: 0 }[history] || 0) +
-      ({ legal: 2, medical: 2, business: 1, personal: 0 }[value] || 0) +
-      ({ running: 2, unknown: 1, powered_off: 0, unplugged: 0 }[state] || 0);
+      ({ legal: 2, medical: 2, business: 1, personal: 0 }[effectiveScenario.value] || 0) +
+      ({ running: 2, unknown: 1, powered_off: 0, unplugged: 0 }[state] || 0) +
+      clientIntelligence.scoreBoost +
+      expertSignals.scoreBoost;
     const level = score >= 13 ? "critical" : score >= 9 ? "high" : score >= 5 ? "priority" : "logical";
     const isCritical = level === "critical";
     const confidence = Math.min(96, 62 + (score * 3));
@@ -788,44 +1305,59 @@ initKineticCanvas();
       `${labels.urgencyLabel}: ${optionLabel(labels.urgencyOptions, urgency)}`,
       `${labels.historyLabel}: ${optionLabel(labels.historyOptions, history)}`,
       `${labels.valueLabel}: ${optionLabel(labels.valueOptions, value)}`,
-      `${labels.stateLabel}: ${optionLabel(labels.stateOptions, state)}`
+      `${labels.stateLabel}: ${optionLabel(labels.stateOptions, state)}`,
+      context && `${labels.contextLabel}: ${context}`
     ];
 
-    latestDiagnosticSummary = `${title}. ${selections.join(" | ")}. ${labels.risk}: ${score}. ${labels.confidence}: ${confidence}%. ${labels.route}: ${route} ${labels.avoid}: ${avoid}`;
+    latestDiagnosticSummary = `${title}. ${selections.filter(Boolean).join(" | ")}. ${labels.need}: ${clientIntelligence.needLabel}. ${labels.signal}: ${clientIntelligence.signalLabel}. ${labels.proposal}: ${clientIntelligence.proposal.primary} ${clientIntelligence.proposal.nextStep}. ${labels.risk}: ${score}. ${labels.confidence}: ${confidence}%. ${labels.route}: ${route} ${labels.avoid}: ${avoid}`;
     result.innerHTML = `
       <div class="chatbot-result-head">
         <strong>${title}</strong>
         <span>${labels.confidence} ${confidence}%</span>
       </div>
       <div class="chatbot-meter chatbot-meter-${level}" aria-hidden="true"><span></span></div>
+      <p class="chatbot-empathy">${clientIntelligence.empathy}</p>
       <dl class="chatbot-decision">
         <div><dt>${labels.risk}</dt><dd>${score}</dd></div>
+        <div><dt>${labels.need}</dt><dd>${clientIntelligence.needLabel}</dd></div>
+        <div><dt>${labels.signal}</dt><dd>${clientIntelligence.signalLabel}</dd></div>
         <div><dt>${labels.route}</dt><dd>${route}</dd></div>
         <div><dt>${labels.avoid}</dt><dd>${avoid}</dd></div>
       </dl>
+      <p class="chatbot-proposal"><strong>${labels.proposal}</strong> ${clientIntelligence.proposal.primary} ${clientIntelligence.proposal.nextStep}</p>
     `;
     const protocolItems = labels.protocols[level] || [];
-    protocolTarget.replaceChildren(...protocolItems.map((item) => {
-      const protocolItem = document.createElement("li");
-      protocolItem.textContent = item;
-      return protocolItem;
-    }));
-    latestServiceHref = getServiceHref(support, symptom, value);
+    const fixItems = buildFixes({ isCritical, expertSignals });
+    const reasonItems = buildReasons(effectiveScenario, expertSignals);
+    const questionItems = buildQuestions(effectiveScenario, expertSignals);
+    renderList(protocolTarget, protocolItems);
+    renderList(fixesTarget, fixItems);
+    renderList(expertSignalsTarget, expertSignals.labels.length ? expertSignals.labels : [labels.guardrail]);
+    if (expert) expert.hidden = !diagnosisShown || expertSignals.labels.length === 0;
+    renderList(reasonsTarget, reasonItems);
+    renderList(questionsTarget, questionItems);
+    latestServiceHref = getServiceHref(effectiveScenario.support, effectiveScenario.symptom, effectiveScenario.value);
     latestCasePayload = {
-      support: mapCaseSupport(support, symptom, value),
-      urgence: mapCaseUrgency(urgency, symptom, value),
-      profil: mapCaseProfile(value),
-      impact: mapCaseImpact(urgency, value),
-      sensibilite: mapCaseSensitivity(symptom, value)
+      support: mapCaseSupport(effectiveScenario.support, effectiveScenario.symptom, effectiveScenario.value),
+      urgence: mapCaseUrgency(effectiveScenario.urgency, effectiveScenario.symptom, effectiveScenario.value),
+      profil: mapCaseProfile(effectiveScenario.value),
+      impact: mapCaseImpact(effectiveScenario.urgency, effectiveScenario.value),
+      sensibilite: mapCaseSensitivity(effectiveScenario.symptom, effectiveScenario.value)
     };
-    latestDiagnosticSummary = `${latestDiagnosticSummary} ${labels.protocol}: ${protocolItems.join(" / ")}`;
+    latestDiagnosticSummary = `${latestDiagnosticSummary} ${expertSignals.labels.length ? `${labels.expert}: ${expertSignals.labels.join(" / ")}. ` : ""}${labels.protocol}: ${protocolItems.join(" / ")}. ${labels.fixed}: ${fixItems.join(" / ")}. ${labels.why}: ${reasonItems.join(" / ")}. ${labels.missing}: ${questionItems.join(" / ")}. ${labels.guardrail}`;
     syncSummaryActions();
+    if (diagnosisShown) applyDiagnosisToMainForm();
     emergencyLink.hidden = !isCritical;
     emergencyLink.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(`${labels.waIntro}\n${latestDiagnosticSummary}`)}`;
+    return scenario;
   };
 
   const showDiagnosisResult = () => {
-    updateDiagnosis();
+    diagnosisShown = true;
+    setDiagnosisVisibility(true);
+    const scenario = updateDiagnosis();
+    applyDiagnosisToMainForm();
+    requestServerDiagnostic(scenario);
     result?.scrollIntoView({ block: "nearest" });
     result?.focus({ preventScroll: true });
   };
@@ -903,15 +1435,27 @@ initKineticCanvas();
 
       if (response.ok && data?.ok) {
         const caseId = data.caseId || "";
-        setCaseStatus("success", labels.caseOpened(caseId));
+        const serverPlan = data.automation || data.concierge || null;
+        setCaseStatus("success", labels.caseOpened(caseId, serverPlan));
 
         if (statusLink && caseId) {
           statusLink.href = `${statusHref}?caseId=${encodeURIComponent(caseId)}`;
         }
 
+        if (serverPlan?.servicePath && serviceLink) {
+          latestServiceHref = `${homePrefix}${serverPlan.servicePath}`;
+          serviceLink.href = latestServiceHref;
+        }
+
+        if (data.concierge?.whatsappUrl && emergencyLink) {
+          emergencyLink.hidden = false;
+          emergencyLink.href = data.concierge.whatsappUrl;
+        }
+
         try {
           sessionStorage.setItem("nexuradata_latest_case_id", caseId);
           sessionStorage.setItem("nexuradata_diagnostic_summary", latestDiagnosticSummary);
+          if (serverPlan) sessionStorage.setItem("nexuradata_server_automation", JSON.stringify(serverPlan));
         } catch {
           // Optional browser handoff only.
         }
@@ -947,8 +1491,18 @@ initKineticCanvas();
     trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "result_button" });
   });
   diagnosticForm.addEventListener("change", () => {
-    updateDiagnosis();
-    trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "local_triage" });
+    const scenario = updateDiagnosis();
+    if (diagnosisShown) {
+      setCaseStatus("", "");
+      scheduleServerDiagnostic(scenario);
+      trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "local_triage" });
+    }
+  });
+  diagnosticForm.addEventListener("input", () => {
+    if (!diagnosisShown) return;
+    const scenario = updateDiagnosis();
+    setCaseStatus("", "");
+    scheduleServerDiagnostic(scenario);
   });
   caseForm?.addEventListener("submit", submitAutonomousCase);
   toggleButton?.addEventListener("click", () => {
@@ -968,6 +1522,7 @@ initKineticCanvas();
     setDockOpen(false);
   });
   updateDiagnosis();
+  setDiagnosisVisibility(false);
   syncPaymentLink();
 
   document.querySelectorAll('a[href="#diagnostic-assistant"]').forEach((trigger) => {
@@ -994,16 +1549,7 @@ initKineticCanvas();
       }
 
       if (link.dataset.chatbotAction === "case") {
-        try {
-          sessionStorage.setItem("nexuradata_diagnostic_summary", latestDiagnosticSummary);
-        } catch {
-          // Optional handoff only.
-        }
-
-        const messageField = document.querySelector('[data-intake-form] textarea[name="message"]');
-        if (messageField && !messageField.value.trim()) {
-          messageField.value = latestDiagnosticSummary;
-        }
+        applyDiagnosisToMainForm();
       }
       trackContactIntent(`chatbot_${link.dataset.chatbotAction || "open"}`);
     });
@@ -2360,6 +2906,7 @@ if (operationsRoot) {
   const conciergeWhatsApp = operationsRoot.querySelector("[data-ops-concierge-whatsapp]");
   const conciergeCopyButton = operationsRoot.querySelector("[data-ops-concierge-copy]");
   const conciergeGenerateButton = operationsRoot.querySelector("[data-ops-concierge-generate]");
+  const automationApplyButton = operationsRoot.querySelector("[data-ops-automation-apply]");
   const conciergeResult = operationsRoot.querySelector("[data-ops-concierge-result]");
 
   const createStepRow = (step = { title: "", note: "", state: "pending" }) => {
@@ -2554,7 +3101,7 @@ if (operationsRoot) {
   const renderConcierge = (concierge) => {
     if (conciergeSummary) {
       conciergeSummary.textContent = concierge
-        ? `${concierge.priorityLabel || "Suivi"} · ${concierge.recommendedPath || "Parcours à confirmer"} · ${concierge.channel === "whatsapp" ? "WhatsApp prêt" : "Courriel ou téléphone"}`
+        ? `${concierge.priorityLabel || "Suivi"} · ${concierge.serviceLevelLabel || "Automation"} · ${concierge.sla || "SLA à confirmer"} · ${concierge.channel === "whatsapp" ? "WhatsApp prêt" : "Courriel ou téléphone"}`
         : "Aucun message concierge disponible.";
     }
 
@@ -3093,6 +3640,39 @@ if (operationsRoot) {
         setMessage(conciergeResult, "error", error instanceof Error ? error.message : "Concierge indisponible.");
       } finally {
         setButtonBusy(conciergeGenerateButton, false);
+      }
+    });
+  }
+
+  if (automationApplyButton) {
+    automationApplyButton.addEventListener("click", async () => {
+      const caseId = currentCaseIdInput?.value || "";
+      if (!caseId) {
+        setMessage(conciergeResult, "error", "Chargez d'abord un dossier.");
+        return;
+      }
+
+      setMessage(conciergeResult, "success", "Application du plan automatisé...");
+      setButtonBusy(automationApplyButton, true, "Application...");
+
+      try {
+        const response = await fetch(searchEndpoint, {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ action: "apply-automation", caseId })
+        });
+        const data = await parseJsonResponse(response);
+
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.message || "Automation indisponible.");
+        }
+
+        if (data.case) fillCaseDetail(data.case);
+        setMessage(conciergeResult, "success", "Plan automatisé appliqué au dossier, à la timeline et aux champs opérateur.");
+      } catch (error) {
+        setMessage(conciergeResult, "error", error instanceof Error ? error.message : "Automation indisponible.");
+      } finally {
+        setButtonBusy(automationApplyButton, false);
       }
     });
   }

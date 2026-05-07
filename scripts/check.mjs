@@ -23,8 +23,8 @@ import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SITE_CSS_VERSION = "20260506b";
-const SITE_JS_VERSION = "20260506b";
+const SITE_CSS_VERSION = "20260506c";
+const SITE_JS_VERSION = "20260506c";
 const errors = [];
 
 function fail(rule, detail) {
@@ -135,8 +135,8 @@ if (existsSync(siteCssPath)) {
         fail("IBM_BODY_FONT", "assets/css/site.css body must use var(--font-sans).");
     }
 
-    if (!siteCss.includes(".chatbot-dock") || !siteCss.includes(".chatbot-avatar") || /\.whatsapp-fab\b/.test(siteCss)) {
-        fail("IBM_CHATBOT_CSS", "assets/css/site.css must expose the IBM square chatbot dock with the robot image, not the old WhatsApp FAB.");
+    if (!siteCss.includes(".chatbot-dock") || !siteCss.includes(".chatbot-brand-tile") || !siteCss.includes(".chatbot-brand-logo") || /\.whatsapp-fab\b/.test(siteCss)) {
+        fail("IBM_CHATBOT_CSS", "assets/css/site.css must expose the branded NEXURADATA square chatbot dock, not the old WhatsApp FAB.");
     }
 
     if (!siteCss.includes(".cookie-consent") || !siteCss.includes(".footer-cookie-button")) {
@@ -158,8 +158,8 @@ if (existsSync(siteCssPath)) {
 const siteJsPath = join(ROOT, "assets", "js", "site.js");
 if (existsSync(siteJsPath)) {
     const siteJs = readFileSync(siteJsPath, "utf8");
-    if (!siteJs.includes("chatbot-dock") || !siteJs.includes("chatbot-robot.svg") || !siteJs.includes("data-chatbot-diagnostic") || !siteJs.includes('data-chatbot-action="urgent_whatsapp"') || !siteJs.includes('data-chatbot-action="stripe_payment"') || !siteJs.includes('data-chatbot-action="copy_summary"') || !siteJs.includes("data-chatbot-protocol") || !siteJs.includes("data-chatbot-case-form") || !siteJs.includes("submitAutonomousCase")) {
-        fail("IBM_CHATBOT_JS", "assets/js/site.js must render the IBM square superbot with autonomous case creation, protocol, Stripe handoff, copy summary, and urgent WhatsApp.");
+    if (!siteJs.includes("chatbot-dock") || !siteJs.includes("/assets/nexuradata-master.svg") || !siteJs.includes("/assets/nexuradata-icon.png") || !siteJs.includes("data-chatbot-diagnostic") || !siteJs.includes('data-chatbot-action="urgent_whatsapp"') || !siteJs.includes('data-chatbot-action="stripe_payment"') || !siteJs.includes('data-chatbot-action="copy_summary"') || !siteJs.includes("data-chatbot-protocol") || !siteJs.includes("data-chatbot-case-form") || !siteJs.includes("submitAutonomousCase")) {
+        fail("IBM_CHATBOT_JS", "assets/js/site.js must render the branded NEXURADATA square superbot with autonomous case creation, protocol, Stripe handoff, copy summary, and urgent WhatsApp.");
     }
 
     if (!siteJs.includes("data-stripe-checkout-link") || !siteJs.includes("nexuradata:payments-rendered")) {
@@ -185,8 +185,8 @@ if (existsSync(join(ROOT, "assets", "js", "ga4-init.js"))) {
     fail("LEGACY_GA4_INIT", "assets/js/ga4-init.js must not exist. GA4 is loaded only by the consent manager.");
 }
 
-if (!existsSync(join(ROOT, "assets", "icons", "chatbot-robot.svg"))) {
-    fail("IBM_CHATBOT_IMAGE", "assets/icons/chatbot-robot.svg must exist for the square diagnostic chatbot.");
+if (!existsSync(join(ROOT, "assets", "nexuradata-icon.png"))) {
+    fail("IBM_CHATBOT_IMAGE", "assets/nexuradata-icon.png must exist for the branded square diagnostic chatbot.");
 }
 
 // ─── 2. No hardcoded secrets in functions/ ───────────────────────────────────

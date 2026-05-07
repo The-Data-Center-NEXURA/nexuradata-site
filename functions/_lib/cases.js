@@ -1,6 +1,6 @@
 import { getDb } from "./db.js";
 import { createHostedCheckoutSession } from "./stripe.js";
-import { buildCaseAutomationDraft } from "./automation.js";
+import { buildAutomationTimeline, buildCaseAutomationDraft, formatAutomationEventNote } from "./automation.js";
 import { buildConciergeDraft, formatConciergeEventNote } from "./concierge.js";
 import {
   decryptAccessCode,
@@ -345,7 +345,7 @@ export const validatePaymentRequestInput = (payload) => {
 
 const nowIso = () => new Date().toISOString();
 
-const buildInitialTimeline = () => [
+const buildInitialTimeline = (automationDraft) => automationDraft ? buildAutomationTimeline(automationDraft) : [
   {
     title: "Dossier reçu",
     note: "La demande a été enregistrée et qualifiée pour une première lecture.",
@@ -389,10 +389,10 @@ export const createCase = async (env, submission) => {
   const accessCode = generateAccessCode();
   const accessCodeHash = await hashAccessCode(accessCode, env);
   const accessCodeCiphertext = await encryptAccessCode(accessCode, env);
-  const timeline = buildInitialTimeline();
   const automationDraft = buildCaseAutomationDraft(submission);
-  const status = "Dossier reçu";
-  const nextStep = automationDraft.nextStep;
+  const timeline = buildInitialTimeline(automationDraft);
+  const status = automationDraft.statusPlan?.status || "Dossier reçu";
+  const nextStep = automationDraft.statusPlan?.nextStep || automationDraft.nextStep;
   const clientSummary = automationDraft.clientSummary;
 
   await sql`INSERT INTO cases (
@@ -420,6 +420,7 @@ export const createCase = async (env, submission) => {
   }
 
   await recordCaseEvent(env, caseId, "system", "Dossier ouvert", "Demande initiale reçue via le formulaire public.");
+  await recordCaseEvent(env, caseId, "nexuradata-automation", "Plan automatisé préparé", formatAutomationEventNote(automationDraft));
   const conciergeDraft = buildConciergeDraft({
     caseId,
     name: submission.nom,
@@ -440,6 +441,7 @@ export const createCase = async (env, submission) => {
     status,
     nextStep,
     clientSummary,
+    automation: automationDraft,
     concierge: conciergeDraft,
     ...submission
   };
@@ -813,6 +815,55 @@ export const buildAndLogConciergeDraft = async (env, caseId, actor = "ops") => {
 
   const draft = buildConciergeDraft(detail);
   await recordCaseEvent(env, detail.caseId, actor, "Message concierge généré", formatConciergeEventNote(draft));
+
+  return {
+    detail: await getCaseDetail(env, detail.caseId),
+    draft
+  };
+};
+
+export const buildAndApplyAutomationDraft = async (env, caseId, actor = "ops") => {
+  const sql = getDb(env);
+  const detail = await getCaseDetail(env, caseId);
+
+  if (!detail) {
+    throw new Error("Dossier introuvable.");
+  }
+
+  const draft = buildCaseAutomationDraft(detail);
+  const timestamp = nowIso();
+  const status = draft.statusPlan?.status || detail.status;
+  const nextStep = draft.statusPlan?.nextStep || draft.nextStep || detail.nextStep;
+  const clientSummary = draft.clientSummary || detail.clientSummary;
+  const qualificationSummary = draft.qualificationSummary || detail.qualificationSummary || "";
+  const handlingFlags = draft.handlingFlags || detail.handlingFlags || "";
+  const timeline = buildAutomationTimeline(draft);
+
+  await sql`UPDATE cases
+    SET updated_at = ${timestamp},
+        status = ${status},
+        next_step = ${nextStep},
+        client_summary = ${clientSummary},
+        qualification_summary = ${qualificationSummary},
+        handling_flags = ${handlingFlags}
+    WHERE case_id = ${detail.caseId}`;
+
+  await sql`UPDATE case_updates
+    SET is_visible = 0, updated_at = ${timestamp}
+    WHERE case_id = ${detail.caseId} AND kind = 'timeline' AND is_visible = 1`;
+
+  for (const step of timeline) {
+    await sql`INSERT INTO case_updates (
+      case_id, kind, title, note, state, sort_order, is_visible,
+      created_at, updated_at, created_by
+    ) VALUES (
+      ${detail.caseId}, 'timeline', ${step.title}, ${step.note}, ${step.state},
+      ${step.sortOrder}, 1, ${timestamp}, ${timestamp},
+      ${normalizeText(actor, 120) || "ops"}
+    )`;
+  }
+
+  await recordCaseEvent(env, detail.caseId, actor, "Plan automatisé appliqué", formatAutomationEventNote(draft));
 
   return {
     detail: await getCaseDetail(env, detail.caseId),
