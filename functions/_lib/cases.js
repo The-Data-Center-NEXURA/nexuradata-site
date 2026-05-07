@@ -572,6 +572,363 @@ const mapPublicAuthorization = (row) => {
   };
 };
 
+const paymentStatusValue = (payment) => normalizeText(`${payment?.status || payment?.stripePaymentStatus || "open"}`, 40).toLowerCase() || "open";
+
+const sumPaymentAmounts = (payments, predicate) =>
+  payments.filter(predicate).reduce((total, payment) => total + (Number(payment.amountCents) || 0), 0);
+
+export const buildPriceIntelligenceDecision = (detail = {}) => {
+  const caseId = normalizeCaseId(detail.caseId || detail.case_id || "");
+  const payments = Array.isArray(detail.payments) ? detail.payments : [];
+  const quoteStatus = normalizeText(detail.quoteStatus || detail.quote_status || "none", 20).toLowerCase() || "none";
+  const quoteAmountCents = Number(detail.quoteAmountCents ?? detail.quote_amount_cents ?? 0) || 0;
+  const preapprovalConfirmed = Boolean(detail.preapprovalConfirmed ?? detail.preapproval_confirmed);
+  const paidAmountCents = sumPaymentAmounts(payments, (payment) => paymentStatusValue(payment) === "paid");
+  const activePaymentCents = sumPaymentAmounts(payments, (payment) => {
+    const status = paymentStatusValue(payment);
+    return status !== "paid" && status !== "expired" && status !== "failed";
+  });
+  const balanceCents = Math.max(quoteAmountCents - paidAmountCents, 0);
+  const blockers = [];
+  const reasonCodes = [];
+
+  const block = (code, message) => {
+    reasonCodes.push(code);
+    blockers.push(message);
+  };
+
+  if (!caseId) {
+    block("missing_case", "Aucun dossier réel n'est chargé.");
+  }
+
+  if (quoteAmountCents <= 0) {
+    block("missing_quote_amount", "Aucune soumission chiffrée n'est enregistrée.");
+  }
+
+  if (quoteStatus !== "approved") {
+    block("quote_not_approved", "La soumission n'est pas approuvée.");
+  }
+
+  if (!preapprovalConfirmed) {
+    block("preapproval_missing", "La préapprobation client n'est pas confirmée.");
+  }
+
+  if (quoteAmountCents > 0 && balanceCents <= 0) {
+    block("balance_zero", "Le solde calculé est nul ou déjà payé.");
+  }
+
+  if (balanceCents > 0 && balanceCents < 100) {
+    block("balance_below_minimum", "Le solde calculé est sous le minimum Stripe de 1,00 $.");
+  }
+
+  if (balanceCents > 10000000) {
+    block("balance_above_limit", "Le solde calculé dépasse la limite de paiement configurée.");
+  }
+
+  if (activePaymentCents > 0) {
+    block("active_payment_exists", `Une demande de paiement active existe déjà (${formatCurrency(activePaymentCents)}).`);
+  }
+
+  const ready = blockers.length === 0;
+  const paymentKind = "final";
+  const amount = (balanceCents / 100).toFixed(2);
+  const label = paidAmountCents > 0
+    ? `Solde final - ${caseId || "dossier"}`
+    : `Paiement approuvé - ${caseId || "dossier"}`;
+  const description = [
+    "Montant calculé par l'intelligence prix NEXURADATA.",
+    `Soumission approuvée: ${formatCurrency(quoteAmountCents)}.`,
+    `Paiements Stripe confirmés: ${formatCurrency(paidAmountCents)}.`,
+    `Solde exact à percevoir: ${formatCurrency(balanceCents)}.`,
+    "Vérifier l'identité du client et le dossier avant l'envoi."
+  ].join(" ");
+  const rules = ready
+    ? [
+      "Soumission approuvée et préapprobation confirmée.",
+      `Calcul serveur: ${formatCurrency(quoteAmountCents)} - ${formatCurrency(paidAmountCents)} = ${formatCurrency(balanceCents)}.`,
+      "Le job peut créer le lien Stripe exact; aucune valeur saisie manuellement n'est utilisée.",
+      "Les remises, remboursements, litiges et termes spéciaux restent en revue humaine."
+    ]
+    : blockers.map((blocker) => `Bloqué: ${blocker}`);
+  const confidence = ready ? 98 : Math.max(15, 82 - (blockers.length * 18));
+  const suggestedPayment = ready
+    ? {
+      caseId,
+      paymentKind,
+      amount,
+      amountCents: balanceCents,
+      currency: "cad",
+      label,
+      description,
+      sendEmail: true,
+      source: "price-intelligence"
+    }
+    : null;
+
+  return {
+    version: "2026-05-07",
+    jobName: "price-intelligence",
+    jobMode: ready ? "ready_to_send" : "blocked",
+    ready,
+    confidence,
+    caseId,
+    quoteStatus,
+    quoteAmountCents,
+    quoteAmountFormatted: formatCurrency(quoteAmountCents),
+    paidAmountCents,
+    paidAmountFormatted: formatCurrency(paidAmountCents),
+    balanceCents,
+    balanceFormatted: formatCurrency(balanceCents),
+    activePaymentCents,
+    activePaymentFormatted: formatCurrency(activePaymentCents),
+    actionLabel: ready ? "Créer/envoyer" : "Bloquée",
+    blockers,
+    reasonCodes,
+    rules,
+    summary: ready
+      ? "Job prêt: le serveur peut créer le lien Stripe exact depuis la soumission approuvée et les paiements confirmés."
+      : "Job bloqué: le serveur refuse de proposer un montant tant que les garde-fous ne sont pas satisfaits.",
+    operatorInstruction: ready
+      ? "Créer le paiement intelligent seulement si le client et le dossier affichés correspondent à la demande réelle."
+      : "Corriger les blocages, puis relancer le job. Ne pas saisir un montant au hasard.",
+    suggestedPayment,
+    copyText: [
+      `Décision price intelligence - ${caseId || "aucun dossier"}`,
+      `Mode: ${ready ? "ready_to_send" : "blocked"}`,
+      `Confiance: ${confidence}%`,
+      `Soumission: ${formatCurrency(quoteAmountCents)}`,
+      `Payé confirmé: ${formatCurrency(paidAmountCents)}`,
+      `Solde exact: ${formatCurrency(balanceCents)}`,
+      `Action: ${ready ? "créer/envoyer le lien Stripe exact" : "ne pas envoyer"}`,
+      ...rules.map((rule) => `- ${rule}`)
+    ].join("\n")
+  };
+};
+
+const automationJob = ({ id, label, mode, confidence, action, summary, signals = [], blockers = [], payload = null }) => ({
+  id,
+  label,
+  mode,
+  ready: mode.startsWith("ready"),
+  confidence,
+  action,
+  summary,
+  signals,
+  blockers,
+  payload
+});
+
+const lowerCaseText = (...values) => values
+  .filter((value) => typeof value === "string")
+  .join(" ")
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "");
+
+const hoursSince = (value) => {
+  const date = new Date(value || "");
+
+  if (Number.isNaN(date.getTime())) {
+    return Infinity;
+  }
+
+  return Math.max(0, (Date.now() - date.getTime()) / 36e5);
+};
+
+const hasTerm = (text, terms) => terms.some((term) => text.includes(term));
+
+const detectFinancialReviewSignals = (detail = {}) => {
+  const historyText = (detail.history || []).map((entry) => `${entry.title || ""} ${entry.note || ""}`).join(" ");
+  const paymentText = (detail.payments || []).map((payment) => `${payment.status || ""} ${payment.label || ""} ${payment.description || ""}`).join(" ");
+  const text = lowerCaseText(detail.message, detail.clientSummary, detail.qualificationSummary, detail.internalNotes, detail.handlingFlags, historyText, paymentText);
+  const signals = [];
+
+  if (hasTerm(text, ["refund", "rembourse", "remboursement", "credit", "crédit", "annulation", "cancel", "cancellation"])) {
+    signals.push("refund_or_credit_request");
+  }
+
+  if (hasTerm(text, ["dispute", "litige", "chargeback", "contestation", "fraud", "fraude", "avocat", "lawyer", "tribunal", "court"])) {
+    signals.push("dispute_or_legal_risk");
+  }
+
+  if ((detail.payments || []).some((payment) => paymentStatusValue(payment) === "failed")) {
+    signals.push("failed_payment_present");
+  }
+
+  return Array.from(new Set(signals));
+};
+
+export const buildCaseAutomationSuite = (detail = {}) => {
+  const caseId = normalizeCaseId(detail.caseId || detail.case_id || "");
+  const draft = buildCaseAutomationDraft({
+    caseId,
+    name: detail.name,
+    email: detail.email,
+    phone: detail.phone,
+    telephone: detail.phone,
+    support: detail.support,
+    urgency: detail.urgency,
+    urgence: detail.urgency,
+    impact: detail.clientSummary,
+    sensibilite: detail.handlingFlags,
+    message: [detail.message, detail.clientSummary, detail.qualificationSummary, detail.internalNotes].filter(Boolean).join("\n")
+  });
+  const pricingDecision = detail.pricingDecision || buildPriceIntelligenceDecision(detail);
+  const financialSignals = detectFinancialReviewSignals(detail);
+  const missingLabels = draft.missingInfoLabels || [];
+  const paymentOpen = (detail.payments || []).some((payment) => {
+    const status = paymentStatusValue(payment);
+    return status !== "paid" && status !== "expired" && status !== "failed";
+  });
+  const paymentFollowUpDue = (detail.payments || []).some((payment) => {
+    const status = paymentStatusValue(payment);
+    return status !== "paid" && status !== "expired" && status !== "failed" && hoursSince(payment.sentAt || payment.createdAt) >= 24;
+  });
+  const quoteFollowUpDue = detail.quoteStatus === "sent" && hoursSince(detail.quoteSentAt) >= 24;
+  const clientWaiting = normalizeText(detail.status || "", 80).toLowerCase().includes("attente");
+  const followUpSignals = [
+    missingLabels.length > 0 && "missing_information",
+    quoteFollowUpDue && "quote_follow_up_due",
+    paymentFollowUpDue && "payment_follow_up_due",
+    clientWaiting && "client_waiting"
+  ].filter(Boolean);
+  const ownerSignals = [
+    draft.riskLevel === "sensitive" && "sensitive_or_forensic_case",
+    draft.serviceLevel === "emergency" && "emergency_service_level",
+    pricingDecision.balanceCents >= 250000 && "amount_requires_owner_review",
+    financialSignals.length > 0 && "financial_exception_signal",
+    pricingDecision.reasonCodes?.length > 0 && "pricing_blockers_present",
+    draft.expertSignals?.signals?.length > 0 && "expert_signals_present"
+  ].filter(Boolean);
+  const jobs = [
+    automationJob({
+      id: "price-intelligence",
+      label: "Prix et facture",
+      mode: pricingDecision.ready ? "ready_to_send" : "blocked",
+      confidence: pricingDecision.confidence,
+      action: pricingDecision.actionLabel,
+      summary: pricingDecision.summary,
+      signals: pricingDecision.ready ? ["exact_balance_verified"] : pricingDecision.reasonCodes,
+      blockers: pricingDecision.blockers,
+      payload: pricingDecision.suggestedPayment
+    }),
+    automationJob({
+      id: "quote-generation",
+      label: "Soumission",
+      mode: draft.quotePlan.readiness === "blocked-missing-information" ? "blocked" : draft.riskLevel === "sensitive" ? "human_review" : "ready_to_draft",
+      confidence: draft.quotePlan.readiness === "blocked-missing-information" ? 42 : draft.riskLevel === "sensitive" ? 68 : 86,
+      action: draft.quotePlan.readiness === "blocked-missing-information" ? "Attendre info" : draft.riskLevel === "sensitive" ? "Revue owner" : "Préparer soumission",
+      summary: `${draft.quotePlan.label}. ${draft.proposal.offer}`,
+      signals: [draft.quotePlan.readiness, draft.recommendedPath, draft.serviceLevel],
+      blockers: draft.quotePlan.readiness === "blocked-missing-information" ? missingLabels : [],
+      payload: {
+        paymentKind: draft.quotePlan.paymentKind,
+        label: draft.quotePlan.label,
+        description: draft.quotePlan.description,
+        proposal: draft.proposal.offer
+      }
+    }),
+    automationJob({
+      id: "follow-up-timing",
+      label: "Relance",
+      mode: followUpSignals.length > 0 ? "ready_to_log" : "monitoring",
+      confidence: followUpSignals.length > 0 ? 88 : 72,
+      action: followUpSignals.length > 0 ? "Préparer relance" : "Surveiller",
+      summary: followUpSignals.length > 0
+        ? "Une relance est pertinente selon l'état du dossier, la soumission, le paiement ou l'information manquante."
+        : "Aucune relance immédiate n'est due selon les signaux actuels.",
+      signals: followUpSignals,
+      blockers: [],
+      payload: {
+        reminderType: missingLabels.length ? "missing_information" : paymentOpen ? "payment_follow_up" : quoteFollowUpDue ? "quote_follow_up" : "general_follow_up",
+        message: missingLabels.length
+          ? `Demander au client: ${missingLabels.join("; ")}.`
+          : paymentOpen
+            ? "Relancer le lien de paiement ouvert et confirmer si le client a une difficulté."
+            : quoteFollowUpDue
+              ? "Relancer la soumission envoyée et confirmer la décision client."
+              : "Suivi général du dossier."
+      }
+    }),
+    automationJob({
+      id: "missing-information",
+      label: "Infos manquantes",
+      mode: missingLabels.length > 0 ? "ready_to_request" : "complete",
+      confidence: missingLabels.length > 0 ? 92 : 90,
+      action: missingLabels.length > 0 ? "Demander" : "Complet",
+      summary: missingLabels.length > 0
+        ? `Informations critiques à obtenir: ${missingLabels.join("; ")}.`
+        : "Aucune information critique manquante détectée.",
+      signals: draft.missingInfo,
+      blockers: missingLabels.length > 0 ? missingLabels : [],
+      payload: { questions: missingLabels }
+    }),
+    automationJob({
+      id: "emotion-handling",
+      label: "Émotion client",
+      mode: draft.emotionalContext.signal === "neutral" ? "monitoring" : "ready_to_respond",
+      confidence: draft.emotionalContext.signal === "neutral" ? 76 : 91,
+      action: draft.emotionalContext.signal === "neutral" ? "Ton standard" : "Réponse empathique",
+      summary: `${draft.emotionalContext.label}. Ton recommandé: ${draft.emotionalContext.responseTone}.`,
+      signals: [draft.emotionalContext.signal, draft.clientNeed?.key].filter(Boolean),
+      blockers: [],
+      payload: {
+        empathyLine: draft.emotionalContext.empathyLine,
+        responseTone: draft.emotionalContext.responseTone
+      }
+    }),
+    automationJob({
+      id: "refund-dispute-flags",
+      label: "Remboursement/litige",
+      mode: financialSignals.length > 0 ? "human_review" : "clear",
+      confidence: financialSignals.length > 0 ? 94 : 82,
+      action: financialSignals.length > 0 ? "Escalader" : "Aucun drapeau",
+      summary: financialSignals.length > 0
+        ? "Un signal financier sensible exige une revue owner avant remboursement, crédit, contestation ou nouvelle facture."
+        : "Aucun signal de remboursement, litige ou contestation détecté.",
+      signals: financialSignals,
+      blockers: financialSignals.length > 0 ? ["Revue owner obligatoire avant action financière sensible."] : [],
+      payload: { financialSignals }
+    }),
+    automationJob({
+      id: "owner-approval-queue",
+      label: "Owner approval",
+      mode: ownerSignals.length > 0 ? "human_review" : "clear",
+      confidence: ownerSignals.length > 0 ? 96 : 84,
+      action: ownerSignals.length > 0 ? "Queue owner" : "Pas requis",
+      summary: ownerSignals.length > 0
+        ? "Le dossier doit remonter en revue propriétaire avant automatisation complète."
+        : "Aucune approbation propriétaire spéciale n'est requise selon les signaux actuels.",
+      signals: ownerSignals,
+      blockers: ownerSignals.length > 0 ? ownerSignals : [],
+      payload: { ownerSignals }
+    })
+  ];
+  const readyCount = jobs.filter((job) => job.ready || job.mode === "complete" || job.mode === "clear").length;
+  const blockedCount = jobs.filter((job) => job.mode === "blocked" || job.mode === "human_review").length;
+  const confidence = Math.round(jobs.reduce((total, job) => total + job.confidence, 0) / jobs.length);
+
+  return {
+    version: "2026-05-07",
+    provider: "nexuradata-automation-suite",
+    caseId,
+    generatedAt: nowIso(),
+    confidence,
+    readyCount,
+    blockedCount,
+    summary: blockedCount > 0
+      ? `${readyCount}/${jobs.length} modules prêts; ${blockedCount} module(s) exigent correction ou revue humaine.`
+      : `${readyCount}/${jobs.length} modules prêts; automation complète autorisée selon les règles actuelles.`,
+    jobs,
+    copyText: [
+      `Automation suite - ${caseId || "aucun dossier"}`,
+      `Confiance globale: ${confidence}%`,
+      `Résumé: ${blockedCount > 0 ? `${blockedCount} module(s) bloqués ou en revue.` : "tous les modules sont prêts ou clairs."}`,
+      ...jobs.map((job) => `- ${job.label}: ${job.mode} · ${job.confidence}% · ${job.action}`)
+    ].join("\n")
+  };
+};
+
 export const listCasePayments = async (env, caseId) => {
   const sql = getDb(env);
   const normalizedCaseId = normalizeCaseId(caseId);
@@ -756,7 +1113,7 @@ export const getCaseDetail = async (env, caseId) => {
   ORDER BY created_at DESC, id DESC
   LIMIT 20`;
 
-  return {
+  const detail = {
     caseId: row.case_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -803,6 +1160,12 @@ export const getCaseDetail = async (env, caseId) => {
       urgency: row.urgency,
       message: row.message
     })
+  };
+
+  return {
+    ...detail,
+    pricingDecision: buildPriceIntelligenceDecision(detail),
+    automationSuite: buildCaseAutomationSuite(detail)
   };
 };
 
@@ -1078,6 +1441,34 @@ export const createCasePaymentRequest = async (env, payload, actor, requestUrl) 
 
   const saved = await getPaymentRequestRow(env, paymentRequestId);
   return saved ? mapPaymentRow(saved) : null;
+};
+
+export const createSmartCasePaymentRequest = async (env, payload, actor, requestUrl) => {
+  const detail = await getCaseDetail(env, payload.caseId);
+
+  if (!detail) {
+    throw new Error("Dossier introuvable.");
+  }
+
+  const decision = buildPriceIntelligenceDecision(detail);
+
+  if (!decision.ready || !decision.suggestedPayment) {
+    throw new Error(`Job prix bloqué: ${decision.blockers.join(" ")}`);
+  }
+
+  const payment = await createCasePaymentRequest(env, decision.suggestedPayment, actor, requestUrl);
+  await recordCaseEvent(
+    env,
+    decision.caseId,
+    actor,
+    "Paiement intelligent créé",
+    `${decision.balanceFormatted} · confiance ${decision.confidence}% · ${decision.reasonCodes.length ? decision.reasonCodes.join(", ") : "ready_to_send"}.`
+  );
+
+  return {
+    payment,
+    decision
+  };
 };
 
 export const updateQuoteStatus = async (env, payload, actor) => {

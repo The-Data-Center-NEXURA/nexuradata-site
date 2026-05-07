@@ -4,6 +4,7 @@ RESEND_FROM_EMAIL=NEXURADATA <dossiers@nexuradata.ca>
 LAB_INBOX_EMAIL=dossiers@nexuradata.ca
 PUBLIC_SITE_ORIGIN=https://nexuradata.ca
 ACCESS_CODE_SECRET=<long-random-secret>
+STRIPE_MODE=test
 STRIPE_SECRET_KEY=<stripe-secret-key>
 STRIPE_WEBHOOK_SECRET=<stripe-webhook-secret>
 OPS_ACCESS_ALLOWED_EMAILS=admin@nexuradata.ca

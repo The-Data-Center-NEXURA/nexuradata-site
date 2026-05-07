@@ -3,6 +3,7 @@ import {
   buildAndApplyAutomationDraft,
   buildAndLogConciergeDraft,
   createCasePaymentRequest,
+  createSmartCasePaymentRequest,
   getCaseDetail,
   getResendableAccessCode,
   listCases,
@@ -168,6 +169,19 @@ export const onRequestPost = async (context) => {
         ok: true,
         case: await getCaseDetail(context.env, payment.caseId),
         payment,
+        delivery: delivery.sent ? "sent" : delivery.reason
+      });
+    }
+
+    if (action === "create-smart-payment") {
+      const result = await createSmartCasePaymentRequest(context.env, payload, auth.actor, context.request.url);
+      const delivery = await sendClientPaymentLinkEmail(context.env, result.payment, context.request.url, auth.actor);
+
+      return json({
+        ok: true,
+        case: await getCaseDetail(context.env, result.payment.caseId),
+        payment: result.payment,
+        pricingDecision: result.decision,
         delivery: delivery.sent ? "sent" : delivery.reason
       });
     }

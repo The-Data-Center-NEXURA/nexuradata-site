@@ -1,5 +1,79 @@
-import { describe, it, expect } from "vitest";
-import { verifyStripeWebhook } from "../../functions/_lib/stripe.js";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { createHostedCheckoutSession, verifyStripeWebhook } from "../../functions/_lib/stripe.js";
+
+const checkoutPayload = {
+  caseId: "NX-20260507-STRIPE1",
+  paymentRequestId: "PAY-20260507-STRIPE1",
+  paymentKind: "deposit",
+  label: "Acompte intervention NEXURADATA",
+  description: "Ouverture dossier laboratoire",
+  amountCents: 15000,
+  currency: "cad",
+  customerEmail: "client@example.com",
+  successUrl: "https://nexuradata.ca/paiement-reussi.html",
+  cancelUrl: "https://nexuradata.ca/paiement-annule.html"
+};
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+// ─── createHostedCheckoutSession ───────────────────────────
+
+describe("createHostedCheckoutSession()", () => {
+  const fakeLiveSecretKey = ["sk", "live", "123"].join("_");
+  const fakeLiveRestrictedKey = ["rk", "live", "123"].join("_");
+  const fakeTestSecretKey = ["sk", "test", "123"].join("_");
+
+  it("creates a live Checkout Session with the current Stripe API version", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      id: "cs_live_123",
+      object: "checkout.session",
+      url: "https://checkout.stripe.com/c/live-session",
+      livemode: true,
+      status: "open",
+      payment_status: "unpaid"
+    }), { status: 200, headers: { "content-type": "application/json" } }));
+
+    const result = await createHostedCheckoutSession({
+      STRIPE_MODE: "live",
+      STRIPE_SECRET_KEY: fakeLiveSecretKey
+    }, checkoutPayload);
+
+    expect(result.id).toBe("cs_live_123");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.stripe.com/v1/checkout/sessions");
+    expect(options.headers["Stripe-Version"]).toBe("2026-04-22.dahlia");
+    expect(options.headers.Authorization).toBe(`Bearer ${fakeLiveSecretKey}`);
+    expect(options.body.get("mode")).toBe("payment");
+    expect(options.body.get("metadata[case_id]")).toBe(checkoutPayload.caseId);
+  });
+
+  it("blocks test keys when production is configured for live mode", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
+
+    await expect(createHostedCheckoutSession({
+      STRIPE_MODE: "live",
+      STRIPE_SECRET_KEY: fakeTestSecretKey
+    }, checkoutPayload)).rejects.toThrow("mode test");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks test Checkout Sessions returned under live mode", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      id: "cs_test_123",
+      object: "checkout.session",
+      url: "https://checkout.stripe.com/c/test-session",
+      livemode: false
+    }), { status: 200, headers: { "content-type": "application/json" } }));
+
+    await expect(createHostedCheckoutSession({
+      STRIPE_MODE: "live",
+      STRIPE_SECRET_KEY: fakeLiveRestrictedKey
+    }, checkoutPayload)).rejects.toThrow("mode test");
+  });
+});
 
 // ─── verifyStripeWebhook ────────────────────────────────────
 
@@ -81,5 +155,12 @@ describe("verifyStripeWebhook()", () => {
     const request = await makeSignedRequest(body, WEBHOOK_SECRET, -100);
     const result = await verifyStripeWebhook(env, request);
     expect(result).toEqual(body);
+  });
+
+  it("blocks test webhook events when production is configured for live mode", async () => {
+    const body = { type: "checkout.session.completed", livemode: false, data: { object: { id: "cs_test_123" } } };
+    const request = await makeSignedRequest(body);
+
+    await expect(verifyStripeWebhook({ ...env, STRIPE_MODE: "live" }, request)).rejects.toThrow("mode test");
   });
 });

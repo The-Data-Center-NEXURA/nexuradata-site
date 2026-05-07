@@ -45,6 +45,7 @@ The platform uses layered controls that should remain active for every change:
 - Cloudflare Access protects operator routes (`/operations/*`, `/api/ops/*`).
 - `ACCESS_CODE_SECRET` protects client status access codes; codes must never be logged in plaintext.
 - Stripe webhooks must validate signatures before processing events.
+- Production Stripe must run with `STRIPE_MODE=live`; test keys or test webhook events are rejected before payment records are created or processed.
 - `DATABASE_URL`, `RESEND_API_KEY`, `ACCESS_CODE_SECRET`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are runtime secrets only and must not be committed.
 - Public intake, status and operator APIs should reuse shared helpers in `functions/_lib/` for parsing, JSON responses, auth, rate limiting and error handling.
 - Automation outputs are advisory and auditable; they must not bypass human review for physical recovery, forensic conclusions, payments or authorization.

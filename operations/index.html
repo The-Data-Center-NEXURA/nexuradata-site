@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/site.css?v=20260506c">
-  <script src="../assets/js/site.js?v=20260506c" defer></script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260507e">
+  <script src="../assets/js/site.js?v=20260507e" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#contenu">Aller au contenu</a>
@@ -44,6 +44,48 @@
           communications utiles. Elle doit être protégée par Cloudflare Access avant exposition.
         </p>
       </header>
+
+      <section class="page-card ops-payout-card" id="payouts" aria-labelledby="ops-payout-title">
+        <div class="ops-payout-head">
+          <div>
+            <p class="guide-meta">Stripe live</p>
+            <h2 id="ops-payout-title">Payouts</h2>
+          </div>
+          <span class="ops-payout-state">Décaissement manuel</span>
+        </div>
+
+        <div class="ops-payout-grid">
+          <article class="ops-payout-metric">
+            <span>Solde disponible</span>
+            <strong>Stripe Dashboard</strong>
+            <p>Vérifier le montant CAD disponible avant toute sortie.</p>
+          </article>
+          <article class="ops-payout-metric">
+            <span>Destination</span>
+            <strong>Compte bancaire</strong>
+            <p>Utiliser seulement le compte NEXURADATA vérifié.</p>
+          </article>
+          <article class="ops-payout-metric">
+            <span>Cadence</span>
+            <strong>Auto ou manuel</strong>
+            <p>Stripe peut verser automatiquement si activé.</p>
+          </article>
+        </div>
+
+        <ol class="ops-payout-steps">
+          <li>Ouvrir Stripe en mode live, pas test.</li>
+          <li>Confirmer le solde disponible en CAD.</li>
+          <li>Vérifier le compte bancaire et les délais de disponibilité.</li>
+          <li>Créer la payout dans Stripe seulement après rapprochement interne.</li>
+        </ol>
+
+        <div class="form-actions">
+          <a class="button button-primary" href="https://dashboard.stripe.com/payouts" target="_blank" rel="noopener noreferrer">Ouvrir payouts Stripe</a>
+          <a class="button button-secondary" href="https://dashboard.stripe.com/balance/overview" target="_blank" rel="noopener noreferrer">Voir solde</a>
+          <button type="button" class="button button-secondary" data-ops-payout-copy>Copier runbook</button>
+        </div>
+        <p class="form-status" data-ops-payout-result aria-live="polite"></p>
+      </section>
 
       <div class="ops-layout">
         <aside class="page-card ops-sidebar">
@@ -159,6 +201,22 @@
             <p class="form-status" data-ops-concierge-result aria-live="polite"></p>
           </section>
 
+          <section class="ops-automation-suite-card" aria-labelledby="ops-automation-suite-title">
+            <div class="ops-automation-suite-head">
+              <div>
+                <p class="guide-meta">AI automation suite</p>
+                <h3 id="ops-automation-suite-title">Command center</h3>
+              </div>
+              <span class="ops-automation-suite-score" data-ops-automation-suite-score>—</span>
+            </div>
+            <p class="form-note" data-ops-automation-suite-summary>Chargez un dossier pour voir les modules automation actifs.</p>
+            <div class="ops-automation-suite-grid" data-ops-automation-suite-jobs></div>
+            <div class="form-actions">
+              <button type="button" class="button button-secondary" data-ops-automation-suite-copy>Copier plan automation</button>
+            </div>
+            <p class="form-status" data-ops-automation-suite-result aria-live="polite"></p>
+          </section>
+
           <form class="ops-case-form" data-ops-case-form>
             <div class="form-grid">
               <label class="field">
@@ -253,6 +311,38 @@
               <button type="button" class="button button-secondary" data-ops-quote-decline>Marquer refusée</button>
             </div>
             <p class="form-status" data-ops-quote-result aria-live="polite"></p>
+          </section>
+
+          <section class="ops-pricing-card" aria-labelledby="ops-pricing-title">
+            <div class="ops-pricing-head">
+              <div>
+                <p class="guide-meta">Automated job</p>
+                <h3 id="ops-pricing-title">Intelligence prix</h3>
+              </div>
+              <span class="ops-pricing-state" data-ops-pricing-state>En attente</span>
+            </div>
+            <p class="form-note" data-ops-pricing-summary>Chargez un dossier pour calculer le montant exact à facturer.</p>
+
+            <div class="ops-pricing-grid">
+              <p><span>Soumission approuvée</span><strong data-ops-pricing-quote>—</strong></p>
+              <p><span>Déjà payé</span><strong data-ops-pricing-paid>—</strong></p>
+              <p><span>Solde exact</span><strong data-ops-pricing-balance>—</strong></p>
+              <p><span>Action job</span><strong data-ops-pricing-action>Bloquée</strong></p>
+              <p><span>Confiance</span><strong data-ops-pricing-confidence>—</strong></p>
+            </div>
+
+            <ol class="ops-pricing-rules" data-ops-pricing-rules>
+              <li>Soumission approuvée requise.</li>
+              <li>Préapprobation client requise.</li>
+              <li>Solde calculé depuis les paiements Stripe confirmés.</li>
+            </ol>
+
+            <div class="form-actions">
+              <button type="button" class="button button-primary" data-ops-pricing-prefill disabled>Préremplir paiement exact</button>
+              <button type="button" class="button button-primary" data-ops-pricing-create disabled>Créer/envoyer lien intelligent</button>
+              <button type="button" class="button button-secondary" data-ops-pricing-copy>Copier décision job</button>
+            </div>
+            <p class="form-status" data-ops-pricing-result aria-live="polite"></p>
           </section>
 
           <section class="ops-reminder-card">

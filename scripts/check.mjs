@@ -23,8 +23,8 @@ import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SITE_CSS_VERSION = "20260506c";
-const SITE_JS_VERSION = "20260506c";
+const SITE_CSS_VERSION = "20260507e";
+const SITE_JS_VERSION = "20260507e";
 const errors = [];
 
 function fail(rule, detail) {
@@ -190,6 +190,16 @@ if (!existsSync(join(ROOT, "assets", "nexuradata-icon.png"))) {
 }
 
 // ─── 2. No hardcoded secrets in functions/ ───────────────────────────────────
+const wranglerPath = join(ROOT, "wrangler.jsonc");
+if (existsSync(wranglerPath)) {
+    const wranglerConfig = readFileSync(wranglerPath, "utf8");
+    if (!/"STRIPE_MODE"\s*:\s*"live"/.test(wranglerConfig)) {
+        fail("STRIPE_LIVE_MODE_MISSING", "wrangler.jsonc must set STRIPE_MODE to live for production Stripe Checkout.");
+    }
+} else {
+    fail("WRANGLER_CONFIG_MISSING", "wrangler.jsonc is missing; Cloudflare Pages runtime vars cannot be verified.");
+}
+
 const SECRET_PATTERNS = [
     // Generic high-entropy patterns for known key formats
     { pattern: /sk_live_[A-Za-z0-9]{20,}/, label: "Stripe live secret key" },

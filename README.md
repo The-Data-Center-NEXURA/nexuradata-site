@@ -71,7 +71,8 @@ Avant d'ajouter une page, verifier cette carte et renforcer la page canonique ex
 4. Creer un secret fort `ACCESS_CODE_SECRET`.
 5. Configurer les alias `contact@`, `urgence@`, `dossiers@` dans Cloudflare Email Routing.
 6. Verifier le domaine d'envoi dans Resend et fournir `RESEND_API_KEY`.
-7. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
+7. Configurer Stripe en production avec `STRIPE_MODE=live`, une cle live (`sk_live_...` ou `rk_live_...`) dans `STRIPE_SECRET_KEY`, et un webhook live vers `/api/stripe-webhook`.
+8. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
 
 Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md). Voir aussi [`docs/PLATFORM-HARDENING-TIMELINE.md`](docs/PLATFORM-HARDENING-TIMELINE.md) et [`docs/`](docs/) pour la checklist de lancement, le guide de deploiement rapide, les baselines qualite / observabilite et les notes de recherche concurrentielle / tarifaire.
 

@@ -2908,6 +2908,53 @@ if (operationsRoot) {
   const conciergeGenerateButton = operationsRoot.querySelector("[data-ops-concierge-generate]");
   const automationApplyButton = operationsRoot.querySelector("[data-ops-automation-apply]");
   const conciergeResult = operationsRoot.querySelector("[data-ops-concierge-result]");
+  const automationSuiteSummary = operationsRoot.querySelector("[data-ops-automation-suite-summary]");
+  const automationSuiteScore = operationsRoot.querySelector("[data-ops-automation-suite-score]");
+  const automationSuiteJobs = operationsRoot.querySelector("[data-ops-automation-suite-jobs]");
+  const automationSuiteCopyButton = operationsRoot.querySelector("[data-ops-automation-suite-copy]");
+  const automationSuiteResult = operationsRoot.querySelector("[data-ops-automation-suite-result]");
+  const payoutCopyButton = document.querySelector("[data-ops-payout-copy]");
+  const payoutResult = document.querySelector("[data-ops-payout-result]");
+  const pricingState = operationsRoot.querySelector("[data-ops-pricing-state]");
+  const pricingSummary = operationsRoot.querySelector("[data-ops-pricing-summary]");
+  const pricingQuote = operationsRoot.querySelector("[data-ops-pricing-quote]");
+  const pricingPaid = operationsRoot.querySelector("[data-ops-pricing-paid]");
+  const pricingBalance = operationsRoot.querySelector("[data-ops-pricing-balance]");
+  const pricingAction = operationsRoot.querySelector("[data-ops-pricing-action]");
+  const pricingConfidence = operationsRoot.querySelector("[data-ops-pricing-confidence]");
+  const pricingRules = operationsRoot.querySelector("[data-ops-pricing-rules]");
+  const pricingPrefillButton = operationsRoot.querySelector("[data-ops-pricing-prefill]");
+  const pricingCreateButton = operationsRoot.querySelector("[data-ops-pricing-create]");
+  const pricingCopyButton = operationsRoot.querySelector("[data-ops-pricing-copy]");
+  const pricingResult = operationsRoot.querySelector("[data-ops-pricing-result]");
+  const payoutRunbook = [
+    "NEXURADATA payout runbook",
+    "1. Ouvrir Stripe Dashboard en mode live.",
+    "2. Vérifier Balance > Available > CAD.",
+    "3. Confirmer le compte bancaire NEXURADATA et les délais de disponibilité.",
+    "4. Rapprocher les paiements payés avec les dossiers et factures internes.",
+    "5. Créer la payout dans Stripe seulement après validation du montant disponible.",
+    "6. Consigner la payout et ne jamais partager de clé Stripe dans un ticket ou un chat."
+  ].join("\n");
+  let currentPricingDecision = null;
+  let currentAutomationSuite = null;
+
+  const writeTextToClipboard = async (text) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const buffer = document.createElement("textarea");
+    buffer.value = text;
+    buffer.setAttribute("readonly", "");
+    buffer.style.position = "fixed";
+    buffer.style.left = "-9999px";
+    document.body.append(buffer);
+    buffer.select();
+    document.execCommand("copy");
+    buffer.remove();
+  };
 
   const createStepRow = (step = { title: "", note: "", state: "pending" }) => {
     const wrapper = document.createElement("div");
@@ -2992,6 +3039,149 @@ if (operationsRoot) {
     approved: "Approuvée",
     expired: "Expirée",
     declined: "Refusée"
+  };
+
+  const paymentStatusValue = (payment) => `${payment?.status || "open"}`.toLowerCase();
+
+  const sumPaymentAmounts = (payments, predicate) =>
+    payments.filter(predicate).reduce((total, payment) => total + (Number(payment.amountCents) || 0), 0);
+
+  const buildPricingDecision = (record = {}) => {
+    const payments = Array.isArray(record.payments) ? record.payments : [];
+    const quoteAmountCents = Number(record.quoteAmountCents) || 0;
+    const paidAmountCents = sumPaymentAmounts(payments, (payment) => paymentStatusValue(payment) === "paid");
+    const openAmountCents = sumPaymentAmounts(payments, (payment) => {
+      const status = paymentStatusValue(payment);
+      return status !== "paid" && status !== "expired" && status !== "failed";
+    });
+    const balanceCents = Math.max(quoteAmountCents - paidAmountCents, 0);
+    const blockers = [];
+
+    if (!record.caseId) {
+      blockers.push("Aucun dossier réel n'est chargé.");
+    }
+
+    if (quoteAmountCents <= 0) {
+      blockers.push("Aucune soumission chiffrée n'est enregistrée.");
+    }
+
+    if (record.quoteStatus !== "approved") {
+      blockers.push("La soumission n'est pas approuvée.");
+    }
+
+    if (!record.preapprovalConfirmed) {
+      blockers.push("La préapprobation client n'est pas confirmée.");
+    }
+
+    if (quoteAmountCents > 0 && balanceCents <= 0) {
+      blockers.push("Le solde calculé est nul ou déjà payé.");
+    }
+
+    if (openAmountCents > 0) {
+      blockers.push(`Une demande de paiement ouverte existe déjà (${formatCurrency(openAmountCents, "cad")}).`);
+    }
+
+    const ready = blockers.length === 0;
+    const amount = (balanceCents / 100).toFixed(2);
+    const label = paidAmountCents > 0
+      ? `Solde final - ${record.caseId || "dossier"}`
+      : `Paiement approuvé - ${record.caseId || "dossier"}`;
+    const description = [
+      "Montant calculé par l'intelligence prix NEXURADATA.",
+      `Soumission approuvée: ${formatCurrency(quoteAmountCents, "cad")}.`,
+      `Paiements Stripe confirmés: ${formatCurrency(paidAmountCents, "cad")}.`,
+      `Solde exact à percevoir: ${formatCurrency(balanceCents, "cad")}.`,
+      "Vérifier l'identité du client et le dossier avant l'envoi."
+    ].join(" ");
+    const rules = ready
+      ? [
+        "Soumission approuvée et préapprobation confirmée.",
+        `Calcul job: ${formatCurrency(quoteAmountCents, "cad")} - ${formatCurrency(paidAmountCents, "cad")} = ${formatCurrency(balanceCents, "cad")}.`,
+        "Le job peut préremplir le paiement exact, mais l'opérateur déclenche l'envoi final.",
+        "Les acomptes, remises, remboursements et cas spéciaux restent en revue humaine."
+      ]
+      : blockers.map((blocker) => `Bloqué: ${blocker}`);
+
+    return {
+      version: "local-fallback",
+      jobName: "price-intelligence",
+      jobMode: ready ? "ready_to_prefill" : "blocked",
+      ready,
+      confidence: ready ? 90 : Math.max(15, 82 - (blockers.length * 18)),
+      blockers,
+      quoteAmountCents,
+      quoteAmountFormatted: formatCurrency(quoteAmountCents, "cad"),
+      paidAmountCents,
+      paidAmountFormatted: formatCurrency(paidAmountCents, "cad"),
+      balanceCents,
+      balanceFormatted: formatCurrency(balanceCents, "cad"),
+      openAmountCents,
+      paymentKind: "final",
+      amount,
+      label,
+      description,
+      rules,
+      summary: ready
+        ? "Job local prêt: le montant exact peut être prérempli, mais la création intelligente passera par le serveur."
+        : "Job bloqué: corriger les points ci-dessous avant qu'un montant soit proposé.",
+      actionLabel: ready ? "Préremplir" : "Bloquée",
+      suggestedPayment: ready
+        ? {
+          paymentKind: "final",
+          amount,
+          label,
+          description,
+          sendEmail: true
+        }
+        : null,
+      copyText: [
+        `Décision price intelligence - ${record.caseId || "aucun dossier"}`,
+        `Mode: ${ready ? "ready_to_prefill" : "blocked"}`,
+        `Soumission: ${formatCurrency(quoteAmountCents, "cad")}`,
+        `Payé confirmé: ${formatCurrency(paidAmountCents, "cad")}`,
+        `Solde exact: ${formatCurrency(balanceCents, "cad")}`,
+        `Action: ${ready ? "préremplir le paiement final" : "ne pas envoyer"}`,
+        ...rules.map((rule) => `- ${rule}`)
+      ].join("\n")
+    };
+  };
+
+  const renderPricingDecision = (record) => {
+    currentPricingDecision = record?.pricingDecision || buildPricingDecision(record);
+
+    if (pricingState) {
+      pricingState.textContent = currentPricingDecision.ready ? "Prêt" : "Bloqué";
+      pricingState.classList.toggle("is-ready", currentPricingDecision.ready);
+      pricingState.classList.toggle("is-blocked", !currentPricingDecision.ready);
+    }
+
+    if (pricingSummary) pricingSummary.textContent = currentPricingDecision.summary;
+    if (pricingQuote) pricingQuote.textContent = currentPricingDecision.quoteAmountFormatted || formatCurrency(currentPricingDecision.quoteAmountCents, "cad");
+    if (pricingPaid) pricingPaid.textContent = currentPricingDecision.paidAmountFormatted || formatCurrency(currentPricingDecision.paidAmountCents, "cad");
+    if (pricingBalance) pricingBalance.textContent = currentPricingDecision.balanceFormatted || formatCurrency(currentPricingDecision.balanceCents, "cad");
+    if (pricingAction) pricingAction.textContent = currentPricingDecision.actionLabel;
+    if (pricingConfidence) pricingConfidence.textContent = `${Number(currentPricingDecision.confidence) || 0}%`;
+
+    if (pricingRules) {
+      pricingRules.replaceChildren(...currentPricingDecision.rules.map((rule) => {
+        const item = document.createElement("li");
+        item.textContent = rule;
+        return item;
+      }));
+    }
+
+    if (pricingPrefillButton) {
+      pricingPrefillButton.disabled = !currentPricingDecision.ready || !currentPricingDecision.suggestedPayment;
+    }
+
+    if (pricingCreateButton) {
+      pricingCreateButton.disabled = !currentPricingDecision.ready || !currentPricingDecision.suggestedPayment;
+    }
+
+    if (pricingResult) {
+      pricingResult.textContent = "";
+      pricingResult.dataset.state = "";
+    }
   };
 
   const renderHistory = (history) => {
@@ -3116,6 +3306,79 @@ if (operationsRoot) {
     }
   };
 
+  const automationModeLabels = {
+    ready_to_send: "Prêt",
+    ready_to_draft: "Brouillon prêt",
+    ready_to_log: "Relance prête",
+    ready_to_request: "Demande prête",
+    ready_to_respond: "Réponse prête",
+    human_review: "Revue humaine",
+    monitoring: "Surveillance",
+    blocked: "Bloqué",
+    complete: "Complet",
+    clear: "Clair"
+  };
+
+  const renderAutomationSuite = (suite) => {
+    currentAutomationSuite = suite || null;
+
+    if (automationSuiteSummary) {
+      automationSuiteSummary.textContent = suite?.summary || "Aucun plan automation disponible pour ce dossier.";
+    }
+
+    if (automationSuiteScore) {
+      automationSuiteScore.textContent = suite ? `${Number(suite.confidence) || 0}% global` : "—";
+    }
+
+    if (automationSuiteJobs) {
+      const jobs = Array.isArray(suite?.jobs) ? suite.jobs : [];
+
+      if (jobs.length === 0) {
+        automationSuiteJobs.innerHTML = "<p class=\"form-note\">Aucun module automation n'est disponible.</p>";
+      } else {
+        automationSuiteJobs.replaceChildren(...jobs.map((job) => {
+          const item = document.createElement("article");
+          item.className = "ops-automation-job";
+
+          const head = document.createElement("div");
+          head.className = "ops-automation-job-head";
+
+          const title = document.createElement("p");
+          title.className = "ops-automation-job-title";
+          title.textContent = job.label || job.id || "Module";
+
+          const mode = `${job.mode || "monitoring"}`;
+          const badge = document.createElement("span");
+          badge.className = `ops-automation-job-badge is-${mode.replace(/_/g, "-")}`;
+          badge.textContent = automationModeLabels[mode] || mode;
+
+          head.append(title, badge);
+
+          const summary = document.createElement("p");
+          summary.className = "ops-automation-job-summary";
+          summary.textContent = job.summary || "Aucun résumé disponible.";
+
+          const meta = document.createElement("p");
+          meta.className = "ops-automation-job-meta";
+          const signals = Array.isArray(job.signals) && job.signals.length ? ` · ${job.signals.slice(0, 3).join(" / ")}` : "";
+          meta.textContent = `${job.action || "Surveiller"} · ${Number(job.confidence) || 0}%${signals}`;
+
+          item.append(head, summary, meta);
+          return item;
+        }));
+      }
+    }
+
+    if (automationSuiteCopyButton) {
+      automationSuiteCopyButton.disabled = !suite?.copyText;
+    }
+
+    if (automationSuiteResult) {
+      automationSuiteResult.textContent = "";
+      automationSuiteResult.dataset.state = "";
+    }
+  };
+
   const fillCaseDetail = (record) => {
     if (casePanel) {
       casePanel.hidden = false;
@@ -3135,6 +3398,7 @@ if (operationsRoot) {
     if (messageTarget) messageTarget.textContent = record.message;
     if (currentCaseIdInput) currentCaseIdInput.value = record.caseId;
     renderConcierge(record.concierge);
+    renderAutomationSuite(record.automationSuite);
 
     if (caseForm) {
       const statusInput = caseForm.querySelector('[name="status"]');
@@ -3171,6 +3435,7 @@ if (operationsRoot) {
     }
 
     renderPayments(record.payments || []);
+    renderPricingDecision(record);
 
     if (accessResult) {
       accessResult.textContent = "";
@@ -3195,6 +3460,11 @@ if (operationsRoot) {
     if (conciergeResult) {
       conciergeResult.textContent = "";
       conciergeResult.dataset.state = "";
+    }
+
+    if (pricingResult) {
+      pricingResult.textContent = "";
+      pricingResult.dataset.state = "";
     }
 
     renderHistory(record.history || []);
@@ -3673,6 +3943,119 @@ if (operationsRoot) {
         setMessage(conciergeResult, "error", error instanceof Error ? error.message : "Automation indisponible.");
       } finally {
         setButtonBusy(automationApplyButton, false);
+      }
+    });
+  }
+
+  if (automationSuiteCopyButton) {
+    automationSuiteCopyButton.addEventListener("click", async () => {
+      try {
+        await writeTextToClipboard(currentAutomationSuite?.copyText || "Aucun plan automation disponible.");
+        setMessage(automationSuiteResult, "success", "Plan automation copié.");
+      } catch {
+        setMessage(automationSuiteResult, "error", "Copie impossible.");
+      }
+    });
+  }
+
+  if (payoutCopyButton) {
+    payoutCopyButton.addEventListener("click", async () => {
+      try {
+        await writeTextToClipboard(payoutRunbook);
+        setMessage(payoutResult, "success", "Runbook payout copié.");
+      } catch {
+        setMessage(payoutResult, "error", "Copie impossible. Ouvrez Stripe et suivez la checklist visible.");
+      }
+    });
+  }
+
+  if (pricingPrefillButton) {
+    pricingPrefillButton.addEventListener("click", () => {
+      if (!currentPricingDecision?.ready || !currentPricingDecision.suggestedPayment || !paymentForm) {
+        setMessage(pricingResult, "error", "Le job prix est bloqué. Corrigez les garde-fous avant de préremplir.");
+        return;
+      }
+
+      const suggestedPayment = currentPricingDecision.suggestedPayment;
+
+      const kindInput = paymentForm.querySelector('[name="paymentKind"]');
+      const amountInput = paymentForm.querySelector('[name="amount"]');
+      const labelInput = paymentForm.querySelector('[name="label"]');
+      const descriptionInput = paymentForm.querySelector('[name="description"]');
+      const sendEmailInput = paymentForm.querySelector('[name="sendEmail"]');
+
+      if (kindInput) kindInput.value = suggestedPayment.paymentKind || currentPricingDecision.paymentKind || "final";
+      if (amountInput) amountInput.value = suggestedPayment.amount || currentPricingDecision.amount;
+      if (labelInput) labelInput.value = suggestedPayment.label || currentPricingDecision.label;
+      if (descriptionInput) descriptionInput.value = suggestedPayment.description || currentPricingDecision.description;
+      if (sendEmailInput) sendEmailInput.checked = true;
+
+      setMessage(pricingResult, "success", "Paiement exact prérempli. Révisez, puis utilisez le bouton Paiements pour créer et envoyer le lien Stripe.");
+      setMessage(paymentStatus, "success", "Demande de paiement préparée par l'intelligence prix, en attente d'envoi opérateur.");
+    });
+  }
+
+  if (pricingCreateButton) {
+    pricingCreateButton.addEventListener("click", async () => {
+      const caseId = currentCaseIdInput?.value || "";
+
+      if (!caseId) {
+        setMessage(pricingResult, "error", "Chargez d'abord un dossier réel.");
+        return;
+      }
+
+      if (!currentPricingDecision?.ready) {
+        setMessage(pricingResult, "error", "Le job prix est bloqué. Aucun lien Stripe ne sera créé.");
+        return;
+      }
+
+      setButtonBusy(pricingCreateButton, true, "Création...");
+      setMessage(pricingResult, "success", "Création du lien intelligent côté serveur...");
+
+      try {
+        const response = await fetch(searchEndpoint, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            accept: "application/json"
+          },
+          body: JSON.stringify({
+            action: "create-smart-payment",
+            caseId
+          })
+        });
+        const data = await parseJsonResponse(response);
+
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.message || "Le job prix n'a pas pu créer le lien.");
+        }
+
+        if (data.case) {
+          fillCaseDetail(data.case);
+        }
+
+        setMessage(
+          pricingResult,
+          data.delivery === "sent" ? "success" : "error",
+          data.delivery === "sent"
+            ? "Lien Stripe exact créé et envoyé au client."
+            : `Lien exact créé. Envoi automatique non effectué: ${data.delivery}.`
+        );
+      } catch (error) {
+        setMessage(pricingResult, "error", error instanceof Error ? error.message : "Le job prix n'a pas pu créer le lien.");
+      } finally {
+        setButtonBusy(pricingCreateButton, false);
+      }
+    });
+  }
+
+  if (pricingCopyButton) {
+    pricingCopyButton.addEventListener("click", async () => {
+      try {
+        await writeTextToClipboard(currentPricingDecision?.copyText || "Aucune décision price intelligence disponible.");
+        setMessage(pricingResult, "success", "Décision job copiée.");
+      } catch {
+        setMessage(pricingResult, "error", "Copie impossible.");
       }
     });
   }

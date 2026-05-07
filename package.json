@@ -24,6 +24,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "quality:gate": "node ./scripts/quality-gate.mjs",
     "audit": "npm audit --audit-level=moderate",
     "audit:signatures": "npm audit signatures",
     "check": "node ./scripts/check.mjs",

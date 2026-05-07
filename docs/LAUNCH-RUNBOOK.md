@@ -36,14 +36,21 @@ Creer ces adresses et les faire suivre vers une seule inbox verifiee au lancemen
 
 Declarer dans Cloudflare Pages:
 
+- `STRIPE_MODE=live` comme variable non secrete
 - `STRIPE_SECRET_KEY` comme secret
 - `STRIPE_WEBHOOK_SECRET` comme secret
+
+La production refuse les cles Stripe test quand `STRIPE_MODE=live`. Le secret `STRIPE_SECRET_KEY` doit donc provenir du mode live (`sk_live_...`) ou d'une cle restreinte live (`rk_live_...`) avec les permissions Checkout requises. Pour le developpement local seulement, utiliser `STRIPE_MODE=test` avec une cle test.
+
+Important: les liens Checkout deja crees en mode test restent des liens test. Apres le passage live, recreer les demandes de paiement depuis `/operations/` afin de generer de nouvelles sessions live.
 
 ### Webhook Stripe
 
 Configurer un endpoint Stripe vers:
 
 - `https://nexuradata.ca/api/stripe-webhook`
+
+Creer ce webhook dans le tableau de bord Stripe en mode live, puis copier son secret de signature live dans `STRIPE_WEBHOOK_SECRET`. Un webhook test avec une cle live, ou l'inverse, ne confirmera pas les paiements de production.
 
 Evenements minimum:
 

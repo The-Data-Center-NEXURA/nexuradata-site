@@ -2951,6 +2951,192 @@ select {
   align-items: start;
 }
 
+.ops-payout-card {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+.ops-payout-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ops-payout-head h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.ops-payout-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(232, 228, 220, 0.18);
+  color: var(--color-text-soft);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ops-payout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ops-payout-metric {
+  min-width: 0;
+  padding: 0.95rem;
+  border: 1px solid rgba(232, 228, 220, 0.1);
+  background: rgba(232, 228, 220, 0.04);
+}
+
+.ops-payout-metric span {
+  display: block;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ops-payout-metric strong {
+  display: block;
+  margin-top: 0.32rem;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.ops-payout-metric p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.ops-payout-steps {
+  display: grid;
+  gap: 0.38rem;
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--color-text-soft);
+  font-size: 0.92rem;
+}
+
+.ops-automation-suite-card {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(232, 228, 220, 0.1);
+  background: rgba(232, 228, 220, 0.035);
+  overflow-wrap: anywhere;
+}
+
+.ops-automation-suite-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ops-automation-suite-head h3 {
+  margin: 0;
+}
+
+.ops-automation-suite-score {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(232, 228, 220, 0.16);
+  color: var(--color-text-soft);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ops-automation-suite-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ops-automation-job {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(232, 228, 220, 0.08);
+  background: rgba(13, 13, 11, 0.44);
+}
+
+.ops-automation-job-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ops-automation-job-title,
+.ops-automation-job-summary,
+.ops-automation-job-meta {
+  margin: 0;
+}
+
+.ops-automation-job-title {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.ops-automation-job-summary {
+  color: var(--color-text-soft);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.ops-automation-job-meta {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ops-automation-job-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid rgba(232, 228, 220, 0.14);
+  color: var(--color-text-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ops-automation-job-badge.is-ready,
+.ops-automation-job-badge.is-clear,
+.ops-automation-job-badge.is-complete {
+  border-color: rgba(232, 228, 220, 0.24);
+  color: var(--color-text);
+}
+
+.ops-automation-job-badge.is-blocked,
+.ops-automation-job-badge.is-human-review {
+  border-color: rgba(168, 92, 72, 0.28);
+  color: var(--color-warning);
+}
+
 .ops-sidebar,
 .ops-panel {
   padding: 1.5rem;
@@ -3201,14 +3387,95 @@ select {
 }
 
 .ops-quote-card,
+.ops-pricing-card,
 .ops-reminder-card {
   margin-top: 1rem;
 }
 
 .ops-quote-card h3,
+.ops-pricing-card h3,
 .ops-reminder-card h3,
 .ops-payments-card h3 {
   margin: 0;
+}
+
+.ops-pricing-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(232, 228, 220, 0.1);
+  background: rgba(232, 228, 220, 0.035);
+  overflow-wrap: anywhere;
+}
+
+.ops-pricing-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ops-pricing-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(232, 228, 220, 0.16);
+  color: var(--color-text-soft);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ops-pricing-state.is-ready {
+  border-color: rgba(232, 228, 220, 0.26);
+  color: var(--color-text);
+}
+
+.ops-pricing-state.is-blocked {
+  border-color: rgba(168, 92, 72, 0.28);
+  color: var(--color-warning);
+}
+
+.ops-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ops-pricing-grid p {
+  min-width: 0;
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(232, 228, 220, 0.08);
+  background: rgba(13, 13, 11, 0.44);
+}
+
+.ops-pricing-grid span {
+  display: block;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ops-pricing-grid strong {
+  display: block;
+  margin-top: 0.28rem;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.ops-pricing-rules {
+  display: grid;
+  gap: 0.38rem;
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--color-text-soft);
+  font-size: 0.9rem;
 }
 
 .ops-quote-meta {
@@ -3362,12 +3629,72 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .ops-payout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-automation-suite-grid {
+    grid-template-columns: 1fr;
+  }
+
   .ops-meta-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 720px) {
+  .ops-payout-card {
+    padding: 1rem;
+  }
+
+  .ops-payout-state {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-payout-card .button {
+    min-width: 0;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-pricing-state {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-pricing-card .button {
+    min-width: 0;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-automation-suite-card {
+    padding: 1rem;
+  }
+
+  .ops-automation-suite-card .button,
+  .ops-automation-suite-score {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
+
   .ops-step-row {
     grid-template-columns: 1fr;
   }

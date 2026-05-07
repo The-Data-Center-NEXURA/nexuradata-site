@@ -13,6 +13,8 @@ import {
   decryptAccessCode,
   validateTimelineSteps,
   validatePaymentRequestInput,
+  buildPriceIntelligenceDecision,
+  buildCaseAutomationSuite,
   validateAuthorizationApproval,
   validateCaseFilters,
   getPublicOrigin,
@@ -530,6 +532,141 @@ describe("validatePaymentRequestInput()", () => {
     const { paymentKind: _, ...rest } = validPayload;
     const result = validatePaymentRequestInput(rest);
     expect(result.paymentKind).toBe("custom");
+  });
+});
+
+// ─── buildPriceIntelligenceDecision ─────────────────────────
+
+describe("buildPriceIntelligenceDecision()", () => {
+  const approvedCase = {
+    caseId: "NX-20260101-ABCD1234",
+    quoteStatus: "approved",
+    quoteAmountCents: 95000,
+    preapprovalConfirmed: true,
+    payments: []
+  };
+
+  it("creates a ready server decision with the exact final balance", () => {
+    const decision = buildPriceIntelligenceDecision({
+      ...approvedCase,
+      payments: [
+        { status: "paid", amountCents: 25000 },
+        { status: "expired", amountCents: 5000 }
+      ]
+    });
+
+    expect(decision.ready).toBe(true);
+    expect(decision.jobMode).toBe("ready_to_send");
+    expect(decision.balanceCents).toBe(70000);
+    expect(decision.suggestedPayment.amount).toBe("700.00");
+    expect(decision.suggestedPayment.paymentKind).toBe("final");
+    expect(decision.confidence).toBeGreaterThanOrEqual(95);
+  });
+
+  it("blocks when quote approval or preapproval is missing", () => {
+    const decision = buildPriceIntelligenceDecision({
+      ...approvedCase,
+      quoteStatus: "sent",
+      preapprovalConfirmed: false
+    });
+
+    expect(decision.ready).toBe(false);
+    expect(decision.suggestedPayment).toBeNull();
+    expect(decision.reasonCodes).toContain("quote_not_approved");
+    expect(decision.reasonCodes).toContain("preapproval_missing");
+  });
+
+  it("blocks when an active payment already exists", () => {
+    const decision = buildPriceIntelligenceDecision({
+      ...approvedCase,
+      payments: [{ status: "open", amountCents: 95000 }]
+    });
+
+    expect(decision.ready).toBe(false);
+    expect(decision.reasonCodes).toContain("active_payment_exists");
+  });
+});
+
+// ─── buildCaseAutomationSuite ──────────────────────────────
+
+describe("buildCaseAutomationSuite()", () => {
+  const baseCase = {
+    caseId: "NX-20260101-AUTO1234",
+    name: "Client Test",
+    email: "client@example.com",
+    phone: "514-555-0101",
+    support: "Disque dur",
+    urgency: "Standard",
+    status: "Dossier reçu",
+    quoteStatus: "approved",
+    quoteAmountCents: 95000,
+    preapprovalConfirmed: true,
+    payments: []
+  };
+
+  const findJob = (suite, id) => suite.jobs.find((job) => job.id === id);
+
+  it("blocks quote generation and prepares missing-information collection", () => {
+    const suite = buildCaseAutomationSuite({
+      ...baseCase,
+      phone: "",
+      support: "RAID / NAS / serveur",
+      message: "NAS inaccessible depuis ce matin"
+    });
+
+    expect(findJob(suite, "quote-generation").mode).toBe("blocked");
+    expect(findJob(suite, "missing-information").mode).toBe("ready_to_request");
+    expect(findJob(suite, "missing-information").payload.questions).toEqual(expect.arrayContaining([
+      "numéro de téléphone direct",
+      "nombre de disques, type de RAID et dernière reconstruction"
+    ]));
+    expect(suite.blockedCount).toBeGreaterThan(0);
+  });
+
+  it("prepares an empathic response for distressed personal-memory cases", () => {
+    const suite = buildCaseAutomationSuite({
+      ...baseCase,
+      support: "SSD",
+      message: "Je suis en panique, les photos de famille et souvenirs irremplaçables sont sur ce SSD modèle Samsung 1TB."
+    });
+
+    const emotionJob = findJob(suite, "emotion-handling");
+    expect(emotionJob.mode).toBe("ready_to_respond");
+    expect(emotionJob.signals).toContain("distressed");
+    expect(emotionJob.payload.responseTone).toBe("rassurant et direct");
+  });
+
+  it("escalates refund or dispute signals to owner review", () => {
+    const suite = buildCaseAutomationSuite({
+      ...baseCase,
+      internalNotes: "Client demande remboursement après litige et menace une contestation.",
+      payments: [{ status: "failed", amountCents: 95000, label: "Paiement refusé" }]
+    });
+
+    const financialJob = findJob(suite, "refund-dispute-flags");
+    const ownerJob = findJob(suite, "owner-approval-queue");
+    expect(financialJob.mode).toBe("human_review");
+    expect(financialJob.signals).toEqual(expect.arrayContaining([
+      "refund_or_credit_request",
+      "dispute_or_legal_risk",
+      "failed_payment_present"
+    ]));
+    expect(ownerJob.mode).toBe("human_review");
+    expect(ownerJob.signals).toContain("financial_exception_signal");
+  });
+
+  it("suggests follow-up timing for stale payment links", () => {
+    const suite = buildCaseAutomationSuite({
+      ...baseCase,
+      support: "Je ne sais pas",
+      message: "Paiement déjà envoyé au client.",
+      payments: [{ status: "open", amountCents: 95000, sentAt: "2020-01-01T00:00:00.000Z" }]
+    });
+
+    const followUpJob = findJob(suite, "follow-up-timing");
+    expect(followUpJob.mode).toBe("ready_to_log");
+    expect(followUpJob.payload.reminderType).toBe("payment_follow_up");
+    expect(followUpJob.signals).toContain("payment_follow_up_due");
   });
 });
 
