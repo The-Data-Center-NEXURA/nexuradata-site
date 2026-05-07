@@ -224,7 +224,11 @@
 
         <aside class="hero-panel hero-lab-panel" aria-label="Engagement laboratoire">
           <figure class="lab-snapshot lab-snapshot-video" data-facebook-video-stage>
-            <img class="lab-snapshot-media" src="assets/icons/hero-lab-media.jpg" alt="Carte électronique inspectée en contexte de récupération de données" width="1200" height="800" decoding="async" fetchpriority="high">
+            <picture>
+              <source srcset="assets/icons/hero-lab-media.avif" type="image/avif">
+              <source srcset="assets/icons/hero-lab-media.webp" type="image/webp">
+              <img class="lab-snapshot-media" src="assets/icons/hero-lab-media.jpg" alt="Carte électronique inspectée en contexte de récupération de données" width="1200" height="800" decoding="async" fetchpriority="high">
+            </picture>
             <figcaption class="lab-video-story">
               <span>Le parcours</span>
               <strong>Perdre les données. Les retrouver.</strong>

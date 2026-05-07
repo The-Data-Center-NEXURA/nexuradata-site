@@ -225,7 +225,11 @@
 
         <aside class="hero-panel hero-lab-panel" aria-label="Laboratory commitment">
           <figure class="lab-snapshot lab-snapshot-video" data-facebook-video-stage>
-            <img class="lab-snapshot-media" src="../assets/icons/hero-lab-media.jpg" alt="Electronic circuit board inspected for data recovery" width="1200" height="800" decoding="async" fetchpriority="high">
+            <picture>
+              <source srcset="../assets/icons/hero-lab-media.avif" type="image/avif">
+              <source srcset="../assets/icons/hero-lab-media.webp" type="image/webp">
+              <img class="lab-snapshot-media" src="../assets/icons/hero-lab-media.jpg" alt="Electronic circuit board inspected for data recovery" width="1200" height="800" decoding="async" fetchpriority="high">
+            </picture>
             <figcaption class="lab-video-story">
               <span>The path</span>
               <strong>Lose the data. Recover it.</strong>
