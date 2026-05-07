@@ -22,6 +22,7 @@ coverage/
 # Cloudflare / build artifacts
 .wrangler/
 release-cloudflare/
+dist/
 *.zip
 
 # Generated previews / accidental exports
