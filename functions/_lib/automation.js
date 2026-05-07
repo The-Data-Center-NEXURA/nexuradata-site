@@ -298,7 +298,7 @@ const slaFrom = (serviceLevel) => ({
 }[serviceLevel] || "Réponse initiale cible en moins de 24 h.");
 
 const statusPlanFrom = (category, riskLevel, missingInfo, serviceLevel, nextStep) => ({
-  status: missingInfo.length > 0 && serviceLevel !== "emergency" ? "En attente du client" : serviceLevel === "standard" ? "Dossier reçu" : "Évaluation en cours",
+  status: missingInfo.length > 0 && serviceLevel !== "emergency" ? "En attente du média" : serviceLevel === "standard" ? "Nouveau dossier" : "Diagnostic en cours",
   nextStep,
   visibleState: missingInfo.length > 0 ? "missing-information" : riskLevel === "standard" ? "standard-triage" : "priority-triage",
   workroomState: category === "forensic" || riskLevel === "sensitive" ? "locked-human-review" : "awaiting-payment-or-authorization"
@@ -615,11 +615,11 @@ export const buildAutomationTimeline = (draft = {}) => {
     ? "Escalade urgente préparée"
     : draft.serviceLevel === "sensitive"
       ? "Revue humaine sensible"
-      : "Évaluation en cours";
+      : "Diagnostic en cours";
 
   return [
     {
-      title: "Dossier reçu",
+      title: "Nouveau dossier",
       note: "La demande a été enregistrée et le client dispose d'un accès de suivi.",
       state: "complete",
       sortOrder: 0
@@ -631,7 +631,7 @@ export const buildAutomationTimeline = (draft = {}) => {
       sortOrder: 1
     },
     {
-      title: hasMissingInfo ? "Informations à compléter" : priorityTitle,
+      title: hasMissingInfo ? "En attente du média" : priorityTitle,
       note: hasMissingInfo
         ? `À obtenir: ${labelMissingInfo(draft.missingInfo || []).join("; ")}.`
         : draft.nextStep || "Le laboratoire prépare la prochaine action utile.",

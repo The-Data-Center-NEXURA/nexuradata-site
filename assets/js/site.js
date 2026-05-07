@@ -267,6 +267,43 @@ const bindCookiePreferenceTriggers = () => {
   });
 };
 
+const initFacebookVideoEmbeds = () => {
+  document.querySelectorAll("[data-facebook-video-stage]").forEach((container) => {
+    const triggers = [...container.querySelectorAll("[data-facebook-video-trigger]")];
+
+    triggers.forEach((trigger) => {
+      trigger.setAttribute("aria-pressed", "false");
+
+      trigger.addEventListener("click", () => {
+        const videoUrl = trigger.getAttribute("data-facebook-video-src") || "";
+        if (!videoUrl) return;
+
+        container.querySelector(".lab-video-frame")?.remove();
+
+        const iframe = document.createElement("iframe");
+        iframe.className = "lab-video-frame";
+        iframe.src = videoUrl;
+        iframe.title = trigger.getAttribute("data-facebook-video-title") || "NEXURADATA video";
+        iframe.width = trigger.getAttribute("data-facebook-video-width") || "560";
+        iframe.height = trigger.getAttribute("data-facebook-video-height") || "314";
+        iframe.loading = "lazy";
+        iframe.allow = "clipboard-write; encrypted-media; picture-in-picture; web-share";
+        iframe.allowFullscreen = true;
+        iframe.setAttribute("scrolling", "no");
+
+        triggers.forEach((button) => {
+          button.setAttribute("aria-pressed", button === trigger ? "true" : "false");
+        });
+
+        container.dataset.videoLoaded = "true";
+        container.dataset.videoFormat = trigger.getAttribute("data-facebook-video-format") || "wide";
+        container.appendChild(iframe);
+        trackGaEvent("facebook_video_loaded", { event_category: "media", method: "hero_reel" });
+      });
+    });
+  });
+};
+
 const initKineticCanvas = () => {
   const canvases = Array.from(document.querySelectorAll("[data-kinetic-canvas]"));
   if (!canvases.length) return;
@@ -436,6 +473,7 @@ const initKineticCanvas = () => {
 applyCookieConsent();
 renderCookieConsent();
 bindCookiePreferenceTriggers();
+initFacebookVideoEmbeds();
 initKineticCanvas();
 
 // ── IBM square chatbot dock ───────────────────────────────────
@@ -446,33 +484,35 @@ initKineticCanvas();
   const waNumber = "14388130592"; // digits only, no +
   const labels = isEnglishDocument
     ? {
-      aria: "NEXURADATA chatbot",
-      openLabel: "Open diagnostic assistant",
-      closeLabel: "Close diagnostic assistant",
-      kicker: "NEXURA GUIDE",
-      status: "LAB TRIAGE",
-      title: "Fix the intake path before recovery",
-      copy: "Answer six questions. The assistant blocks unsafe next steps, selects the route, prepares missing details, prefills the case and arms escalation when needed.",
-      placeholder: "Generate a plan before handling the device again.",
+      aria: "NEXURADATA case help",
+      openLabel: "Open a case",
+      closeLabel: "Close case help",
+      kicker: "NEXURADATA",
+      status: "OPEN CASE",
+      title: "Open a recovery case.",
+      copy: "Tell us what happened in your own words. We will prepare the safest next step and keep your request ready if the online form fails.",
+      placeholder: "Describe the device, what changed, and the files you need.",
       supportLabel: "Media",
       symptomLabel: "Symptom",
       urgencyLabel: "Urgency",
       historyLabel: "Attempt",
       valueLabel: "Value",
       stateLabel: "State",
-      contextLabel: "What happened / what matters",
-      contextPlaceholder: "Payroll server down, family photos, legal evidence, liquid damage, previous recovery attempts...",
+      contextLabel: "Your message",
+      contextPlaceholder: "Example: my external drive is no longer detected and I need family photos from last year.",
+      moodLabel: "How are you holding up?",
+      moodOptions: [["Okay", "okay"], ["Stressed", "stressed"], ["Business blocked", "business_blocked"], ["Legal pressure", "legal_pressure"]],
       supportOptions: [["drive", "Hard drive"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Phone"], ["server", "Server"], ["removable", "USB / card"]],
       symptomOptions: [["deleted", "Deleted files"], ["slow", "Slow / unstable"], ["not_detected", "Not detected"], ["physical", "Shock / noise"], ["water", "Liquid damage"], ["encrypted", "Encrypted / forensic"]],
       urgencyOptions: [["standard", "Standard"], ["business", "Business impact"], ["critical", "Critical now"]],
       historyOptions: [["no_attempt", "No attempt"], ["software", "Recovery app"], ["opened", "Opened device"], ["rebuild", "RAID rebuild"], ["powered_on", "Repeated power-on"]],
       valueOptions: [["personal", "Personal"], ["business", "Business"], ["legal", "Legal"], ["medical", "Sensitive"]],
       stateOptions: [["powered_off", "Powered off"], ["unplugged", "Unplugged"], ["running", "Still running"], ["unknown", "Unknown"]],
-      resultAction: "Generate plan",
+      resultAction: "Prepare my case",
       risk: "Risk",
       confidence: "Confidence",
-      route: "Route",
-      avoid: "Avoid",
+      route: "Next step",
+      avoid: "Do not",
       protocol: "Protocol",
       fixed: "Fixed automatically",
       expert: "Expert alerts",
@@ -488,7 +528,7 @@ initKineticCanvas();
       quoteReadiness: "Quote",
       operatorFocus: "Operator focus",
       guardrail: "Human review remains required before recovery, forensic conclusions, payment or physical intervention.",
-      autoFillStatus: "The full case form was updated from this diagnosis.",
+      autoFillStatus: "The case form was prepared from your message.",
       needLabels: {
         personal_memory: "Personal memories to preserve",
         business_continuity: "Business continuity",
@@ -564,10 +604,10 @@ initKineticCanvas();
         impact: "Systems affected, business deadline, responsible contact and acceptable intervention window."
       },
       cases: {
-        logical: ["Logical recovery", "Open a structured case with file type, last known location and timeline.", "Do not save new files on the same media."],
-        priority: ["Priority lab review", "Stop handling the media and send the diagnostic summary with the case.", "Do not run generic recovery tools again."],
-        high: ["High-risk recovery", "Keep the device powered down and wait for lab instructions before any restart.", "Do not open, rebuild, initialize or format."],
-        critical: ["Critical intervention", "Use the emergency channel only if operations are blocked right now.", "Do not power-cycle or attempt a RAID rebuild."]
+        logical: ["Ready to open a case", "Tell us which files matter and when the device last worked normally.", "Do not save anything new on the same device."],
+        priority: ["Handle this carefully", "Keep the device aside and open the case with your description.", "Avoid recovery apps or automatic repair tools for now."],
+        high: ["Keep it powered off", "The safest next step is lab review before another attempt.", "Do not open, rebuild, initialize or format it."],
+        critical: ["Urgent human review", "Use the urgent channel if work is blocked right now.", "Do not restart anything or attempt a rebuild."]
       },
       protocols: {
         logical: ["Preserve the original media.", "Open a case with the diagnostic summary.", "Prepare a destination drive if recovery is approved."],
@@ -575,60 +615,63 @@ initKineticCanvas();
         high: ["Keep the device isolated and stable.", "Do not initialize, format or repair volumes.", "Send the case to lab review before powering on."],
         critical: ["Freeze all manipulations now.", "Escalate only through the emergency channel.", "Wait for lab instructions before any rebuild or restart."]
       },
-      case: "Review full form",
-      service: "Open route",
+      case: "Full form",
+      service: "Service page",
       reception: "Secure intake",
-      rates: "Rates",
-      statusLink: "Track",
-      payment: "Stripe payment",
-      emailSummary: "Email summary",
-      copySummary: "Copy summary",
+      rates: "Pricing",
+      statusLink: "Track case",
+      payment: "Payment",
+      paymentPrepared: "Payment prepared after approval",
+      emailSummary: "Email instead",
+      copySummary: "Copy message",
       copied: "Copied",
       copyFailed: "Copy failed",
-      quickCase: "Autonomous case",
+      quickCase: "Where should we reach you?",
       fieldName: "Name",
       fieldEmail: "Email",
       fieldPhone: "Phone",
-      consent: "Open and manage this case with the diagnostic summary.",
-      submitCase: "Create case",
-      openingCase: "Creating case...",
+      consent: "I agree to open a case with this message.",
+      submitCase: "Open my case",
+      openingCase: "Opening your case...",
       caseOpened: (caseId, plan) => plan?.recommendedPath
-        ? `Case ${caseId} created. Automation applied: ${plan.recommendedPath}. ${plan.sla || "Operator review is queued."}`
-        : `Case ${caseId} created. Client and lab notifications are queued.`,
-      caseFallback: "Online creation is unavailable. The prepared email will open.",
-      caseError: "Case creation failed.",
+        ? `Case ${caseId} is open. We will review it before giving recovery instructions.`
+        : `Case ${caseId} is open. Check your email for the access code.`,
+      caseFallback: "Online opening did not complete. Your prepared email is opening so the request is not lost.",
+      caseError: "I could not open the case online. Use the prepared email or the full form.",
       emergency: "Urgent WhatsApp",
-      emailSubject: "NEXURADATA diagnostic summary",
-      waIntro: "Hello NEXURADATA, the diagnostic assistant classified this case as urgent."
+      emailSubject: "NEXURADATA recovery request",
+      waIntro: "Hello NEXURADATA, I need urgent help with this recovery case."
     }
     : {
-      aria: "Chatbot NEXURADATA",
-      openLabel: "Ouvrir l'assistant diagnostic",
-      closeLabel: "Fermer l'assistant diagnostic",
-      kicker: "NEXURA GUIDE",
-      status: "TRIAGE LAB",
-      title: "Corriger le parcours avant récupération",
-      copy: "Répondez à six questions. L'assistant bloque les gestes risqués, choisit le parcours, prépare les infos manquantes, préremplit le dossier et arme l'escalade au besoin.",
-      placeholder: "Générez un plan avant de manipuler le support à nouveau.",
+      aria: "Aide dossier NEXURADATA",
+      openLabel: "Ouvrir un dossier",
+      closeLabel: "Fermer l'aide dossier",
+      kicker: "NEXURADATA",
+      status: "OUVRIR DOSSIER",
+      title: "Ouvrir un dossier de récupération.",
+      copy: "Expliquez ce qui s'est passé avec vos mots. On prépare la prochaine étape et on garde la demande prête si le formulaire en ligne tombe.",
+      placeholder: "Décrivez l'appareil, ce qui a changé et les fichiers dont vous avez besoin.",
       supportLabel: "Support",
       symptomLabel: "Symptôme",
       urgencyLabel: "Urgence",
       historyLabel: "Tentative",
       valueLabel: "Valeur",
       stateLabel: "État",
-      contextLabel: "Ce qui s'est passé / ce qui compte",
-      contextPlaceholder: "Serveur paie bloqué, photos de famille, preuve légale, liquide, logiciel déjà tenté...",
+      contextLabel: "Votre message",
+      contextPlaceholder: "Exemple: mon disque externe n'est plus détecté et j'ai besoin des photos de famille de l'an dernier.",
+      moodLabel: "Comment ça va avec ça?",
+      moodOptions: [["Ça va", "okay"], ["Stressé", "stressed"], ["Entreprise bloquée", "business_blocked"], ["Pression légale", "legal_pressure"]],
       supportOptions: [["drive", "Disque dur"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Téléphone"], ["server", "Serveur"], ["removable", "USB / carte"]],
       symptomOptions: [["deleted", "Fichiers supprimés"], ["slow", "Lent / instable"], ["not_detected", "Non détecté"], ["physical", "Choc / bruit"], ["water", "Liquide"], ["encrypted", "Chiffré / forensique"]],
       urgencyOptions: [["standard", "Standard"], ["business", "Impact entreprise"], ["critical", "Critique maintenant"]],
       historyOptions: [["no_attempt", "Aucune"], ["software", "Logiciel tenté"], ["opened", "Support ouvert"], ["rebuild", "RAID reconstruit"], ["powered_on", "Redémarrages"]],
       valueOptions: [["personal", "Personnel"], ["business", "Entreprise"], ["legal", "Juridique"], ["medical", "Sensible"]],
       stateOptions: [["powered_off", "Éteint"], ["unplugged", "Débranché"], ["running", "Encore allumé"], ["unknown", "Inconnu"]],
-      resultAction: "Générer plan",
+      resultAction: "Préparer mon dossier",
       risk: "Risque",
       confidence: "Confiance",
-      route: "Parcours",
-      avoid: "À éviter",
+      route: "Prochaine étape",
+      avoid: "À ne pas faire",
       protocol: "Protocole",
       fixed: "Corrigé automatiquement",
       expert: "Alertes expertes",
@@ -644,7 +687,7 @@ initKineticCanvas();
       quoteReadiness: "Soumission",
       operatorFocus: "Focus opérateur",
       guardrail: "La revue humaine reste obligatoire avant récupération, conclusion probatoire, paiement ou intervention physique.",
-      autoFillStatus: "Le formulaire complet a été mis à jour avec ce diagnostic.",
+      autoFillStatus: "Le formulaire a été préparé avec votre message.",
       needLabels: {
         personal_memory: "Souvenirs personnels à préserver",
         business_continuity: "Continuité d'activité",
@@ -720,10 +763,10 @@ initKineticCanvas();
         impact: "Systèmes touchés, échéance d'affaires, contact responsable et fenêtre d'intervention acceptable."
       },
       cases: {
-        logical: ["Récupération logique", "Ouvrez un dossier structuré avec type de fichiers, dernier emplacement connu et chronologie.", "N'enregistrez rien de nouveau sur le même support."],
-        priority: ["Révision prioritaire laboratoire", "Cessez toute manipulation et joignez le résumé diagnostic au dossier.", "Ne relancez pas d'outil de récupération générique."],
-        high: ["Récupération à haut risque", "Gardez l'appareil éteint et attendez les consignes du laboratoire avant tout redémarrage.", "N'ouvrez pas, ne reconstruisez pas, n'initialisez pas et ne formatez pas."],
-        critical: ["Intervention critique", "Utilisez le canal urgence seulement si les opérations sont bloquées maintenant.", "Ne redémarrez pas et ne tentez pas de reconstruction RAID."]
+        logical: ["Dossier prêt à ouvrir", "Dites-nous quels fichiers comptent et quand l'appareil fonctionnait encore normalement.", "N'enregistrez rien de nouveau sur le même support."],
+        priority: ["À traiter avec prudence", "Gardez le support de côté et ouvrez le dossier avec votre description.", "Évitez les logiciels de récupération ou les réparations automatiques pour l'instant."],
+        high: ["Gardez l'appareil éteint", "Le plus sûr est une revue laboratoire avant un autre essai.", "N'ouvrez pas, ne reconstruisez pas, n'initialisez pas et ne formatez pas."],
+        critical: ["Revue humaine urgente", "Utilisez le canal urgence si les opérations sont bloquées maintenant.", "Ne redémarrez rien et ne tentez pas de reconstruction."]
       },
       protocols: {
         logical: ["Préservez le support original.", "Ouvrez un dossier avec le résumé diagnostic.", "Préparez un disque de destination si la récupération est approuvée."],
@@ -731,31 +774,32 @@ initKineticCanvas();
         high: ["Gardez l'appareil isolé et stable.", "N'initialisez pas, ne formatez pas et ne réparez pas les volumes.", "Envoyez le dossier au laboratoire avant toute remise sous tension."],
         critical: ["Gelez toute manipulation maintenant.", "Escaladez seulement par le canal urgence.", "Attendez les consignes du laboratoire avant toute reconstruction ou redémarrage."]
       },
-      case: "Réviser formulaire",
-      service: "Ouvrir parcours",
+      case: "Formulaire complet",
+      service: "Page service",
       reception: "Réception sécurisée",
       rates: "Tarifs",
-      statusLink: "Suivi",
-      payment: "Paiement Stripe",
-      emailSummary: "Courriel résumé",
-      copySummary: "Copier résumé",
+      statusLink: "Suivi dossier",
+      payment: "Paiement",
+      paymentPrepared: "Paiement préparé après accord",
+      emailSummary: "Écrire plutôt",
+      copySummary: "Copier message",
       copied: "Copié",
       copyFailed: "Échec copie",
-      quickCase: "Dossier autonome",
+      quickCase: "Où doit-on vous joindre?",
       fieldName: "Nom",
       fieldEmail: "Courriel",
       fieldPhone: "Téléphone",
-      consent: "Ouvrir et gérer ce dossier avec le résumé diagnostic.",
-      submitCase: "Créer dossier",
-      openingCase: "Création du dossier...",
+      consent: "J'accepte d'ouvrir un dossier avec ce message.",
+      submitCase: "Ouvrir mon dossier",
+      openingCase: "Ouverture du dossier...",
       caseOpened: (caseId, plan) => plan?.recommendedPath
-        ? `Dossier ${caseId} créé. Automation appliquée: ${plan.recommendedPath}. ${plan.sla || "Revue opérateur en file."}`
-        : `Dossier ${caseId} créé. Les notifications client et labo sont lancées.`,
-      caseFallback: "Création en ligne indisponible. Le courriel préparé va s'ouvrir.",
-      caseError: "Création du dossier impossible.",
+        ? `Dossier ${caseId} ouvert. Nous le relisons avant de donner des consignes de récupération.`
+        : `Dossier ${caseId} ouvert. Vérifiez votre courriel pour le code d'accès.`,
+      caseFallback: "L'ouverture en ligne n'a pas complété. Le courriel préparé s'ouvre pour ne pas perdre la demande.",
+      caseError: "Impossible d'ouvrir le dossier en ligne. Utilisez le courriel préparé ou le formulaire complet.",
       emergency: "WhatsApp urgence",
-      emailSubject: "Résumé diagnostic NEXURADATA",
-      waIntro: "Bonjour NEXURADATA, l'assistant diagnostic classe ce dossier comme urgent."
+      emailSubject: "Demande de récupération NEXURADATA",
+      waIntro: "Bonjour NEXURADATA, j'ai besoin d'aide urgente pour ce dossier de récupération."
     };
   const homePrefix = isEnglishDocument ? "/en" : "";
   const caseHref = `${homePrefix}/#contact`;
@@ -767,6 +811,7 @@ initKineticCanvas();
   const whatsappHref = `https://wa.me/${waNumber}?text=${encodeURIComponent(labels.waIntro)}`;
   const optionMarkup = (options) => options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
   const optionLabel = (options, value) => options.find(([optionValue]) => optionValue === value)?.[1] || value;
+  const moodLabelFor = (value) => labels.moodOptions.find(([, optionValue]) => optionValue === value)?.[0] || value;
   const getServiceHref = (support, symptom, value) => {
     if (symptom === "encrypted" || value === "legal") {
       return serviceHref("forensique-numerique-montreal.html");
@@ -783,17 +828,17 @@ initKineticCanvas();
     return serviceHref("recuperation-donnees-montreal.html");
   };
   const mapCaseSupport = (support, symptom, value) => {
-    if (symptom === "encrypted" || value === "legal") return "Forensique / preuve numérique";
+    if (symptom === "encrypted" || value === "legal") return "Dossier légal / forensique";
     if (support === "raid" || support === "server") return "RAID / NAS / serveur";
-    if (support === "phone") return "Téléphone / mobile";
-    if (support === "ssd") return "SSD";
-    if (support === "removable") return "USB / carte mémoire";
-    return "Disque dur";
+    if (support === "phone") return "Téléphone";
+    if (support === "ssd") return "SSD / NVMe";
+    if (support === "removable") return "USB / carte SD";
+    return "HDD";
   };
   const mapCaseUrgency = (urgency, symptom, value) => {
     if (symptom === "encrypted" || value === "legal" || value === "medical") return "Très sensible";
-    if (urgency === "critical") return "Urgent";
-    if (urgency === "business") return "Rapide";
+    if (urgency === "critical") return "Urgence 24–48 h";
+    if (urgency === "business") return "Priorité";
     return "Standard";
   };
   const mapCaseProfile = (value) => {
@@ -813,6 +858,16 @@ initKineticCanvas();
     if (value === "business") return "Confidentiel";
     return "Standard";
   };
+  const mapCaseSymptom = (scenario) => {
+    if (scenario.caseSymptom) return scenario.caseSymptom;
+    if (scenario.symptom === "deleted") return "fichiers supprimés";
+    if (scenario.symptom === "not_detected") return "non détecté";
+    if (scenario.symptom === "physical") return "bruit / clic";
+    if (scenario.symptom === "water") return "eau / feu / choc";
+    if (scenario.symptom === "encrypted") return "ransomware / chiffré";
+    return "non détecté";
+  };
+  const mapCaseClientType = (scenario) => scenario.clientType || mapCaseProfile(scenario.value);
   const findActiveStripeCheckoutHref = () => {
     const checkoutLink = document.querySelector('[data-stripe-checkout-link][href*="checkout.stripe.com"], .status-payment-actions a[href*="checkout.stripe.com"]');
     return checkoutLink?.href || "";
@@ -844,48 +899,55 @@ initKineticCanvas();
       <p class="chatbot-title">${labels.title}</p>
       <p class="chatbot-copy">${labels.copy}</p>
       <form class="chatbot-diagnostic" data-chatbot-diagnostic>
-        <label><span>${labels.supportLabel}</span><select name="support">${optionMarkup(labels.supportOptions)}</select></label>
-        <label><span>${labels.symptomLabel}</span><select name="symptom">${optionMarkup(labels.symptomOptions)}</select></label>
-        <label><span>${labels.urgencyLabel}</span><select name="urgency">${optionMarkup(labels.urgencyOptions)}</select></label>
-        <label><span>${labels.historyLabel}</span><select name="history">${optionMarkup(labels.historyOptions)}</select></label>
-        <label><span>${labels.valueLabel}</span><select name="value">${optionMarkup(labels.valueOptions)}</select></label>
-        <label><span>${labels.stateLabel}</span><select name="state">${optionMarkup(labels.stateOptions)}</select></label>
-        <label class="chatbot-context-field"><span>${labels.contextLabel}</span><textarea name="context" rows="3" maxlength="420" placeholder="${labels.contextPlaceholder}"></textarea></label>
+        <div class="chatbot-thread" data-chatbot-thread aria-live="polite"></div>
+        <div class="chatbot-quick-actions" data-chatbot-quick-actions></div>
+        <input type="hidden" name="support" value="drive">
+        <input type="hidden" name="symptom" value="not_detected">
+        <input type="hidden" name="urgency" value="standard">
+        <input type="hidden" name="history" value="no_attempt">
+        <input type="hidden" name="value" value="personal">
+        <input type="hidden" name="state" value="unknown">
+        <input type="hidden" name="mood" value="okay">
+        <input type="hidden" name="caseSymptom" value="non détecté">
+        <input type="hidden" name="clientType" value="Particulier">
+        <label class="chatbot-context-field"><span>${labels.contextLabel}</span><textarea name="context" rows="4" maxlength="620" required placeholder="${labels.contextPlaceholder}"></textarea></label>
+        <p class="chatbot-estimate" data-chatbot-estimate hidden></p>
         <button type="submit" class="chatbot-diagnostic-submit" data-chatbot-diagnostic-submit>${labels.resultAction}</button>
       </form>
       <div class="chatbot-result" data-chatbot-result aria-live="polite" tabindex="-1" hidden>
         <p class="chatbot-placeholder">${labels.placeholder}</p>
       </div>
-      <section class="chatbot-brief" data-chatbot-brief hidden aria-labelledby="chatbot-brief-title">
-        <h3 id="chatbot-brief-title">${labels.brief}</h3>
+      <section class="chatbot-brief" data-chatbot-brief hidden>
+        <h3>${labels.brief}</h3>
         <dl data-chatbot-brief-fields></dl>
         <ul data-chatbot-brief-focus></ul>
       </section>
-      <section class="chatbot-fixed" data-chatbot-fixed hidden aria-labelledby="chatbot-fixed-title">
-        <h3 id="chatbot-fixed-title">${labels.fixed}</h3>
+      <section class="chatbot-fixed" data-chatbot-fixed hidden>
+        <h3>${labels.fixed}</h3>
         <ul data-chatbot-fixes></ul>
       </section>
-      <section class="chatbot-expert" data-chatbot-expert hidden aria-labelledby="chatbot-expert-title">
-        <h3 id="chatbot-expert-title">${labels.expert}</h3>
+      <section class="chatbot-expert" data-chatbot-expert hidden>
+        <h3>${labels.expert}</h3>
         <ul data-chatbot-expert-signals></ul>
         <p>${labels.guardrail}</p>
       </section>
-      <div class="chatbot-insight" data-chatbot-insight hidden>
-        <section class="chatbot-insight-block" aria-labelledby="chatbot-why-title">
-          <h3 id="chatbot-why-title">${labels.why}</h3>
+      <section class="chatbot-insight" data-chatbot-insight hidden>
+        <div class="chatbot-insight-block">
+          <h3>${labels.why}</h3>
           <ul data-chatbot-reasons></ul>
-        </section>
-        <section class="chatbot-insight-block" aria-labelledby="chatbot-missing-title">
-          <h3 id="chatbot-missing-title">${labels.missing}</h3>
+        </div>
+        <div class="chatbot-insight-block">
+          <h3>${labels.missing}</h3>
           <ul data-chatbot-questions></ul>
-        </section>
-      </div>
-      <ul class="chatbot-protocol" data-chatbot-protocol aria-label="${labels.protocol}" hidden></ul>
+        </div>
+      </section>
       <form class="chatbot-case-form" data-chatbot-case-form data-intake-endpoint="/api/intake" hidden>
         <p>${labels.quickCase}</p>
         <label><span>${labels.fieldName}</span><input type="text" name="nom" autocomplete="name" required></label>
         <label><span>${labels.fieldEmail}</span><input type="email" name="courriel" autocomplete="email" required></label>
         <label><span>${labels.fieldPhone}</span><input type="tel" name="telephone" autocomplete="tel"></label>
+        <label><span>${isEnglishDocument ? "City" : "Ville"}</span><input type="text" name="ville" autocomplete="address-level2"></label>
+        <label><span>${isEnglishDocument ? "Preferred contact" : "Préférence de contact"}</span><select name="preferenceContact"><option value="email">Email</option><option value="téléphone">${isEnglishDocument ? "Phone" : "Téléphone"}</option><option value="whatsapp">WhatsApp</option></select></label>
         <label class="chatbot-case-consent"><input type="checkbox" name="consentement" required><span>${labels.consent}</span></label>
         <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>
         <button type="submit" class="chatbot-execute" data-chatbot-case-submit>${labels.submitCase}</button>
@@ -893,12 +955,9 @@ initKineticCanvas();
       </form>
       <div class="chatbot-actions" data-chatbot-actions hidden>
         <a class="chatbot-link chatbot-link-primary" href="${caseHref}" data-chatbot-action="case">${labels.case}</a>
-        <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-action="service_route" data-chatbot-service>${labels.service}</a>
-        <a class="chatbot-link" href="${receptionHref}" data-chatbot-action="secure_intake">${labels.reception}</a>
-        <a class="chatbot-link" href="${ratesHref}" data-chatbot-action="rates">${labels.rates}</a>
-        <a class="chatbot-link" href="${statusHref}" data-chatbot-action="stripe_payment" data-chatbot-payment>${labels.payment}</a>
+        <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-service>${labels.service}</a>
         <a class="chatbot-link" href="${statusHref}" data-chatbot-action="status">${labels.statusLink}</a>
-        <button type="button" class="chatbot-link" data-chatbot-action="copy_summary" data-chatbot-copy>${labels.copySummary}</button>
+        <a class="chatbot-link" href="${statusHref}" data-chatbot-payment>${labels.payment}</a>
         <a class="chatbot-link" href="mailto:contact@nexuradata.ca" data-chatbot-action="email_summary" data-chatbot-email>${labels.emailSummary}</a>
         <a class="chatbot-link" href="${whatsappHref}" target="_blank" rel="noopener noreferrer" data-chatbot-action="urgent_whatsapp" data-chatbot-emergency hidden>${labels.emergency}</a>
       </div>
@@ -910,6 +969,9 @@ initKineticCanvas();
   const panel = dock.querySelector("[data-chatbot-panel]");
   const closeButton = dock.querySelector("[data-chatbot-close]");
   const diagnosticForm = dock.querySelector("[data-chatbot-diagnostic]");
+  const thread = dock.querySelector("[data-chatbot-thread]");
+  const quickActions = dock.querySelector("[data-chatbot-quick-actions]");
+  const estimateTarget = dock.querySelector("[data-chatbot-estimate]");
   const result = dock.querySelector("[data-chatbot-result]");
   const brief = dock.querySelector("[data-chatbot-brief]");
   const briefFields = dock.querySelector("[data-chatbot-brief-fields]");
@@ -955,11 +1017,29 @@ initKineticCanvas();
 
     window.setTimeout(() => {
       if (isOpen) {
-        diagnosticForm?.querySelector("select")?.focus({ preventScroll: true });
+        diagnosticForm?.querySelector("textarea")?.focus({ preventScroll: true });
       } else {
         toggleButton?.focus({ preventScroll: true });
       }
     }, 0);
+  };
+  const watchHeroMediaOverlap = () => {
+    const heroMedia = document.querySelector("[data-facebook-video-stage]");
+    if (!heroMedia || !("IntersectionObserver" in window)) return;
+
+    const mobileQuery = window.matchMedia("(max-width: 720px)");
+    let mediaInView = false;
+    const syncState = () => {
+      dock.dataset.heroMediaInView = mobileQuery.matches && mediaInView ? "true" : "false";
+    };
+    const observer = new IntersectionObserver((entries) => {
+      mediaInView = entries.some((entry) => entry.isIntersecting);
+      syncState();
+    }, { threshold: 0.12 });
+
+    observer.observe(heroMedia);
+    mobileQuery.addEventListener?.("change", syncState);
+    syncState();
   };
   const setCaseStatus = (state, message) => {
     if (!caseStatus) return;
@@ -986,8 +1066,12 @@ initKineticCanvas();
     return keys.map((key) => labels.expertSignals?.[map[key]]).filter(Boolean);
   };
   const setDiagnosisVisibility = (visible) => {
-    [result, brief, fixed, expert, insight, protocolTarget, caseForm, actions].forEach((element) => {
+    [result, caseForm, actions].forEach((element) => {
       if (element) element.hidden = !visible;
+    });
+
+    [brief, fixed, expert, insight, protocolTarget].forEach((element) => {
+      if (element) element.hidden = true;
     });
   };
   const renderList = (target, items) => {
@@ -999,6 +1083,130 @@ initKineticCanvas();
     }));
   };
   const uniqueItems = (items) => [...new Set(items.filter(Boolean))];
+  const conversationCopy = isEnglishDocument
+    ? {
+      assistant: "NEXURADATA",
+      you: "You",
+      estimatePrefix: "Estimate",
+      stripePrefix: "Stripe",
+      paymentHint: "The assistant does not charge you blindly. It opens an existing Stripe Checkout link if one is already attached to the case; otherwise payment is sent after written approval.",
+      finalPrompt: "Add one sentence in your own words, then I can open the case.",
+      steps: [
+        {
+          key: "mood",
+          question: "How are you holding up?",
+          options: labels.moodOptions.map(([label, mood]) => [label, { mood }])
+        },
+        {
+          key: "support",
+          question: "Media type",
+          options: [
+            ["HDD", { support: "drive" }],
+            ["SSD/NVMe", { support: "ssd" }],
+            ["USB/SD card", { support: "removable" }],
+            ["Phone", { support: "phone" }],
+            ["RAID/NAS/server", { support: "raid", urgency: "business" }],
+            ["Legal/forensic file", { support: "drive", symptom: "encrypted", value: "legal", clientType: "Avocat", caseSymptom: "ransomware / chiffré" }]
+          ]
+        },
+        {
+          key: "symptom",
+          question: "Symptom",
+          options: [
+            ["Deleted files", { symptom: "deleted", caseSymptom: "fichiers supprimés" }],
+            ["Formatted", { symptom: "deleted", history: "rebuild", caseSymptom: "formaté" }],
+            ["Not detected", { symptom: "not_detected", caseSymptom: "non détecté" }],
+            ["Noise/click", { symptom: "physical", state: "powered_off", caseSymptom: "bruit / clic" }],
+            ["Water/fire/shock", { symptom: "water", state: "powered_off", caseSymptom: "eau / feu / choc" }],
+            ["Ransomware/encrypted", { symptom: "encrypted", value: "legal", caseSymptom: "ransomware / chiffré" }],
+            ["Multiple failed disks", { support: "raid", symptom: "physical", urgency: "critical", caseSymptom: "plusieurs disques défaillants" }]
+          ]
+        },
+        {
+          key: "urgency",
+          question: "Urgency",
+          options: [
+            ["Standard", { urgency: "standard" }],
+            ["Priority", { urgency: "business" }],
+            ["Emergency 24-48 h", { urgency: "critical" }]
+          ]
+        },
+        {
+          key: "value",
+          question: "Client type",
+          options: [
+            ["Individual", { value: "personal", clientType: "Particulier" }],
+            ["Business", { value: "business", clientType: "Entreprise" }],
+            ["Lawyer", { value: "legal", clientType: "Avocat", symptom: "encrypted" }],
+            ["Insurer", { value: "legal", clientType: "Assureur", symptom: "encrypted" }],
+            ["Accountant", { value: "business", clientType: "Comptable" }],
+            ["Police/investigator", { value: "legal", clientType: "Police / enquêteur", symptom: "encrypted" }]
+          ]
+        }
+      ]
+    }
+    : {
+      assistant: "NEXURADATA",
+      you: "Vous",
+      estimatePrefix: "Estimation",
+      stripePrefix: "Stripe",
+      paymentHint: "L'assistant ne facture pas à l'aveugle. Il ouvre un lien Stripe Checkout existant si un paiement est déjà attaché au dossier; sinon le paiement part après accord écrit.",
+      finalPrompt: "Ajoutez une phrase dans vos mots, puis je peux ouvrir le dossier.",
+      steps: [
+        {
+          key: "mood",
+          question: "Comment ça va avec ça?",
+          options: labels.moodOptions.map(([label, mood]) => [label, { mood }])
+        },
+        {
+          key: "support",
+          question: "Type de média",
+          options: [
+            ["HDD", { support: "drive" }],
+            ["SSD/NVMe", { support: "ssd" }],
+            ["USB/carte SD", { support: "removable" }],
+            ["Téléphone", { support: "phone" }],
+            ["RAID/NAS/serveur", { support: "raid", urgency: "business" }],
+            ["Dossier légal/forensique", { support: "drive", symptom: "encrypted", value: "legal", clientType: "Avocat", caseSymptom: "ransomware / chiffré" }]
+          ]
+        },
+        {
+          key: "symptom",
+          question: "Symptôme",
+          options: [
+            ["Fichiers supprimés", { symptom: "deleted", caseSymptom: "fichiers supprimés" }],
+            ["Formaté", { symptom: "deleted", history: "rebuild", caseSymptom: "formaté" }],
+            ["Non détecté", { symptom: "not_detected", caseSymptom: "non détecté" }],
+            ["Bruit/clic", { symptom: "physical", state: "powered_off", caseSymptom: "bruit / clic" }],
+            ["Eau/feu/choc", { symptom: "water", state: "powered_off", caseSymptom: "eau / feu / choc" }],
+            ["Ransomware/chiffré", { symptom: "encrypted", value: "legal", caseSymptom: "ransomware / chiffré" }],
+            ["Plusieurs disques défaillants", { support: "raid", symptom: "physical", urgency: "critical", caseSymptom: "plusieurs disques défaillants" }]
+          ]
+        },
+        {
+          key: "urgency",
+          question: "Urgence",
+          options: [
+            ["Standard", { urgency: "standard" }],
+            ["Priorité", { urgency: "business" }],
+            ["Urgence 24–48 h", { urgency: "critical" }]
+          ]
+        },
+        {
+          key: "value",
+          question: "Type de client",
+          options: [
+            ["Particulier", { value: "personal", clientType: "Particulier" }],
+            ["Entreprise", { value: "business", clientType: "Entreprise" }],
+            ["Avocat", { value: "legal", clientType: "Avocat", symptom: "encrypted" }],
+            ["Assureur", { value: "legal", clientType: "Assureur", symptom: "encrypted" }],
+            ["Comptable", { value: "business", clientType: "Comptable" }],
+            ["Police/enquêteur", { value: "legal", clientType: "Police / enquêteur", symptom: "encrypted" }]
+          ]
+        }
+      ]
+    };
+  const conversationAnswers = {};
   const renderBrief = (diagnostic) => {
     const handoff = diagnostic?.brief;
     if (!brief || !briefFields || !briefFocus || !handoff) return;
@@ -1019,6 +1227,34 @@ initKineticCanvas();
       return [dt, dd];
     }));
     renderList(briefFocus, uniqueItems([handoff.clientAction, ...(handoff.operatorFocus || []), ...(handoff.missingInfo || []).map((item) => `${labels.missing}: ${item}`)]).slice(0, 5));
+  };
+  const renderServerHandoff = (diagnostic) => {
+    const handoff = diagnostic?.brief;
+    if (!result || !diagnosisShown || !handoff) return;
+
+    result.querySelector("[data-chatbot-server-handoff]")?.remove();
+
+    const message = document.createElement("div");
+    message.className = "chatbot-message chatbot-message-assistant";
+    message.setAttribute("data-chatbot-server-handoff", "");
+
+    const title = document.createElement("p");
+    const titleStrong = document.createElement("strong");
+    titleStrong.textContent = `${labels.serverVerified}: ${handoff.recommendedPath || diagnostic.recommendedPath || ""}`;
+    title.append(titleStrong);
+    message.append(title);
+
+    [
+      handoff.nextStep && `${labels.nextAction}: ${handoff.nextStep}`,
+      handoff.clientAction,
+      handoff.missingInfo?.length ? `${labels.missing}: ${handoff.missingInfo.join(" / ")}` : ""
+    ].filter(Boolean).forEach((line) => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = line;
+      message.append(paragraph);
+    });
+
+    result.append(message);
   };
   const appendServerBriefToSummary = (diagnostic) => {
     const handoff = diagnostic?.brief;
@@ -1074,8 +1310,8 @@ initKineticCanvas();
     urgency: expertSignals.has("urgencyUnderstated") ? "business" : urgency,
     value: expertSignals.routeOverride === "forensic" ? "legal" : value
   });
-  const buildClientIntelligence = ({ support, symptom, urgency, value, context }) => {
-    const text = normalizeSignalText(context, support, symptom, urgency, value);
+  const buildClientIntelligence = ({ support, symptom, urgency, value, mood, context }) => {
+    const text = normalizeSignalText(context, support, symptom, urgency, value, mood);
     let needKey = "technical_recovery";
     let signalKey = "neutral";
 
@@ -1091,13 +1327,13 @@ initKineticCanvas();
       needKey = "urgent_stabilization";
     }
 
-    if (hasSignal(text, ["panique", "panic", "desespere", "desperate", "pleure", "crying", "devast", "decede", "passed away", "irreplaceable", "irremplacable"])) {
+    if (mood === "stressed" || hasSignal(text, ["panique", "panic", "desespere", "desperate", "pleure", "crying", "devast", "decede", "passed away", "irreplaceable", "irremplacable"])) {
       signalKey = "distressed";
     } else if (hasSignal(text, ["frustre", "frustrated", "fache", "angry", "tanne", "exhausted", "epuise", "personne repond"])) {
       signalKey = "frustrated";
-    } else if (needKey === "business_continuity" || hasSignal(text, ["operations blocked", "operations bloquees", "payroll", "paie", "production", "server down", "serveur down"])) {
+    } else if (mood === "business_blocked" || needKey === "business_continuity" || hasSignal(text, ["operations blocked", "operations bloquees", "payroll", "paie", "production", "server down", "serveur down"])) {
       signalKey = "business_pressure";
-    } else if (needKey === "legal_or_insurance") {
+    } else if (mood === "legal_pressure" || needKey === "legal_or_insurance") {
       signalKey = "legal_anxiety";
     }
 
@@ -1207,6 +1443,7 @@ initKineticCanvas();
     if (!diagnostic) return;
     latestServerDiagnostic = diagnostic;
     renderBrief(diagnostic);
+    renderServerHandoff(diagnostic);
     appendServerBriefToSummary(diagnostic);
 
     if (diagnostic.servicePath && serviceLink) {
@@ -1222,11 +1459,13 @@ initKineticCanvas();
 
     const serverQuestions = diagnostic.missingInfoLabels || [];
     if (serverQuestions.length > 0) {
-      renderList(questionsTarget, uniqueItems([...serverQuestions, ...[...questionsTarget.querySelectorAll("li")].map((item) => item.textContent)]).slice(0, 5));
+      const existingQuestions = questionsTarget ? [...questionsTarget.querySelectorAll("li")].map((item) => item.textContent) : [];
+      renderList(questionsTarget, uniqueItems([...serverQuestions, ...existingQuestions]).slice(0, 5));
     }
 
     if (diagnostic.clientActions?.length) {
-      renderList(protocolTarget, uniqueItems([...diagnostic.clientActions, ...[...protocolTarget.querySelectorAll("li")].map((item) => item.textContent)]).slice(0, 5));
+      const existingProtocol = protocolTarget ? [...protocolTarget.querySelectorAll("li")].map((item) => item.textContent) : [];
+      renderList(protocolTarget, uniqueItems([...diagnostic.clientActions, ...existingProtocol]).slice(0, 5));
     }
 
     try {
@@ -1271,16 +1510,173 @@ initKineticCanvas();
       paymentLink.removeAttribute("rel");
     }
   };
-  const updateDiagnosis = () => {
+  const normalizeForMatch = (value) => `${value || ""}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const inferScenarioFromContext = (scenario) => {
+    const text = normalizeForMatch(scenario.context);
+    const inferred = { ...scenario };
+
+    if (/\b(raid|nas|synology|qnap|serveur|server|vmware|hyper-v)\b/.test(text)) inferred.support = text.includes("serveur") || text.includes("server") ? "server" : "raid";
+    else if (/\b(iphone|ipad|android|telephone|phone|cellulaire|mobile)\b/.test(text)) inferred.support = "phone";
+    else if (/\b(ssd|nvme|m\.2)\b/.test(text)) inferred.support = "ssd";
+    else if (/\b(usb|cle usb|carte sd|microsd|sd card)\b/.test(text)) inferred.support = "removable";
+
+    if (/\b(liquide|eau|cafe|mouille|water|liquid|wet)\b/.test(text)) inferred.symptom = "water";
+    else if (/\b(bruit|clac|clique|choc|tombe|drop|noise|clicking|burn|odeur)\b/.test(text)) inferred.symptom = "physical";
+    else if (/\b(chiffre|bitlocker|mot de passe|password|preuve|legal|juridique|assurance|police)\b/.test(text)) inferred.symptom = "encrypted";
+    else if (/\b(non detecte|non reconnu|plus detecte|plus reconnu|not detected|unrecognized|n'apparait|apparait pas)\b/.test(text) || /n.est plus (detecte|reconnu)/.test(text)) inferred.symptom = "not_detected";
+    else if (/\b(lent|slow|freeze|bloque|instable)\b/.test(text)) inferred.symptom = "slow";
+    else if (/\b(supprime|efface|formatte|delete|deleted|format)\b/.test(text)) inferred.symptom = "deleted";
+
+    if (/\b(urgent|urgence|maintenant|bloque|production|entreprise|business|client|serveur|server|critique|critical)\b/.test(text)) inferred.urgency = /\b(maintenant|bloque|critique|critical|production)\b/.test(text) ? "critical" : "business";
+
+    if (/\b(logiciel|software|recuva|disk drill|easeus|tent[eé]|tried)\b/.test(text)) inferred.history = "software";
+    if (/\b(ouvert|opened|demont[eé]|riz|rice|chaleur|heat|congele|freezer)\b/.test(text)) inferred.history = "opened";
+    if (/\b(rebuild|reconstruction|initialis[eé]|initialize|formatte|formatted)\b/.test(text)) inferred.history = "rebuild";
+    if (/\b(redemarr[eé]|reboot|redemar|powered on|encore allume)\b/.test(text)) inferred.history = "powered_on";
+
+    if (/\b(preuve|legal|juridique|assurance|lawyer|court|police)\b/.test(text)) inferred.value = "legal";
+    else if (/\b(medical|sante|patient|health)\b/.test(text)) inferred.value = "medical";
+    else if (/\b(entreprise|business|client|compta|serveur|server|production)\b/.test(text)) inferred.value = "business";
+
+    if (/\b(encore allume|running|powered on|ouvert sur l'ecran)\b/.test(text)) inferred.state = "running";
+    if (/\b(eteint|off|debranche|unplugged)\b/.test(text)) inferred.state = "powered_off";
+
+    return inferred;
+  };
+  const buildScenarioFromDiagnosticForm = () => {
     const formData = new FormData(diagnosticForm);
-    const support = formData.get("support");
-    const symptom = formData.get("symptom");
-    const urgency = formData.get("urgency");
-    const history = formData.get("history");
-    const value = formData.get("value");
-    const state = formData.get("state");
-    const context = `${formData.get("context") || ""}`.trim().slice(0, 420);
-    const scenario = { support, symptom, urgency, history, value, state, context };
+    const scenario = inferScenarioFromContext({
+      support: formData.get("support") || "drive",
+      symptom: formData.get("symptom") || "not_detected",
+      urgency: formData.get("urgency") || "standard",
+      history: formData.get("history") || "no_attempt",
+      value: formData.get("value") || "personal",
+      state: formData.get("state") || "unknown",
+      mood: formData.get("mood") || "okay",
+      context: `${formData.get("context") || ""}`.trim().slice(0, 620)
+    });
+    scenario.caseSymptom = `${formData.get("caseSymptom") || ""}`.trim();
+    scenario.clientType = `${formData.get("clientType") || ""}`.trim();
+    return scenario;
+  };
+  const buildBotEstimate = (scenario) => {
+    const quoted = isEnglishDocument ? "Firm quote after review" : "Prix ferme après diagnostic";
+    const paymentAfterApproval = isEnglishDocument
+      ? "Payment link after case opening and written approval."
+      : "Lien de paiement après ouverture du dossier et accord écrit.";
+    const paymentPortal = conversationCopy.paymentHint;
+    const hasHighRisk = ["physical", "water", "encrypted"].includes(scenario.symptom) || ["opened", "rebuild"].includes(scenario.history) || ["legal", "medical"].includes(scenario.value);
+
+    if (scenario.value === "legal" || scenario.symptom === "encrypted") {
+      return {
+        price: isEnglishDocument ? "Forensic review from $2,500 CAD" : "Revue forensique dès 2 500 $ CA",
+        payment: paymentPortal
+      };
+    }
+
+    if (scenario.support === "raid" || scenario.support === "server") {
+      return {
+        price: isEnglishDocument ? "Server/RAID triage $399-$1,200 CAD; recovery usually $1,200+ CAD" : "Triage serveur/RAID 399 $-1 200 $ CA; récupération souvent 1 200 $+ CA",
+        payment: isEnglishDocument ? `${paymentAfterApproval} Stripe deposit can be created from the admin cockpit.` : `${paymentAfterApproval} Un dépôt Stripe peut être créé depuis le cockpit admin.`
+      };
+    }
+
+    if (hasHighRisk) {
+      return {
+        price: scenario.support === "phone" ? (isEnglishDocument ? "Physical phone cases from $699 CAD" : "Téléphone physique dès 699 $ CA") : quoted,
+        payment: paymentAfterApproval
+      };
+    }
+
+    if (scenario.support === "phone") {
+      return { price: isEnglishDocument ? "Phone logical recovery from $299 CAD" : "Téléphone logique dès 299 $ CA", payment: paymentAfterApproval };
+    }
+
+    if (scenario.support === "removable") {
+      return { price: isEnglishDocument ? "USB / memory card from $299 CAD" : "USB / carte mémoire dès 299 $ CA", payment: paymentAfterApproval };
+    }
+
+    if (scenario.symptom === "deleted") {
+      return { price: isEnglishDocument ? "Deleted files from $199 CAD" : "Fichiers supprimés dès 199 $ CA", payment: paymentAfterApproval };
+    }
+
+    if (scenario.support === "ssd") {
+      return { price: isEnglishDocument ? "SSD / NVMe lab work from $649 CAD" : "SSD / NVMe en laboratoire dès 649 $ CA", payment: paymentAfterApproval };
+    }
+
+    return { price: isEnglishDocument ? "HDD / external drive from $299 CAD; complex cases from $649 CAD" : "HDD / disque externe dès 299 $ CA; cas complexes dès 649 $ CA", payment: paymentAfterApproval };
+  };
+  const setDiagnosticValues = (values = {}) => {
+    Object.entries(values).forEach(([name, value]) => {
+      const field = diagnosticForm?.elements?.[name];
+      if (field) field.value = value;
+    });
+  };
+  const createConversationBubble = (role, text) => {
+    const item = document.createElement("p");
+    item.className = `chatbot-conversation-line is-${role}`;
+    item.textContent = text;
+    return item;
+  };
+  const renderConversation = () => {
+    if (!thread || !quickActions) return;
+
+    const answeredSteps = conversationCopy.steps.filter((step) => conversationAnswers[step.key]);
+    const currentStep = conversationCopy.steps.find((step) => !conversationAnswers[step.key]);
+    const lines = [];
+
+    if (answeredSteps.length === 0) {
+      lines.push(createConversationBubble("assistant", conversationCopy.steps[0].question));
+    } else {
+      answeredSteps.forEach((step) => {
+        lines.push(createConversationBubble("assistant", step.question));
+        lines.push(createConversationBubble("user", conversationAnswers[step.key]));
+      });
+      if (currentStep) {
+        lines.push(createConversationBubble("assistant", currentStep.question));
+      } else {
+        lines.push(createConversationBubble("assistant", conversationCopy.finalPrompt));
+      }
+    }
+
+    thread.replaceChildren(...lines);
+    quickActions.replaceChildren();
+
+    if (currentStep) {
+      currentStep.options.forEach(([label, values]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "chatbot-quick-choice";
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          conversationAnswers[currentStep.key] = label;
+          setDiagnosticValues(values);
+          renderConversation();
+          const scenario = updateDiagnosis();
+          const estimate = buildBotEstimate(scenario);
+          if (estimateTarget) {
+            estimateTarget.hidden = false;
+            estimateTarget.textContent = `${conversationCopy.estimatePrefix}: ${estimate.price}. ${conversationCopy.stripePrefix}: ${estimate.payment}`;
+          }
+          trackGaEvent("chatbot_conversation_answer", { event_category: "diagnostic", method: currentStep.key });
+        });
+        quickActions.append(button);
+      });
+      return;
+    }
+
+    const estimate = buildBotEstimate(buildScenarioFromDiagnosticForm());
+    if (estimateTarget) {
+      estimateTarget.hidden = false;
+      estimateTarget.textContent = `${conversationCopy.estimatePrefix}: ${estimate.price}. ${conversationCopy.stripePrefix}: ${estimate.payment}`;
+    }
+  };
+  const updateDiagnosis = () => {
+    const scenario = buildScenarioFromDiagnosticForm();
+    const context = scenario.context || "";
     latestServerDiagnostic = null;
     if (brief) brief.hidden = true;
     const expertSignals = buildExpertSignals(scenario);
@@ -1290,41 +1686,25 @@ initKineticCanvas();
       ({ raid: 3, server: 3, ssd: 2, phone: 1, drive: 0, removable: 0 }[effectiveScenario.support] || 0) +
       ({ water: 4, physical: 4, encrypted: 3, not_detected: 2, slow: 1, deleted: 0 }[effectiveScenario.symptom] || 0) +
       ({ critical: 4, business: 2, standard: 0 }[effectiveScenario.urgency] || 0) +
-      ({ rebuild: 4, opened: 3, software: 2, powered_on: 2, no_attempt: 0 }[history] || 0) +
+      ({ rebuild: 4, opened: 3, software: 2, powered_on: 2, no_attempt: 0 }[effectiveScenario.history] || 0) +
       ({ legal: 2, medical: 2, business: 1, personal: 0 }[effectiveScenario.value] || 0) +
-      ({ running: 2, unknown: 1, powered_off: 0, unplugged: 0 }[state] || 0) +
+      ({ running: 2, unknown: 1, powered_off: 0, unplugged: 0 }[effectiveScenario.state] || 0) +
       clientIntelligence.scoreBoost +
       expertSignals.scoreBoost;
     const level = score >= 13 ? "critical" : score >= 9 ? "high" : score >= 5 ? "priority" : "logical";
     const isCritical = level === "critical";
     const confidence = Math.min(96, 62 + (score * 3));
     const [title, route, avoid] = labels.cases[level];
-    const selections = [
-      `${labels.supportLabel}: ${optionLabel(labels.supportOptions, support)}`,
-      `${labels.symptomLabel}: ${optionLabel(labels.symptomOptions, symptom)}`,
-      `${labels.urgencyLabel}: ${optionLabel(labels.urgencyOptions, urgency)}`,
-      `${labels.historyLabel}: ${optionLabel(labels.historyOptions, history)}`,
-      `${labels.valueLabel}: ${optionLabel(labels.valueOptions, value)}`,
-      `${labels.stateLabel}: ${optionLabel(labels.stateOptions, state)}`,
-      context && `${labels.contextLabel}: ${context}`
-    ];
-
-    latestDiagnosticSummary = `${title}. ${selections.filter(Boolean).join(" | ")}. ${labels.need}: ${clientIntelligence.needLabel}. ${labels.signal}: ${clientIntelligence.signalLabel}. ${labels.proposal}: ${clientIntelligence.proposal.primary} ${clientIntelligence.proposal.nextStep}. ${labels.risk}: ${score}. ${labels.confidence}: ${confidence}%. ${labels.route}: ${route} ${labels.avoid}: ${avoid}`;
+    const selectedSupport = optionLabel(labels.supportOptions, effectiveScenario.support);
+    const selectedSymptom = optionLabel(labels.symptomOptions, effectiveScenario.symptom);
+    const selectedUrgency = optionLabel(labels.urgencyOptions, effectiveScenario.urgency);
     result.innerHTML = `
-      <div class="chatbot-result-head">
-        <strong>${title}</strong>
-        <span>${labels.confidence} ${confidence}%</span>
+      <div class="chatbot-message chatbot-message-assistant">
+        <p>${clientIntelligence.empathy}</p>
+        <p><strong>${title}</strong></p>
+        <p>${route}</p>
+        <p>${avoid}</p>
       </div>
-      <div class="chatbot-meter chatbot-meter-${level}" aria-hidden="true"><span></span></div>
-      <p class="chatbot-empathy">${clientIntelligence.empathy}</p>
-      <dl class="chatbot-decision">
-        <div><dt>${labels.risk}</dt><dd>${score}</dd></div>
-        <div><dt>${labels.need}</dt><dd>${clientIntelligence.needLabel}</dd></div>
-        <div><dt>${labels.signal}</dt><dd>${clientIntelligence.signalLabel}</dd></div>
-        <div><dt>${labels.route}</dt><dd>${route}</dd></div>
-        <div><dt>${labels.avoid}</dt><dd>${avoid}</dd></div>
-      </dl>
-      <p class="chatbot-proposal"><strong>${labels.proposal}</strong> ${clientIntelligence.proposal.primary} ${clientIntelligence.proposal.nextStep}</p>
     `;
     const protocolItems = labels.protocols[level] || [];
     const fixItems = buildFixes({ isCritical, expertSignals });
@@ -1333,18 +1713,31 @@ initKineticCanvas();
     renderList(protocolTarget, protocolItems);
     renderList(fixesTarget, fixItems);
     renderList(expertSignalsTarget, expertSignals.labels.length ? expertSignals.labels : [labels.guardrail]);
-    if (expert) expert.hidden = !diagnosisShown || expertSignals.labels.length === 0;
+    if (expert) expert.hidden = true;
     renderList(reasonsTarget, reasonItems);
     renderList(questionsTarget, questionItems);
+    if (fixed) fixed.hidden = !diagnosisShown;
+    if (insight) insight.hidden = !diagnosisShown;
+    if (protocolTarget) protocolTarget.hidden = !diagnosisShown;
     latestServiceHref = getServiceHref(effectiveScenario.support, effectiveScenario.symptom, effectiveScenario.value);
     latestCasePayload = {
       support: mapCaseSupport(effectiveScenario.support, effectiveScenario.symptom, effectiveScenario.value),
+      symptome: mapCaseSymptom(effectiveScenario),
       urgence: mapCaseUrgency(effectiveScenario.urgency, effectiveScenario.symptom, effectiveScenario.value),
-      profil: mapCaseProfile(effectiveScenario.value),
+      profil: mapCaseClientType(effectiveScenario),
       impact: mapCaseImpact(effectiveScenario.urgency, effectiveScenario.value),
       sensibilite: mapCaseSensitivity(effectiveScenario.symptom, effectiveScenario.value)
     };
-    latestDiagnosticSummary = `${latestDiagnosticSummary} ${expertSignals.labels.length ? `${labels.expert}: ${expertSignals.labels.join(" / ")}. ` : ""}${labels.protocol}: ${protocolItems.join(" / ")}. ${labels.fixed}: ${fixItems.join(" / ")}. ${labels.why}: ${reasonItems.join(" / ")}. ${labels.missing}: ${questionItems.join(" / ")}. ${labels.guardrail}`;
+    latestDiagnosticSummary = [
+      `${title}`,
+      `${labels.contextLabel}: ${context || labels.placeholder}`,
+      `${labels.supportLabel}: ${selectedSupport}`,
+      `${labels.symptomLabel}: ${selectedSymptom}`,
+      `${labels.urgencyLabel}: ${selectedUrgency}`,
+      `${labels.moodLabel}: ${moodLabelFor(effectiveScenario.mood)}`,
+      `${labels.route}: ${route}`,
+      `${labels.avoid}: ${avoid}`
+    ].filter(Boolean).join("\n");
     syncSummaryActions();
     if (diagnosisShown) applyDiagnosisToMainForm();
     emergencyLink.hidden = !isCritical;
@@ -1356,10 +1749,10 @@ initKineticCanvas();
     diagnosisShown = true;
     setDiagnosisVisibility(true);
     const scenario = updateDiagnosis();
+    scheduleServerDiagnostic(scenario);
     applyDiagnosisToMainForm();
-    requestServerDiagnostic(scenario);
-    result?.scrollIntoView({ block: "nearest" });
-    result?.focus({ preventScroll: true });
+    caseForm?.scrollIntoView({ block: "nearest" });
+    caseForm?.querySelector("input")?.focus({ preventScroll: true });
   };
 
   const copyDiagnosticSummary = async () => {
@@ -1403,7 +1796,10 @@ initKineticCanvas();
       nom: `${formData.get("nom") || ""}`.trim(),
       courriel: `${formData.get("courriel") || ""}`.trim(),
       telephone: `${formData.get("telephone") || ""}`.trim(),
+      ville: `${formData.get("ville") || ""}`.trim(),
+      preferenceContact: `${formData.get("preferenceContact") || "email"}`.trim(),
       support: latestCasePayload.support,
+      symptome: latestCasePayload.symptome,
       urgence: latestCasePayload.urgence,
       profil: latestCasePayload.profil,
       impact: latestCasePayload.impact,
@@ -1442,6 +1838,11 @@ initKineticCanvas();
           statusLink.href = `${statusHref}?caseId=${encodeURIComponent(caseId)}`;
         }
 
+        if (paymentLink && caseId) {
+          paymentLink.href = `${statusHref}?caseId=${encodeURIComponent(caseId)}#paiement`;
+          paymentLink.textContent = labels.paymentPrepared;
+        }
+
         if (serverPlan?.servicePath && serviceLink) {
           latestServiceHref = `${homePrefix}${serverPlan.servicePath}`;
           serviceLink.href = latestServiceHref;
@@ -1460,12 +1861,12 @@ initKineticCanvas();
           // Optional browser handoff only.
         }
 
-        trackIntakeFormSubmit(data?.delivery?.client || "superbot");
+        trackIntakeFormSubmit(data?.delivery?.client || "chatbot_case_assistant");
         trackContactIntent("chatbot_autonomous_case_created");
         return;
       }
 
-      if (data?.fallback === "mailto" || response.status >= 500) {
+      if (data?.fallback === "mailto" || response.status >= 500 || [404, 405, 429].includes(response.status) || /anti-abus|temporarily unavailable|indisponible/i.test(data?.message || "")) {
         setCaseStatus("success", labels.caseFallback);
         syncSummaryActions();
         window.location.href = emailLink?.href || "mailto:contact@nexuradata.ca";
@@ -1493,16 +1894,16 @@ initKineticCanvas();
   diagnosticForm.addEventListener("change", () => {
     const scenario = updateDiagnosis();
     if (diagnosisShown) {
-      setCaseStatus("", "");
       scheduleServerDiagnostic(scenario);
+      setCaseStatus("", "");
       trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "local_triage" });
     }
   });
   diagnosticForm.addEventListener("input", () => {
     if (!diagnosisShown) return;
     const scenario = updateDiagnosis();
-    setCaseStatus("", "");
     scheduleServerDiagnostic(scenario);
+    setCaseStatus("", "");
   });
   caseForm?.addEventListener("submit", submitAutonomousCase);
   toggleButton?.addEventListener("click", () => {
@@ -1521,9 +1922,11 @@ initKineticCanvas();
     if (dock.dataset.chatbotOpen !== "true" || dock.contains(event.target)) return;
     setDockOpen(false);
   });
+  renderConversation();
   updateDiagnosis();
   setDiagnosisVisibility(false);
   syncPaymentLink();
+  watchHeroMediaOverlap();
 
   document.querySelectorAll('a[href="#diagnostic-assistant"]').forEach((trigger) => {
     trigger.addEventListener("click", (event) => {
@@ -1540,10 +1943,6 @@ initKineticCanvas();
         copyDiagnosticSummary();
       }
 
-      if (link.dataset.chatbotAction === "stripe_payment") {
-        syncPaymentLink();
-      }
-
       if (link.dataset.chatbotAction === "email_summary" || link.dataset.chatbotAction === "service_route") {
         syncSummaryActions();
       }
@@ -1554,8 +1953,6 @@ initKineticCanvas();
       trackContactIntent(`chatbot_${link.dataset.chatbotAction || "open"}`);
     });
   });
-
-  document.addEventListener("nexuradata:payments-rendered", syncPaymentLink);
 }());
 
 document.querySelectorAll("[data-contact-intent]").forEach((link) => {
@@ -2866,8 +3263,14 @@ if (operationsRoot) {
   const metaUpdated = operationsRoot.querySelector("[data-ops-meta-updated]");
   const metaClient = operationsRoot.querySelector("[data-ops-meta-client]");
   const metaEmail = operationsRoot.querySelector("[data-ops-meta-email]");
+  const metaPhone = operationsRoot.querySelector("[data-ops-meta-phone]");
+  const metaCity = operationsRoot.querySelector("[data-ops-meta-city]");
+  const metaContact = operationsRoot.querySelector("[data-ops-meta-contact]");
   const metaSupport = operationsRoot.querySelector("[data-ops-meta-support]");
+  const metaSymptom = operationsRoot.querySelector("[data-ops-meta-symptom]");
   const metaUrgency = operationsRoot.querySelector("[data-ops-meta-urgency]");
+  const metaIndicativePrice = operationsRoot.querySelector("[data-ops-meta-indicative-price]");
+  const metaReceived = operationsRoot.querySelector("[data-ops-meta-received]");
   const metaSource = operationsRoot.querySelector("[data-ops-meta-source]");
   const metaAccessSent = operationsRoot.querySelector("[data-ops-meta-access-sent]");
   const metaStatusSent = operationsRoot.querySelector("[data-ops-meta-status-sent]");
@@ -2887,6 +3290,7 @@ if (operationsRoot) {
   const caseSubmitButton = caseForm?.querySelector('button[type="submit"]');
   const paymentSubmitButton = paymentForm?.querySelector('button[type="submit"]');
   const metaAcquisition = operationsRoot.querySelector("[data-ops-meta-acquisition]");
+  const metaAssigned = operationsRoot.querySelector("[data-ops-meta-assigned]");
   const quoteStatusDisplay = operationsRoot.querySelector("[data-ops-quote-status]");
   const quoteAmountDisplay = operationsRoot.querySelector("[data-ops-quote-amount]");
   const quotePreapprovalDisplay = operationsRoot.querySelector("[data-ops-quote-preapproval]");
@@ -2895,6 +3299,7 @@ if (operationsRoot) {
   const quoteResult = operationsRoot.querySelector("[data-ops-quote-result]");
   const quoteSendButton = operationsRoot.querySelector("[data-ops-quote-send]");
   const quoteApproveButton = operationsRoot.querySelector("[data-ops-quote-approve]");
+  const quotePdfLink = operationsRoot.querySelector("[data-ops-quote-pdf]");
   const quoteExpireButton = operationsRoot.querySelector("[data-ops-quote-expire]");
   const quoteDeclineButton = operationsRoot.querySelector("[data-ops-quote-decline]");
   const reminderTypeSelect = operationsRoot.querySelector("[data-ops-reminder-type]");
@@ -3389,10 +3794,17 @@ if (operationsRoot) {
     if (metaUpdated) metaUpdated.textContent = formatTimestamp(record.updatedAt);
     if (metaClient) metaClient.textContent = record.name;
     if (metaEmail) metaEmail.textContent = record.email;
+    if (metaPhone) metaPhone.textContent = record.phone || "—";
+    if (metaCity) metaCity.textContent = record.city || "—";
+    if (metaContact) metaContact.textContent = record.preferredContact || "—";
     if (metaSupport) metaSupport.textContent = record.support;
+    if (metaSymptom) metaSymptom.textContent = record.symptom || "—";
     if (metaUrgency) metaUrgency.textContent = record.urgency;
+    if (metaIndicativePrice) metaIndicativePrice.textContent = record.indicativePrice || "—";
+    if (metaReceived) metaReceived.textContent = record.receivedAt ? formatTimestamp(record.receivedAt) : "—";
     if (metaSource) metaSource.textContent = record.sourcePath || "/";
     if (metaAcquisition) metaAcquisition.textContent = record.acquisitionSource || "—";
+    if (metaAssigned) metaAssigned.textContent = record.assignedTo || "—";
     if (metaAccessSent) metaAccessSent.textContent = record.accessCodeLastSentAt ? formatTimestamp(record.accessCodeLastSentAt) : "Pas encore";
     if (metaStatusSent) metaStatusSent.textContent = record.statusEmailLastSentAt ? formatTimestamp(record.statusEmailLastSentAt) : "Pas encore";
     if (messageTarget) messageTarget.textContent = record.message;
@@ -3402,26 +3814,56 @@ if (operationsRoot) {
 
     if (caseForm) {
       const statusInput = caseForm.querySelector('[name="status"]');
+      const receivedAtInput = caseForm.querySelector('[name="receivedAt"]');
+      const cityInput = caseForm.querySelector('[name="city"]');
+      const contactInput = caseForm.querySelector('[name="preferredContact"]');
+      const symptomInput = caseForm.querySelector('[name="symptom"]');
+      const clientTypeInput = caseForm.querySelector('[name="clientType"]');
       const nextStepInput = caseForm.querySelector('[name="nextStep"]');
       const summaryInput = caseForm.querySelector('[name="clientSummary"]');
+      const diagnosticInput = caseForm.querySelector('[name="diagnosticSummary"]');
+      const probabilityInput = caseForm.querySelector('[name="recoveryProbability"]');
+      const timelineInput = caseForm.querySelector('[name="estimatedTimeline"]');
+      const conditionsInput = caseForm.querySelector('[name="quoteConditions"]');
       const notifyInput = caseForm.querySelector('[name="notifyClient"]');
       const qualInput = caseForm.querySelector('[name="qualificationSummary"]');
       const notesInput = caseForm.querySelector('[name="internalNotes"]');
       const flagsInput = caseForm.querySelector('[name="handlingFlags"]');
       const acqInput = caseForm.querySelector('[name="acquisitionSource"]');
+      const assignedInput = caseForm.querySelector('[name="assignedTo"]');
+      const lastActionInput = caseForm.querySelector('[name="lastAction"]');
+      const nextActionInput = caseForm.querySelector('[name="nextAction"]');
+      const documentsInput = caseForm.querySelector('[name="documentsSummary"]');
       const quoteAmtInput = caseForm.querySelector('[name="quoteAmount"]');
       const preapprovalInput = caseForm.querySelector('[name="preapprovalConfirmed"]');
 
       if (statusInput) statusInput.value = record.status;
+      if (receivedAtInput) receivedAtInput.value = record.receivedAt ? new Date(record.receivedAt).toISOString().slice(0, 16) : "";
+      if (cityInput) cityInput.value = record.city || "";
+      if (contactInput) contactInput.value = record.preferredContact || "";
+      if (symptomInput) symptomInput.value = record.symptom || "";
+      if (clientTypeInput) clientTypeInput.value = record.clientType || "";
       if (nextStepInput) nextStepInput.value = record.nextStep;
       if (summaryInput) summaryInput.value = record.clientSummary;
+      if (diagnosticInput) diagnosticInput.value = record.diagnosticSummary || "";
+      if (probabilityInput) probabilityInput.value = record.recoveryProbability || "";
+      if (timelineInput) timelineInput.value = record.estimatedTimeline || "";
+      if (conditionsInput) conditionsInput.value = record.quoteConditions || "Aucune donnée récupérée = aucune facture.";
       if (notifyInput) notifyInput.checked = false;
       if (qualInput) qualInput.value = record.qualificationSummary || "";
       if (notesInput) notesInput.value = record.internalNotes || "";
       if (flagsInput) flagsInput.value = record.handlingFlags || "";
       if (acqInput) acqInput.value = record.acquisitionSource || "";
+      if (assignedInput) assignedInput.value = record.assignedTo || "";
+      if (lastActionInput) lastActionInput.value = record.lastAction || "";
+      if (nextActionInput) nextActionInput.value = record.nextAction || "";
+      if (documentsInput) documentsInput.value = record.documentsSummary || "";
       if (quoteAmtInput) quoteAmtInput.value = record.quoteAmountCents ? (record.quoteAmountCents / 100).toFixed(2) : "";
       if (preapprovalInput) preapprovalInput.checked = Boolean(record.preapprovalConfirmed);
+    }
+
+    if (quotePdfLink) {
+      quotePdfLink.href = `${searchEndpoint.replace(/\/cases$/, "/quote-pdf")}?caseId=${encodeURIComponent(record.caseId)}`;
     }
 
     if (quoteStatusDisplay) quoteStatusDisplay.textContent = quoteStatusLabels[record.quoteStatus] || record.quoteStatus || "Aucune";
@@ -3608,12 +4050,25 @@ if (operationsRoot) {
             action: "update",
             caseId,
             status: caseForm.querySelector('[name="status"]')?.value.trim() || "",
+            receivedAt: caseForm.querySelector('[name="receivedAt"]')?.value.trim() || "",
+            city: caseForm.querySelector('[name="city"]')?.value.trim() || "",
+            preferredContact: caseForm.querySelector('[name="preferredContact"]')?.value.trim() || "",
+            symptom: caseForm.querySelector('[name="symptom"]')?.value.trim() || "",
+            clientType: caseForm.querySelector('[name="clientType"]')?.value.trim() || "",
             nextStep: caseForm.querySelector('[name="nextStep"]')?.value.trim() || "",
             clientSummary: caseForm.querySelector('[name="clientSummary"]')?.value.trim() || "",
+            diagnosticSummary: caseForm.querySelector('[name="diagnosticSummary"]')?.value.trim() || "",
+            recoveryProbability: caseForm.querySelector('[name="recoveryProbability"]')?.value.trim() || "",
+            estimatedTimeline: caseForm.querySelector('[name="estimatedTimeline"]')?.value.trim() || "",
+            quoteConditions: caseForm.querySelector('[name="quoteConditions"]')?.value.trim() || "",
             qualificationSummary: caseForm.querySelector('[name="qualificationSummary"]')?.value.trim() || "",
             internalNotes: caseForm.querySelector('[name="internalNotes"]')?.value.trim() || "",
             handlingFlags: caseForm.querySelector('[name="handlingFlags"]')?.value.trim() || "",
             acquisitionSource: caseForm.querySelector('[name="acquisitionSource"]')?.value.trim() || "",
+            assignedTo: caseForm.querySelector('[name="assignedTo"]')?.value.trim() || "",
+            lastAction: caseForm.querySelector('[name="lastAction"]')?.value.trim() || "",
+            nextAction: caseForm.querySelector('[name="nextAction"]')?.value.trim() || "",
+            documentsSummary: caseForm.querySelector('[name="documentsSummary"]')?.value.trim() || "",
             quoteAmount: caseForm.querySelector('[name="quoteAmount"]')?.value.trim() || "",
             preapprovalConfirmed: Boolean(caseForm.querySelector('[name="preapprovalConfirmed"]')?.checked),
             notifyClient: Boolean(caseForm.querySelector('[name="notifyClient"]')?.checked),
@@ -3796,6 +4251,10 @@ if (operationsRoot) {
         if (action === "quote-send") {
           const amt = caseForm?.querySelector('[name="quoteAmount"]')?.value.trim() || "";
           if (amt) body.quoteAmount = amt;
+          body.diagnosticSummary = caseForm?.querySelector('[name="diagnosticSummary"]')?.value.trim() || "";
+          body.recoveryProbability = caseForm?.querySelector('[name="recoveryProbability"]')?.value.trim() || "";
+          body.estimatedTimeline = caseForm?.querySelector('[name="estimatedTimeline"]')?.value.trim() || "";
+          body.quoteConditions = caseForm?.querySelector('[name="quoteConditions"]')?.value.trim() || "";
         }
 
         const response = await fetch(searchEndpoint, {
@@ -4309,4 +4768,291 @@ if (opsViewRoot) {
 
     loadView();
   }
+}
+
+/* ── RemoteFix client portal and admin dashboard ──────────── */
+
+const remoteFixForm = document.querySelector("[data-remotefix-form]");
+const remoteFixSessionPanel = document.querySelector("[data-remotefix-session]");
+
+const remoteFixParams = new URLSearchParams(window.location.search);
+const remoteFixCredentials = {
+  caseId: remoteFixParams.get("caseId") || "",
+  sessionId: remoteFixParams.get("sessionId") || "",
+  token: remoteFixParams.get("token") || ""
+};
+
+const remoteFixJson = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+const remoteFixIdempotencyKey = () => {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return `rf-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+};
+
+const remoteFixDiagnosticPayload = () => ({
+  caseId: remoteFixCredentials.caseId,
+  sessionId: remoteFixCredentials.sessionId,
+  sessionToken: remoteFixCredentials.token,
+  agentVersion: "tauri-simulated-0.1",
+  platform: "browser_simulated",
+  diagnostics: {
+    disks: [{
+      model: "RemoteFix simulated disk",
+      sizeGb: 1000,
+      smartStatus: "passed",
+      isDetected: true,
+      hasMountPoint: false,
+      fileSystem: "NTFS",
+      isReadOnly: true
+    }],
+    cloud: { provider: "onedrive", syncStatus: "stuck", previousVersionsFound: 3 },
+    outlook: { profileDetected: true, pstFilesFound: 1, ostFilesFound: 1, indexingHealthy: false },
+    system: { freeSpaceGb: 128, criticalEventsLast24h: 0, malwareIndicators: 0, ransomwareExtensionsDetected: [] }
+  }
+});
+
+const renderRemoteFixClientOverview = (data) => {
+  const sessionSummary = document.querySelector("[data-remotefix-session-summary]");
+  const reportTarget = document.querySelector("[data-remotefix-report]");
+  const runButton = document.querySelector("[data-remotefix-run-diagnostic]");
+  if (remoteFixSessionPanel) remoteFixSessionPanel.hidden = false;
+  if (sessionSummary) {
+    sessionSummary.textContent = `${data.case?.caseId || "Dossier"} · ${data.triage?.decision || "diagnostic"} · ${data.session?.status || "session"}`;
+  }
+  if (runButton) runButton.disabled = !data.hasConsent;
+  if (reportTarget) {
+    reportTarget.textContent = JSON.stringify({
+      dossier: data.case?.caseId,
+      statut: data.case?.status,
+      decision: data.triage?.decision,
+      service: data.triage?.service,
+      rapport: data.diagnostic?.summary || "Aucun rapport agent reçu.",
+      actionsAutorisees: data.diagnostic?.safeActionsToOffer || data.triage?.allowedActions || [],
+      actionsBloquees: data.diagnostic?.blockedActions || data.triage?.blockedActions || []
+    }, null, 2);
+  }
+};
+
+if (remoteFixForm) {
+  const messageTarget = document.querySelector("[data-remotefix-message]");
+  const resultPanel = document.querySelector("[data-remotefix-result]");
+  const submitButton = remoteFixForm.querySelector('button[type="submit"]');
+  const endpoint = remoteFixForm.getAttribute("data-remotefix-endpoint") || "/api/remotefix/cases";
+
+  remoteFixForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!remoteFixForm.checkValidity()) {
+      remoteFixForm.reportValidity();
+      return;
+    }
+    const formData = new FormData(remoteFixForm);
+    const payload = {
+      client: {
+        name: `${formData.get("name") || ""}`.trim(),
+        email: `${formData.get("email") || ""}`.trim(),
+        phone: `${formData.get("phone") || ""}`.trim(),
+        type: `${formData.get("clientType") || "individual"}`
+      },
+      intake: {
+        deviceType: `${formData.get("deviceType") || "unknown"}`,
+        systemType: `${formData.get("systemType") || "unknown"}`,
+        symptom: `${formData.get("symptom") || "unknown"}`,
+        urgency: `${formData.get("urgency") || "standard"}`,
+        problemStartedAt: `${formData.get("problemStartedAt") || ""}`.trim(),
+        containsCriticalData: formData.get("containsCriticalData") === "on",
+        attemptedFix: formData.get("attemptedFix") === "on",
+        legalMatter: formData.get("legalMatter") === "on",
+        notes: `${formData.get("notes") || ""}`.trim()
+      },
+      idempotencyKey: remoteFixIdempotencyKey()
+    };
+
+    setButtonBusy(submitButton, true, "Création...");
+    setMessage(messageTarget, "success", "Création du dossier, triage et lien sécurisé...");
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await remoteFixJson(response);
+      if (!response.ok || !data?.ok) throw new Error(data?.message || "RemoteFix indisponible.");
+
+      if (resultPanel) resultPanel.hidden = false;
+      document.querySelector("[data-remotefix-case-title]").textContent = `Dossier ${data.caseId}`;
+      document.querySelector("[data-remotefix-decision]").textContent = data.triage?.decision || "—";
+      document.querySelector("[data-remotefix-service]").textContent = data.triage?.service || "—";
+      document.querySelector("[data-remotefix-risk]").textContent = `${data.triage?.riskLabel || "—"} (${data.triage?.riskScore || 0}/100)`;
+      document.querySelector("[data-remotefix-price]").textContent = data.triage?.priceRange || "—";
+      document.querySelector("[data-remotefix-next]").textContent = data.triage?.nextAction || "—";
+      const secureLink = document.querySelector("[data-remotefix-secure-link]");
+      const reportLink = document.querySelector("[data-remotefix-report-link]");
+      if (secureLink) secureLink.href = data.session?.publicUrl || "#";
+      if (reportLink) reportLink.href = `/api/remotefix/report-pdf?caseId=${encodeURIComponent(data.caseId)}&sessionId=${encodeURIComponent(data.session?.id || "")}&token=${encodeURIComponent(new URL(data.session?.publicUrl || window.location.href).searchParams.get("token") || "")}`;
+      setMessage(messageTarget, data.email?.sent ? "success" : "error", data.email?.sent ? "Dossier créé et courriel Resend envoyé." : "Dossier créé. Courriel simulé ou non configuré.");
+    } catch (error) {
+      setMessage(messageTarget, "error", error instanceof Error ? error.message : "RemoteFix indisponible.");
+    } finally {
+      setButtonBusy(submitButton, false);
+    }
+  });
+}
+
+if (remoteFixSessionPanel && remoteFixCredentials.caseId && remoteFixCredentials.sessionId && remoteFixCredentials.token) {
+  const consentForm = document.querySelector("[data-remotefix-consent-form]");
+  const runButton = document.querySelector("[data-remotefix-run-diagnostic]");
+  const reportTarget = document.querySelector("[data-remotefix-report]");
+  const loadRemoteFixSession = async () => {
+    const response = await fetch(`/api/remotefix/cases?caseId=${encodeURIComponent(remoteFixCredentials.caseId)}&sessionId=${encodeURIComponent(remoteFixCredentials.sessionId)}&token=${encodeURIComponent(remoteFixCredentials.token)}`, { headers: { accept: "application/json" } });
+    const data = await remoteFixJson(response);
+    if (response.ok && data?.ok) renderRemoteFixClientOverview(data);
+    else if (reportTarget) reportTarget.textContent = data?.message || "Lien RemoteFix invalide.";
+  };
+
+  consentForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const response = await fetch("/api/remotefix/consent", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ ...remoteFixCredentials, accepted: true, acceptedTermsVersion: "remotefix-terms-2026-05-07" })
+    });
+    const data = await remoteFixJson(response);
+    if (response.ok && data?.ok) {
+      setMessage(reportTarget, "success", "Consentement reçu. Le diagnostic simulé peut démarrer.");
+      if (runButton) runButton.disabled = false;
+      await loadRemoteFixSession();
+    } else {
+      setMessage(reportTarget, "error", data?.message || "Consentement impossible.");
+    }
+  });
+
+  runButton?.addEventListener("click", async () => {
+    setButtonBusy(runButton, true, "Diagnostic...");
+    const response = await fetch("/api/remotefix/diagnostics", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify(remoteFixDiagnosticPayload())
+    });
+    const data = await remoteFixJson(response);
+    if (response.ok && data?.ok) {
+      if (reportTarget) reportTarget.textContent = JSON.stringify(data.result, null, 2);
+      await loadRemoteFixSession();
+    } else {
+      setMessage(reportTarget, "error", data?.message || "Diagnostic refusé.");
+    }
+    setButtonBusy(runButton, false);
+  });
+
+  loadRemoteFixSession();
+}
+
+const remoteFixAdmin = document.querySelector("[data-remotefix-admin]");
+
+if (remoteFixAdmin) {
+  const listTarget = remoteFixAdmin.querySelector("[data-remotefix-admin-list]");
+  const detailPanel = remoteFixAdmin.querySelector("[data-remotefix-admin-detail]");
+  const messageTarget = remoteFixAdmin.querySelector("[data-remotefix-admin-message]");
+  const searchForm = remoteFixAdmin.querySelector("[data-remotefix-admin-search]");
+  let selectedOverview = null;
+
+  const loadRemoteFixDetail = async (caseId) => {
+    const response = await fetch(`/api/remotefix/admin?caseId=${encodeURIComponent(caseId)}`, { headers: { accept: "application/json" } });
+    const data = await remoteFixJson(response);
+    if (!response.ok || !data?.ok) throw new Error(data?.message || "Dossier indisponible.");
+    selectedOverview = data;
+    if (detailPanel) detailPanel.hidden = false;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-case-id]").textContent = data.case.caseId;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-title]").textContent = `${data.case.name} · ${data.case.email}`;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-decision]").textContent = `${data.triage?.decision || "—"} · ${data.triage?.riskLabel || "—"}`;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-report]").textContent = data.diagnostic?.summary || "Aucun rapport reçu.";
+    remoteFixAdmin.querySelector("[data-remotefix-admin-actions]").textContent = (data.diagnostic?.safeActionsToOffer || data.triage?.allowedActions || []).join(", ") || "Lecture seulement";
+    remoteFixAdmin.querySelector("[data-remotefix-admin-blocked]").textContent = (data.diagnostic?.blockedActions || data.triage?.blockedActions || []).join(", ") || "—";
+    remoteFixAdmin.querySelector("[data-remotefix-admin-pdf]").href = `/api/remotefix/report-pdf?caseId=${encodeURIComponent(data.case.caseId)}`;
+    const auditTarget = remoteFixAdmin.querySelector("[data-remotefix-admin-audit]");
+    auditTarget.replaceChildren(...(data.audit || []).map((entry) => {
+      const item = document.createElement("li");
+      item.textContent = `${formatTimestamp(entry.createdAt)} · ${entry.actor} · ${entry.event}`;
+      return item;
+    }));
+  };
+
+  const loadRemoteFixAdminList = async () => {
+    const formData = new FormData(searchForm);
+    const query = `${formData.get("query") || ""}`.trim();
+    const response = await fetch(`/api/remotefix/admin?query=${encodeURIComponent(query)}`, { headers: { accept: "application/json" } });
+    const data = await remoteFixJson(response);
+    if (!response.ok || !data?.ok) throw new Error(data?.message || "Dashboard indisponible.");
+    listTarget.replaceChildren(...(data.items || []).map((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ops-case-item";
+      button.innerHTML = `<strong>${escapeHtml(item.caseId)}</strong><span>${escapeHtml(item.name)} · ${escapeHtml(item.triage.decision)}</span><small>${escapeHtml(item.triage.riskLabel)} · ${escapeHtml(item.status)}</small>`;
+      button.addEventListener("click", async () => {
+        try {
+          await loadRemoteFixDetail(item.caseId);
+          setMessage(messageTarget, "success", "Dossier RemoteFix chargé.");
+        } catch (error) {
+          setMessage(messageTarget, "error", error instanceof Error ? error.message : "Dossier indisponible.");
+        }
+      });
+      return button;
+    }));
+    setMessage(messageTarget, "success", `${(data.items || []).length} dossier(s) RemoteFix.`);
+  };
+
+  searchForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await loadRemoteFixAdminList();
+    } catch (error) {
+      setMessage(messageTarget, "error", error instanceof Error ? error.message : "Dashboard indisponible.");
+    }
+  });
+
+  remoteFixAdmin.querySelector("[data-remotefix-admin-email]")?.addEventListener("click", async () => {
+    if (!selectedOverview?.case?.caseId) return;
+    const response = await fetch("/api/remotefix/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ caseId: selectedOverview.case.caseId })
+    });
+    const data = await remoteFixJson(response);
+    setMessage(messageTarget, response.ok && data?.ok ? "success" : "error", response.ok && data?.ok ? "Courriel sécurisé envoyé ou simulé." : data?.message || "Envoi impossible.");
+    if (response.ok && data?.ok) await loadRemoteFixDetail(selectedOverview.case.caseId);
+  });
+
+  remoteFixAdmin.querySelector("[data-remotefix-admin-payment]")?.addEventListener("click", async () => {
+    if (!selectedOverview?.case?.caseId) return;
+    const response = await fetch("/api/remotefix/payments", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ caseId: selectedOverview.case.caseId })
+    });
+    const data = await remoteFixJson(response);
+    setMessage(messageTarget, response.ok && data?.ok ? "success" : "error", response.ok && data?.ok ? "Paiement Stripe créé." : data?.message || "Paiement impossible.");
+  });
+
+  remoteFixAdmin.querySelector("[data-remotefix-admin-approve]")?.addEventListener("click", async () => {
+    if (!selectedOverview?.case?.caseId) return;
+    const session = selectedOverview.sessions?.[0];
+    const action = remoteFixAdmin.querySelector("[data-remotefix-admin-command]")?.value || "read_diagnostics";
+    const response = await fetch("/api/remotefix/commands", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ caseId: selectedOverview.case.caseId, sessionId: session?.id, action, paymentAuthorized: true })
+    });
+    const data = await remoteFixJson(response);
+    setMessage(messageTarget, response.ok && data?.ok ? "success" : "error", response.ok && data?.ok ? `Commande signée: ${data.command.id}` : data?.message || "Commande refusée.");
+    if (response.ok && data?.ok) await loadRemoteFixDetail(selectedOverview.case.caseId);
+  });
+
+  searchForm?.requestSubmit();
 }

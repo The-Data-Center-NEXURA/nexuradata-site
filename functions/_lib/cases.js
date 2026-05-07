@@ -1,4 +1,5 @@
 import { getDb } from "./db.js";
+import { buildQuoteNumber, suggestBasePriceCents } from "./quotes.js";
 import { createHostedCheckoutSession } from "./stripe.js";
 import { buildAutomationTimeline, buildCaseAutomationDraft, formatAutomationEventNote } from "./automation.js";
 import { buildConciergeDraft, formatConciergeEventNote } from "./concierge.js";
@@ -13,6 +14,15 @@ import {
 export { decryptAccessCode, encryptAccessCode, generateAccessCode, hashAccessCode, normalizeAccessCode };
 
 const allowedSupports = new Set([
+  "HDD",
+  "SSD / NVMe",
+  "SSD/NVMe",
+  "USB / carte SD",
+  "USB/carte SD",
+  "Téléphone",
+  "RAID / NAS / serveur",
+  "Dossier légal / forensique",
+  "Dossier légal/forensique",
   "Disque dur",
   "SSD",
   "RAID / NAS / serveur",
@@ -23,20 +33,44 @@ const allowedSupports = new Set([
   "Je ne sais pas"
 ]);
 
+const allowedSymptoms = new Set([
+  "fichiers supprimés",
+  "formaté",
+  "non détecté",
+  "bruit / clic",
+  "bruit/clic",
+  "eau / feu / choc",
+  "eau/feu/choc",
+  "ransomware / chiffré",
+  "ransomware/chiffré",
+  "plusieurs disques défaillants",
+  ""
+]);
+
 const allowedUrgencies = new Set([
   "Standard",
   "Rapide",
   "Urgent",
-  "Très sensible"
+  "Très sensible",
+  "Priorité",
+  "Urgence 24–48 h"
 ]);
 
 const allowedProfiles = new Set([
   "Particulier",
+  "Entreprise",
   "Entreprise / TI",
   "Cabinet juridique",
   "Assureur / partenaire",
+  "Avocat",
+  "Assureur",
+  "Comptable",
+  "Police / enquêteur",
+  "Police/enquêteur",
   "Je ne sais pas"
 ]);
+
+const allowedContactPreferences = new Set(["", "email", "téléphone", "sms", "whatsapp"]);
 
 const allowedImpacts = new Set([
   "Planifié / non urgent",
@@ -57,6 +91,24 @@ const allowedPaymentKinds = new Set(["deposit", "final", "custom"]);
 const allowedQuoteStatuses = new Set(["none", "draft", "sent", "approved", "expired", "declined"]);
 const allowedReminderTypes = new Set(["quote_follow_up", "payment_follow_up", "missing_information", "general_follow_up"]);
 const allowedCaseFilterStatuses = new Set([
+  "Nouveau dossier",
+  "En attente du média",
+  "Média reçu",
+  "Diagnostic en cours",
+  "Diagnostic terminé",
+  "Soumission envoyée",
+  "Approuvé",
+  "Refusé",
+  "Récupération en cours",
+  "Données récupérées",
+  "Paiement requis",
+  "Payé",
+  "Livraison prête",
+  "Livré",
+  "Rapport final",
+  "Avis demandé",
+  "Fermé",
+  "Échec sans frais",
   "Dossier reçu",
   "Évaluation en cours",
   "Soumission envoyée",
@@ -105,7 +157,10 @@ export const validateSubmission = (payload) => {
   const nom = normalizeText(payload.nom, 120);
   const courriel = normalizeText(payload.courriel, 160).toLowerCase();
   const telephone = normalizeText(payload.telephone, 40);
+  const ville = normalizeText(payload.ville || payload.city, 120);
+  const preferenceContact = normalizeText(payload.preferenceContact || payload.preferredContact, 40).toLowerCase();
   const support = normalizeText(payload.support, 60);
+  const symptome = normalizeText(payload.symptome || payload.symptom, 80);
   const urgence = normalizeText(payload.urgence, 40);
   const profil = normalizeText(payload.profil, 60);
   const impact = normalizeText(payload.impact, 80);
@@ -131,12 +186,20 @@ export const validateSubmission = (payload) => {
     throw new Error("Support invalide.");
   }
 
+  if (symptome && !allowedSymptoms.has(symptome)) {
+    throw new Error("Symptôme invalide.");
+  }
+
   if (!allowedUrgencies.has(urgence)) {
     throw new Error("Niveau d'urgence invalide.");
   }
 
   if (profil && !allowedProfiles.has(profil)) {
     throw new Error("Profil du demandeur invalide.");
+  }
+
+  if (preferenceContact && !allowedContactPreferences.has(preferenceContact)) {
+    throw new Error("Préférence de contact invalide.");
   }
 
   if (impact && !allowedImpacts.has(impact)) {
@@ -149,6 +212,9 @@ export const validateSubmission = (payload) => {
 
   const qualification = [
     profil ? `Profil du demandeur: ${profil}` : "",
+    symptome ? `Symptôme: ${symptome}` : "",
+    ville ? `Ville: ${ville}` : "",
+    preferenceContact ? `Préférence de contact: ${preferenceContact}` : "",
     impact ? `Impact d'affaires: ${impact}` : "",
     sensibilite ? `Sensibilité du dossier: ${sensibilite}` : ""
   ].filter(Boolean);
@@ -161,7 +227,10 @@ export const validateSubmission = (payload) => {
     nom,
     courriel,
     telephone,
+    ville,
+    preferenceContact,
     support,
+    symptome,
     urgence,
     profil,
     impact,
@@ -345,15 +414,51 @@ export const validatePaymentRequestInput = (payload) => {
 
 const nowIso = () => new Date().toISOString();
 
+export const canonicalCaseStatuses = [
+  "Nouveau dossier",
+  "En attente du média",
+  "Média reçu",
+  "Diagnostic en cours",
+  "Diagnostic terminé",
+  "Soumission envoyée",
+  "Approuvé",
+  "Refusé",
+  "Récupération en cours",
+  "Données récupérées",
+  "Paiement requis",
+  "Payé",
+  "Livraison prête",
+  "Livré",
+  "Rapport final",
+  "Avis demandé",
+  "Fermé",
+  "Échec sans frais"
+];
+
+export const normalizeCaseStatus = (status) => {
+  const normalized = normalizeText(status, 80);
+  const aliases = {
+    "Dossier reçu": "Nouveau dossier",
+    "Évaluation en cours": "Diagnostic en cours",
+    "En attente du client": "En attente du média",
+    "Intervention autorisée": "Approuvé",
+    "En cours": "Récupération en cours",
+    "Terminé": "Livré",
+    "paid": "Payé"
+  };
+
+  return aliases[normalized] || normalized;
+};
+
 const buildInitialTimeline = (automationDraft) => automationDraft ? buildAutomationTimeline(automationDraft) : [
   {
-    title: "Dossier reçu",
+    title: "Nouveau dossier",
     note: "La demande a été enregistrée et qualifiée pour une première lecture.",
     state: "complete",
     sortOrder: 0
   },
   {
-    title: "Évaluation en cours",
+    title: "Diagnostic en cours",
     note: "Lecture initiale du support et qualification du niveau de risque.",
     state: "active",
     sortOrder: 1
@@ -391,19 +496,24 @@ export const createCase = async (env, submission) => {
   const accessCodeCiphertext = await encryptAccessCode(accessCode, env);
   const automationDraft = buildCaseAutomationDraft(submission);
   const timeline = buildInitialTimeline(automationDraft);
-  const status = automationDraft.statusPlan?.status || "Dossier reçu";
+  const status = normalizeCaseStatus(automationDraft.statusPlan?.status || "Nouveau dossier");
   const nextStep = automationDraft.statusPlan?.nextStep || automationDraft.nextStep;
   const clientSummary = automationDraft.clientSummary;
+  const indicativePrice = formatCurrency(suggestBasePriceCents(submission));
 
   await sql`INSERT INTO cases (
-    case_id, created_at, updated_at, name, email, phone, support, urgency,
+    case_id, created_at, updated_at, name, email, phone, city, preferred_contact,
+    support, symptom, urgency, client_type, indicative_price, assigned_to,
+    last_action, next_action, documents_summary, estimated_timeline,
     message, source_path, status, next_step, client_summary,
     access_code_hash, access_code_ciphertext,
     access_code_last_sent_at, status_email_last_sent_at,
     qualification_summary, handling_flags
   ) VALUES (
     ${caseId}, ${createdAt}, ${createdAt}, ${submission.nom}, ${submission.courriel},
-    ${submission.telephone}, ${submission.support}, ${submission.urgence},
+    ${submission.telephone}, ${submission.ville}, ${submission.preferenceContact},
+    ${submission.support}, ${submission.symptome}, ${submission.urgence}, ${submission.profil}, ${indicativePrice}, '',
+    'Dossier ouvert', ${nextStep}, '', '',
     ${submission.message}, ${submission.sourcePath}, ${status}, ${nextStep},
     ${clientSummary}, ${accessCodeHash}, ${accessCodeCiphertext}, '', '',
     ${automationDraft.qualificationSummary}, ${automationDraft.handlingFlags}
@@ -460,6 +570,26 @@ export const recordCaseEvent = async (env, caseId, actor, title, note) => {
   )`;
 };
 
+export const recordNotificationOutbox = async (env, payload = {}) => {
+  const sql = getDb(env);
+  const timestamp = nowIso();
+  const notificationId = normalizeText(payload.notificationId, 80) || `NTF-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
+
+  await sql`INSERT INTO case_notification_outbox (
+    notification_id, case_id, channel, status_trigger, recipient, subject, body,
+    state, provider, provider_message_id, error, created_at, sent_at, created_by
+  ) VALUES (
+    ${notificationId}, ${normalizeCaseId(payload.caseId)}, ${normalizeText(payload.channel, 40)},
+    ${normalizeText(payload.statusTrigger, 80)}, ${normalizeText(payload.recipient, 220)},
+    ${normalizeText(payload.subject, 220)}, ${normalizeMultilineText(payload.body, 4000)},
+    ${normalizeText(payload.state, 40) || "pending"}, ${normalizeText(payload.provider, 80)},
+    ${normalizeText(payload.providerMessageId, 180)}, ${normalizeMultilineText(payload.error, 1000)},
+    ${timestamp}, ${payload.sentAt ? timestamp : null}, ${normalizeText(payload.actor, 120) || "system"}
+  ) ON CONFLICT (notification_id) DO NOTHING`;
+
+  return notificationId;
+};
+
 export const markAccessEmailSent = async (env, caseId) => {
   const sql = getDb(env);
   const timestamp = nowIso();
@@ -497,12 +627,15 @@ export const getVisibleTimeline = async (env, caseId) => {
 const getCaseRow = async (env, caseId) => {
   const sql = getDb(env);
   const results = await sql`SELECT
-    case_id, created_at, updated_at, name, email, phone, support, urgency,
+    id, case_id, created_at, updated_at, name, email, phone, city, preferred_contact,
+    support, symptom, urgency, client_type, indicative_price, received_at,
+    assigned_to, last_action, next_action, documents_summary, estimated_timeline,
     message, source_path, status, next_step, client_summary,
     access_code_hash, access_code_ciphertext,
     access_code_last_sent_at, status_email_last_sent_at,
     qualification_summary, internal_notes, handling_flags,
-    quote_status, quote_amount_cents, quote_sent_at, quote_approved_at,
+    quote_status, quote_number, quote_amount_cents, quote_sent_at, quote_approved_at,
+    diagnostic_summary, recovery_probability, quote_conditions,
     preapproval_confirmed, acquisition_source,
     last_reminder_sent_at, last_client_contact_at
   FROM cases
@@ -967,8 +1100,11 @@ export const getPublicCaseByCredentials = async (env, caseId, accessCode) => {
 
   return {
     caseId: row.case_id,
+    quoteNumber: row.quote_number,
     updatedAt: row.updated_at,
+    receivedAt: row.received_at,
     support: row.support,
+    symptom: row.symptom,
     status: row.status,
     nextStep: row.next_step,
     summary: row.client_summary,
@@ -1004,7 +1140,7 @@ export const approveCaseAuthorization = async (env, payload) => {
   }
 
   const timestamp = nowIso();
-  const status = "Intervention autorisée";
+  const status = "Approuvé";
   const nextStep = "NEXURADATA prépare les consignes et la séquence de traitement confirmées.";
   const clientSummary = "Votre autorisation a été reçue. Le laboratoire peut maintenant poursuivre selon le cadre transmis et préparer les prochaines actions nécessaires.";
 
@@ -1025,25 +1161,25 @@ export const approveCaseAuthorization = async (env, payload) => {
 
   const approvedTimeline = [
     {
-      title: "Dossier reçu",
+      title: "Nouveau dossier",
       note: "La demande a été enregistrée et qualifiée.",
       state: "complete",
       sortOrder: 0
     },
     {
-      title: "Soumission transmise",
+      title: "Soumission envoyée",
       note: "Le cadre d'intervention a été présenté au client.",
       state: "complete",
       sortOrder: 1
     },
     {
-      title: "Autorisation reçue",
+      title: "Approuvé",
       note: `Autorisation confirmée par ${input.signerName}.`,
       state: "complete",
       sortOrder: 2
     },
     {
-      title: "Préparation du traitement",
+      title: "Récupération en cours",
       note: "Le laboratoire prépare les consignes, outils ou manipulations applicables au dossier.",
       state: "active",
       sortOrder: 3
@@ -1081,8 +1217,10 @@ export const listCases = async (env, rawQuery = "", filters = {}) => {
   const like = query ? `%${query}%` : null;
 
   const results = await sql`SELECT
-    case_id, created_at, updated_at, name, email, support,
-    urgency, status, next_step, quote_status
+    case_id, created_at, updated_at, name, email, phone, city, preferred_contact,
+    support, symptom, urgency, client_type, indicative_price, received_at,
+    assigned_to, last_action, next_action, documents_summary, estimated_timeline,
+    status, next_step, quote_status
   FROM cases
   WHERE
     (${like}::text IS NULL OR (case_id LIKE ${like} OR name LIKE ${like} OR email LIKE ${like} OR support LIKE ${like}))
@@ -1114,14 +1252,26 @@ export const getCaseDetail = async (env, caseId) => {
   LIMIT 20`;
 
   const detail = {
+    databaseId: row.id,
     caseId: row.case_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     name: row.name,
     email: row.email,
     phone: row.phone,
+    city: row.city,
+    preferredContact: row.preferred_contact,
     support: row.support,
+    symptom: row.symptom,
     urgency: row.urgency,
+    clientType: row.client_type,
+    indicativePrice: row.indicative_price,
+    receivedAt: row.received_at,
+    assignedTo: row.assigned_to,
+    lastAction: row.last_action,
+    nextAction: row.next_action,
+    documentsSummary: row.documents_summary,
+    estimatedTimeline: row.estimated_timeline,
     message: row.message,
     sourcePath: row.source_path,
     status: row.status,
@@ -1133,9 +1283,13 @@ export const getCaseDetail = async (env, caseId) => {
     internalNotes: row.internal_notes,
     handlingFlags: row.handling_flags,
     quoteStatus: row.quote_status,
+    quoteNumber: row.quote_number,
     quoteAmountCents: row.quote_amount_cents,
     quoteSentAt: row.quote_sent_at,
     quoteApprovedAt: row.quote_approved_at,
+    diagnosticSummary: row.diagnostic_summary,
+    recoveryProbability: row.recovery_probability,
+    quoteConditions: row.quote_conditions,
     preapprovalConfirmed: Boolean(row.preapproval_confirmed),
     acquisitionSource: row.acquisition_source,
     lastReminderSentAt: row.last_reminder_sent_at,
@@ -1237,11 +1391,25 @@ export const buildAndApplyAutomationDraft = async (env, caseId, actor = "ops") =
 export const updateCaseRecord = async (env, payload, actor) => {
   const sql = getDb(env);
   const caseId = normalizeCaseId(payload.caseId);
-  const status = normalizeText(payload.status, 80);
+  const status = normalizeCaseStatus(payload.status);
   const nextStep = normalizeText(payload.nextStep, 180);
+  const receivedAtInput = normalizeText(payload.receivedAt || "", 80);
   const clientSummary = normalizeMultilineText(payload.clientSummary, 800);
+  const diagnosticSummary = normalizeMultilineText(payload.diagnosticSummary ?? "", 1200);
+  const recoveryProbability = normalizeText(payload.recoveryProbability ?? "", 120);
+  const quoteConditions = normalizeMultilineText(payload.quoteConditions ?? "", 1200);
   const qualificationSummary = normalizeMultilineText(payload.qualificationSummary ?? "", 1200);
   const internalNotes = normalizeMultilineText(payload.internalNotes ?? "", 3000);
+  const city = normalizeText(payload.city ?? "", 120);
+  const preferredContact = normalizeText(payload.preferredContact ?? "", 40).toLowerCase();
+  const symptom = normalizeText(payload.symptom ?? "", 80);
+  const clientType = normalizeText(payload.clientType ?? "", 80);
+  const indicativePrice = normalizeText(payload.indicativePrice ?? "", 80);
+  const assignedTo = normalizeText(payload.assignedTo ?? "", 120);
+  const lastAction = normalizeText(payload.lastAction ?? "", 220);
+  const nextAction = normalizeText(payload.nextAction ?? "", 220);
+  const documentsSummary = normalizeMultilineText(payload.documentsSummary ?? "", 1200);
+  const estimatedTimeline = normalizeText(payload.estimatedTimeline ?? "", 120);
   const handlingFlags = normalizeText(payload.handlingFlags ?? "", 400);
   const acquisitionSource = normalizeText(payload.acquisitionSource ?? "", 120);
   const quoteAmountCents = payload.quoteAmount !== undefined && payload.quoteAmount !== null && payload.quoteAmount !== ""
@@ -1266,9 +1434,23 @@ export const updateCaseRecord = async (env, payload, actor) => {
     SET updated_at = ${timestamp},
         status = ${status},
         next_step = ${nextStep},
+        city = ${city || existing.city || ""},
+        preferred_contact = ${preferredContact || existing.preferred_contact || ""},
+        symptom = ${symptom || existing.symptom || ""},
+        client_type = ${clientType || existing.client_type || ""},
+        indicative_price = ${indicativePrice || existing.indicative_price || ""},
+        received_at = ${receivedAtInput || null},
         client_summary = ${clientSummary},
+        diagnostic_summary = ${diagnosticSummary},
+        recovery_probability = ${recoveryProbability},
+        quote_conditions = ${quoteConditions},
         qualification_summary = ${qualificationSummary},
         internal_notes = ${internalNotes},
+        assigned_to = ${assignedTo},
+        last_action = ${lastAction},
+        next_action = ${nextAction},
+        documents_summary = ${documentsSummary},
+        estimated_timeline = ${estimatedTimeline},
         handling_flags = ${handlingFlags},
         acquisition_source = ${acquisitionSource},
         quote_amount_cents = ${quoteAmountCents},
@@ -1294,7 +1476,12 @@ export const updateCaseRecord = async (env, payload, actor) => {
 
   await recordCaseEvent(env, caseId, actor, "Dossier mis à jour", `Statut défini sur "${status}".`);
 
-  return getCaseDetail(env, caseId);
+  const detail = await getCaseDetail(env, caseId);
+  return {
+    ...detail,
+    previousStatus: existing.status,
+    statusChanged: normalizeCaseStatus(existing.status) !== status
+  };
 };
 
 export const regenerateCaseAccessCode = async (env, caseId, actor) => {
@@ -1435,9 +1622,19 @@ export const createCasePaymentRequest = async (env, payload, actor, requestUrl) 
     env,
     input.caseId,
     actor,
-    "Demande de paiement créée",
+    "Facture Stripe créée",
     `${input.label} · ${formatCurrency(input.amountCents, input.currency)}.`
   );
+
+  await sql`UPDATE cases
+    SET updated_at = ${createdAt},
+        status = ${localStatus === "paid" ? "Payé" : "Paiement requis"},
+        next_step = ${localStatus === "paid"
+          ? "Paiement reçu. Le travail démarre ou la livraison chiffrée est débloquée."
+          : "Lien Stripe envoyé. Le travail ou la livraison sera débloqué après paiement."},
+        last_action = 'Facture Stripe créée',
+        next_action = ${localStatus === "paid" ? "Démarrer ou débloquer la livraison" : "Attendre le paiement Stripe"}
+    WHERE case_id = ${input.caseId}`;
 
   const saved = await getPaymentRequestRow(env, paymentRequestId);
   return saved ? mapPaymentRow(saved) : null;
@@ -1497,14 +1694,26 @@ export const updateQuoteStatus = async (env, payload, actor) => {
       ? parseAmountToCents(payload.quoteAmount)
       : row.quote_amount_cents;
 
+    const quoteNumber = row.quote_number || buildQuoteNumber({ id: row.id, caseId: row.case_id, createdAt: row.created_at });
+    const diagnosticSummary = normalizeMultilineText(payload.diagnosticSummary || row.diagnostic_summary || row.client_summary || "Diagnostic terminé.", 1200);
+    const recoveryProbability = normalizeText(payload.recoveryProbability || row.recovery_probability || "À confirmer", 120);
+    const estimatedTimeline = normalizeText(payload.estimatedTimeline || row.estimated_timeline || "À confirmer", 120);
+    const quoteConditions = normalizeMultilineText(payload.quoteConditions || row.quote_conditions || "Aucun travail facturable sans approbation écrite. Aucune donnée récupérée = aucune facture.", 1200);
+
     await sql`UPDATE cases
       SET updated_at = ${timestamp}, quote_status = ${targetStatus},
-          quote_sent_at = ${timestamp}, quote_amount_cents = ${quoteAmount}
+          quote_number = ${quoteNumber}, quote_sent_at = ${timestamp}, quote_amount_cents = ${quoteAmount},
+          status = 'Soumission envoyée', next_step = 'Soumission transmise au client. En attente d’approbation écrite.',
+          diagnostic_summary = ${diagnosticSummary}, recovery_probability = ${recoveryProbability},
+          estimated_timeline = ${estimatedTimeline}, quote_conditions = ${quoteConditions},
+          last_action = 'Soumission PDF générée', next_action = 'Attendre l’approbation client'
       WHERE case_id = ${caseId}`;
   } else if (targetStatus === "approved") {
     await sql`UPDATE cases
       SET updated_at = ${timestamp}, quote_status = ${targetStatus},
-          quote_approved_at = ${timestamp}
+          quote_approved_at = ${timestamp}, status = 'Approuvé', preapproval_confirmed = 1,
+          next_step = 'Soumission approuvée. Création du lien Stripe en cours.',
+          last_action = 'Soumission approuvée', next_action = 'Créer et envoyer le lien Stripe'
       WHERE case_id = ${caseId}`;
   } else {
     await sql`UPDATE cases
@@ -1629,6 +1838,39 @@ export const syncPaymentRequestFromStripe = async (env, event) => {
           : `Le paiement ${paymentRequestId} n'a pas abouti.`;
 
     await recordCaseEvent(env, existing.case_id, "stripe-webhook", title, note);
+
+    if (localStatus === "paid") {
+      await sql`UPDATE cases
+        SET updated_at = ${timestamp},
+            status = 'Payé',
+            next_step = 'Paiement reçu. Le travail démarre ou la livraison chiffrée est débloquée.',
+            last_action = 'Paiement Stripe reçu',
+            next_action = 'Démarrer la récupération ou débloquer la livraison chiffrée',
+            last_client_contact_at = ${timestamp}
+        WHERE case_id = ${existing.case_id}`;
+
+      await sql`UPDATE case_updates
+        SET is_visible = 0, updated_at = ${timestamp}
+        WHERE case_id = ${existing.case_id} AND kind = 'timeline' AND is_visible = 1`;
+
+      const paidTimeline = [
+        ["Nouveau dossier", "La demande a été enregistrée.", "complete"],
+        ["Soumission approuvée", "Le client a approuvé la soumission.", "complete"],
+        ["Payé", "Paiement Stripe confirmé.", "complete"],
+        ["Récupération ou livraison", "Le travail démarre ou la livraison chiffrée est débloquée.", "active"]
+      ];
+
+      for (let index = 0; index < paidTimeline.length; index += 1) {
+        const [stepTitle, stepNote, stepState] = paidTimeline[index];
+        await sql`INSERT INTO case_updates (
+          case_id, kind, title, note, state, sort_order, is_visible,
+          created_at, updated_at, created_by
+        ) VALUES (
+          ${existing.case_id}, 'timeline', ${stepTitle}, ${stepNote}, ${stepState},
+          ${index}, 1, ${timestamp}, ${timestamp}, 'stripe-webhook'
+        )`;
+      }
+    }
   }
 
   const updated = await getPaymentRequestRow(env, paymentRequestId);

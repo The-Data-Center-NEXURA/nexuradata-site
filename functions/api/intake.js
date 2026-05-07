@@ -1,7 +1,18 @@
 import { createCase, validateSubmission } from "../_lib/cases.js";
 import { sendClientAccessEmail, sendLabNotificationEmail } from "../_lib/email.js";
 import { json, methodNotAllowed, onOptions, parsePayload } from "../_lib/http.js";
+import { sendLifecycleNotifications } from "../_lib/notifications.js";
+import { logError } from "../_lib/observability.js";
 import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
+
+const isUserFacingValidationError = (error) => error instanceof Error && (
+  error.message.includes("obligatoire") ||
+  error.message.includes("requis") ||
+  error.message.includes("invalide") ||
+  error.message.includes("format") ||
+  error.message.includes("courriel") ||
+  error.message.includes("Requête rejetée")
+);
 
 export const onRequestOptions = (context) => onOptions(context.env, "POST, OPTIONS");
 
@@ -56,7 +67,7 @@ export const onRequestPost = async (context) => {
 
     const submission = validateSubmission(payload);
     const intakeRecord = await createCase(context.env, submission);
-    const [labDelivery, clientDelivery] = await Promise.all([
+    const [labDelivery, clientDelivery, lifecycleDelivery] = await Promise.all([
       sendLabNotificationEmail(context.env, intakeRecord, context.request.url),
       sendClientAccessEmail(
         context.env,
@@ -70,7 +81,19 @@ export const onRequestPost = async (context) => {
         },
         context.request.url,
         "initial"
-      )
+      ),
+      sendLifecycleNotifications(context.env, {
+        caseId: intakeRecord.caseId,
+        updatedAt: intakeRecord.createdAt,
+        name: intakeRecord.nom,
+        email: intakeRecord.courriel,
+        phone: intakeRecord.telephone,
+        status: intakeRecord.status,
+        nextStep: intakeRecord.nextStep,
+        support: intakeRecord.support,
+        symptom: intakeRecord.symptome,
+        clientSummary: intakeRecord.clientSummary
+      }, context.request.url, "Nouveau dossier", "system")
     ]);
 
     return json({
@@ -117,22 +140,24 @@ export const onRequestPost = async (context) => {
       },
       delivery: {
         lab: labDelivery.sent ? "sent" : labDelivery.reason,
-        client: clientDelivery.sent ? "sent" : clientDelivery.reason
+        client: clientDelivery.sent ? "sent" : clientDelivery.reason,
+        lifecycleEmail: lifecycleDelivery.email.sent ? "sent" : lifecycleDelivery.email.reason,
+        lifecycleWhatsApp: lifecycleDelivery.whatsapp.sent ? "sent" : lifecycleDelivery.whatsapp.reason
       }
     });
   } catch (error) {
-    const isUserError = error instanceof Error && (
-      error.message.includes("obligatoire") ||
-      error.message.includes("invalide") ||
-      error.message.includes("format") ||
-      error.message.includes("courriel")
-    );
+    if (isUserFacingValidationError(error)) {
+      return json({ ok: false, message: error.message }, { status: 400 });
+    }
+
+    logError(context, "api.intake.processing_error", error);
     return json(
       {
         ok: false,
-        message: isUserError ? error.message : "Erreur de traitement."
+        fallback: "mailto",
+        message: "La création en ligne n'a pas pu être complétée. Le courriel préparé va s'ouvrir pour que le dossier ne soit pas perdu."
       },
-      { status: 400 }
+      { status: 503 }
     );
   }
 };

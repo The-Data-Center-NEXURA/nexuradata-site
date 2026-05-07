@@ -19,7 +19,7 @@ const ensureSecret = (value, label) => {
   return normalized;
 };
 
-const getStripeMode = (env) => {
+export const getStripeMode = (env) => {
   const mode = normalizeString(env?.STRIPE_MODE, 20).toLowerCase();
   return mode === "test" ? "test" : "live";
 };
@@ -40,20 +40,29 @@ const assertStripeKeyMode = (env, secretKey) => {
   }
 };
 
-const assertStripeObjectMode = (env, value, label = "Stripe") => {
+export const getStripeObjectModeMismatch = (env, value, label = "Stripe") => {
   const mode = getStripeMode(env);
 
   if (!value || typeof value.livemode !== "boolean") {
-    return;
+    return "";
   }
 
   if (mode === "live" && value.livemode === false) {
-    throw new Error(`${label} est en mode test alors que STRIPE_MODE=live. Vérifiez les clés et recréez le webhook/lien en mode live.`);
+    return `${label} est en mode test alors que STRIPE_MODE=live. Vérifiez les clés et recréez le webhook/lien en mode live.`;
   }
 
   if (mode === "test" && value.livemode === true) {
-    throw new Error(`${label} est en mode live alors que STRIPE_MODE=test. Utilisez des credentials test en local.`);
+    return `${label} est en mode live alors que STRIPE_MODE=test. Utilisez des credentials test en local.`;
   }
+
+  return "";
+};
+
+export const isStripeObjectModeMismatch = (env, value) => Boolean(getStripeObjectModeMismatch(env, value));
+
+const assertStripeObjectMode = (env, value, label = "Stripe") => {
+  const mismatch = getStripeObjectModeMismatch(env, value, label);
+  if (mismatch) throw new Error(mismatch);
 };
 
 const buildBody = (entries) => {
@@ -222,6 +231,5 @@ export const verifyStripeWebhook = async (env, request) => {
   }
 
   const event = rawBody ? JSON.parse(rawBody) : null;
-  assertStripeObjectMode(env, event, "L'événement Stripe");
   return event;
 };

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { onRequestPost as intakeHandler, onRequestOptions as intakeOptions } from "../../functions/api/intake.js";
 import { onRequestPost as diagnosticHandler, onRequestOptions as diagnosticOptions, onRequest as diagnosticFallback } from "../../functions/api/diagnostic.js";
 import { onRequestPost as statusHandler, onRequestOptions as statusOptions, onRequest as statusFallback } from "../../functions/api/status.js";
@@ -7,14 +7,55 @@ import { isAllowedStripeWebhookEvent, onRequestPost as webhookHandler } from "..
 
 // ─── Helpers ────────────────────────────────────────────────
 
-const makeContext = (body, env = {}, method = "POST") => ({
+let requestCounter = 0;
+
+const makeContext = (body, env = {}, method = "POST") => {
+  requestCounter += 1;
+  return {
   request: new Request("https://nexuradata.ca/api/intake", {
     method,
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "cf-connecting-ip": `203.0.113.${requestCounter}` },
     body: JSON.stringify(body)
   }),
   env
-});
+  };
+};
+
+const makeSignedStripeRequest = async (body, secret = "whsec_test_secret") => {
+  const rawBody = JSON.stringify(body);
+  const timestamp = Math.floor(Date.now() / 1000);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${rawBody}`));
+  const signature = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+
+  return new Request("https://nexuradata.ca/api/stripe-webhook", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "Stripe-Signature": `t=${timestamp},v1=${signature}`
+    },
+    body: rawBody
+  });
+};
+
+const validIntakePayload = {
+  nom: "Jean Dupont",
+  courriel: "jean@example.com",
+  telephone: "514-555-0100",
+  support: "Disque dur",
+  urgence: "Standard",
+  profil: "Particulier",
+  impact: "Planifié / non urgent",
+  sensibilite: "Standard",
+  message: "Mon disque ne démarre plus.",
+  consentement: true
+};
 
 // ─── intake endpoint ────────────────────────────────────────
 
@@ -43,6 +84,22 @@ describe("POST /api/intake", () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.ok).toBe(false);
+  });
+
+  it("returns mail fallback when backend processing fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const ctx = makeContext(validIntakePayload, { DATABASE_URL: "wrong-test-url", ACCESS_CODE_SECRET: "test-secret" });
+
+    try {
+      const res = await intakeHandler(ctx);
+      expect(res.status).toBe(503);
+      const body = await res.json();
+      expect(body.ok).toBe(false);
+      expect(body.fallback).toBe("mailto");
+      expect(body.message).toContain("courriel préparé");
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 
   it("OPTIONS handler returns 204", () => {
@@ -184,15 +241,45 @@ describe("POST /api/stripe-webhook", () => {
     expect(isAllowedStripeWebhookEvent("async_payment_succeeded")).toBe(false);
   });
 
-  it("returns 503 when DATABASE_URL is not configured", async () => {
-    const ctx = makeContext({}, {});
-    ctx.request = new Request("https://nexuradata.ca/api/stripe-webhook", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({})
-    });
+  it("returns 503 when a processable event arrives without DATABASE_URL", async () => {
+    const env = { STRIPE_MODE: "live", STRIPE_WEBHOOK_SECRET: "whsec_test_secret" };
+    const ctx = makeContext({}, env);
+    ctx.request = await makeSignedStripeRequest({
+      id: "evt_live_missing_db",
+      type: "checkout.session.completed",
+      livemode: true,
+      data: {
+        object: {
+          id: "cs_live_missing_db",
+          object: "checkout.session",
+          client_reference_id: "PAY-20260507-MISSINGDB"
+        }
+      }
+    }, env.STRIPE_WEBHOOK_SECRET);
     const res = await webhookHandler(ctx);
     expect(res.status).toBe(503);
+  });
+
+  it("acknowledges signed sandbox events sent to the live endpoint without processing", async () => {
+    const env = { STRIPE_MODE: "live", STRIPE_WEBHOOK_SECRET: "whsec_test_secret" };
+    const ctx = makeContext({}, env);
+    ctx.request = await makeSignedStripeRequest({
+      id: "evt_test_to_live",
+      type: "checkout.session.completed",
+      livemode: false,
+      data: {
+        object: {
+          id: "cs_test_to_live",
+          object: "checkout.session",
+          client_reference_id: "PAY-20260507-TESTTOLIVE"
+        }
+      }
+    }, env.STRIPE_WEBHOOK_SECRET);
+
+    const res = await webhookHandler(ctx);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toMatchObject({ ok: true, received: true, ignored: true, reason: "mode_mismatch" });
   });
 
   it("returns 400 when signature verification fails", async () => {

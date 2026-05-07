@@ -143,7 +143,7 @@ describe("buildCaseAutomationDraft()", () => {
     expect(draft.clientNeed.key).toBe("business_continuity");
     expect(draft.proposal.primary).toContain("continuité");
     expect(draft.servicePath).toBe("/recuperation-raid-ssd-montreal.html");
-    expect(draft.statusPlan.status).toBe("Évaluation en cours");
+    expect(draft.statusPlan.status).toBe("Diagnostic en cours");
     expect(draft.quotePlan.paymentKind).toBe("deposit");
     expect(draft.clientActions[0]).toContain("Ne lancez aucune reconstruction");
     expect(draft.operatorTasks).toEqual(expect.arrayContaining([

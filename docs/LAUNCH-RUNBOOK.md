@@ -3,12 +3,29 @@
 ## 1. Cloudflare Pages et Neon Postgres
 
 1. Connecter le repo a Cloudflare Pages si ce n'est pas deja fait.
-2. Provisionner une base Neon Postgres (https://neon.tech) pour le projet.
+2. Provisionner une base Neon Postgres ([neon.tech](https://neon.tech)) pour le projet.
 3. Recuperer le `DATABASE_URL` (chaine de connexion pooled).
 4. Declarer `DATABASE_URL` comme secret Cloudflare Pages (production + preview).
 5. Copier `.dev.vars.example` vers `.dev.vars` pour le dev local et y placer un `DATABASE_URL` de branche Neon.
 6. Appliquer le schema consolide via `psql` ou la console Neon:
    - `psql "$DATABASE_URL" -f migrations/neon/0001_full_schema.sql`
+
+### Cloudflare R2 Object Storage
+
+R2 est le bon stockage pour les pieces jointes futures: captures, journaux, documents, preuves ou petits lots transmis apres ouverture d'un dossier. Ne pas l'utiliser comme depot public non controle.
+
+Configuration recommandee:
+
+1. Creer deux buckets R2 prives:
+   - production: `nexuradata-case-uploads`
+   - preview/dev: `nexuradata-case-uploads-preview`
+2. Garder l'acces public des buckets desactive.
+3. Ajouter un binding Cloudflare Pages seulement quand le flux d'upload est implemente, par exemple `CASE_UPLOADS`.
+4. Stocker dans Neon uniquement les metadonnees: `caseId`, nom objet R2, type, taille, horodatage, statut de retention.
+5. Utiliser des URLs signees ou des endpoints authentifies a duree courte pour l'envoi et la consultation.
+6. Definir une politique de retention/suppression par dossier avant d'accepter des fichiers sensibles en production.
+
+Important: les supports complets, images disque et preuves lourdes ne doivent pas etre ouverts en upload public. Utiliser R2 pour les documents et fichiers demandes par l'equipe, apres cadrage du dossier.
 
 ## 2. Emails
 

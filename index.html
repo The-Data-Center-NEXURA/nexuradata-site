@@ -37,7 +37,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/site.css?v=20260507e">
+  <link rel="stylesheet" href="assets/css/site.css?v=20260507h">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -164,7 +164,7 @@
       "url": "https://nexuradata.ca/"
     }
   </script>
-  <script src="assets/js/site.js?v=20260507e" defer></script>
+  <script src="assets/js/site.js?v=20260507h" defer></script>
 </head>
 
 <body>
@@ -223,22 +223,23 @@
         </div>
 
         <aside class="hero-panel hero-lab-panel" aria-label="Engagement laboratoire">
-          <div class="lab-snapshot" aria-hidden="true">
-            <dl class="lab-snapshot-grid">
-              <div>
-                <dt>Analyse</dt>
-                <dd>84%</dd>
-              </div>
-              <div>
-                <dt>Alignement</dt>
-                <dd>97%</dd>
-              </div>
-              <div>
-                <dt>Contrôle</dt>
-                <dd>OK</dd>
-              </div>
-            </dl>
-          </div>
+          <figure class="lab-snapshot lab-snapshot-video" data-facebook-video-stage>
+            <img class="lab-snapshot-media" src="assets/icons/hero-lab-media.jpg" alt="Carte électronique inspectée en contexte de récupération de données" width="1200" height="800" decoding="async" fetchpriority="high">
+            <figcaption class="lab-video-story">
+              <span>Le parcours</span>
+              <strong>Perdre les données. Les retrouver.</strong>
+            </figcaption>
+            <div class="lab-video-actions" aria-label="Vidéos NEXURADATA">
+              <button type="button" class="lab-video-trigger" data-facebook-video-trigger data-facebook-video-src="https://www.facebook.com/plugins/video.php?height=314&amp;href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1353554126829936%2F&amp;show_text=false&amp;width=560&amp;t=0" data-facebook-video-title="Perte de données - NEXURADATA" data-facebook-video-width="560" data-facebook-video-height="314" data-facebook-video-format="wide" aria-label="Lire la vidéo Perte de données">
+                <span class="lab-video-play" aria-hidden="true"></span>
+                <span><strong>Perte de données</strong><small>Quand tout disparaît</small></span>
+              </button>
+              <button type="button" class="lab-video-trigger" data-facebook-video-trigger data-facebook-video-src="https://www.facebook.com/plugins/video.php?height=314&amp;href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2793337254360216%2F&amp;show_text=false&amp;width=560&amp;t=0" data-facebook-video-title="Données retrouvées - NEXURADATA" data-facebook-video-width="560" data-facebook-video-height="314" data-facebook-video-format="wide" aria-label="Lire la vidéo Données retrouvées">
+                <span class="lab-video-play" aria-hidden="true"></span>
+                <span><strong>Données retrouvées</strong><small>Le dossier revient</small></span>
+              </button>
+            </div>
+          </figure>
           <div class="lab-commitment-card">
             <p class="panel-label">Engagement laboratoire</p>
             <h2>Évaluation claire, sans engagement.</h2>
@@ -385,16 +386,16 @@
           <article class="page-card service-card">
             <p class="service-index">02 / entreprise</p>
             <h3>RAID, NAS, serveur ou stockage critique en panne</h3>
-            <p>Pour les entreprises quand un serveur, un NAS ou un RAID bloque le travail ou contient des données importantes.</p>
+            <p>Pour les entreprises quand un serveur, un NAS ou un RAID bloque le travail, contient des données importantes ou exige une décision rapide sans reconstruction improvisée.</p>
             <ul class="offer-points" role="list">
-              <li>RAID dégradé, NAS inaccessible ou serveur hors ligne</li>
-              <li>On évite les reconstructions improvisées qui peuvent empirer le problème</li>
-              <li>Pour équipes TI, dirigeants, cabinets et partenaires techniques</li>
+              <li>RAID dégradé, NAS inaccessible, volume serveur hors ligne ou VM critique</li>
+              <li>Collecte de contexte: modèle, ordre des disques, contrôleur, logs et dernière action tentée</li>
+              <li>Plan clair pour TI, direction, MSP, cabinet ou assureur avant toute manipulation</li>
             </ul>
             <ul class="pill-list offer-meta" role="list">
+              <li>Triage serveur dès 399 $</li>
               <li>Urgence 7 j / 7</li>
-              <li>Priorité</li>
-              <li>Dossier entreprise</li>
+              <li>Décision TI</li>
             </ul>
             <a class="service-link" href="recuperation-raid-ssd-montreal">Voir l'offre</a>
           </article>
@@ -509,7 +510,7 @@
 
           <article class="page-card trust-card">
             <h3>Technicien certifié</h3>
-            <p>Les dossiers sensibles sont traités par un examinateur certifié en analyse numérique.</p>
+            <p>Les dossiers sensibles sont relus par le fondateur, examinateur certifié en analyse numérique, avant toute consigne risquée.</p>
             <a class="service-link" href="le-laboratoire">Le laboratoire</a>
           </article>
 
@@ -538,7 +539,7 @@
 
           <article class="page-card trust-card">
             <h3>Un seul contact</h3>
-            <p>Vous savez à qui parler. Le même responsable suit votre dossier du début à la fin.</p>
+            <p>Vous savez à qui parler. Le fondateur garde la responsabilité du cadre, de la méthode et des décisions sensibles.</p>
             <a class="service-link" href="mot-du-fondateur">Mot du fondateur</a>
           </article>
 
@@ -776,53 +777,45 @@
 
             <div class="contact-rail">
               <article class="contact-card contact-card-channels">
-                <h3>Canaux d'urgence</h3>
+                <h3>Chemin le plus rapide</h3>
                 <div class="channel-list" aria-label="Canaux d'urgence">
                   <a class="channel-link channel-link-whatsapp" href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20."
                     target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_emergency_channel">
-                    <span>WhatsApp urgence</span>
-                    <strong>Cas critique seulement</strong>
+                    <span>WhatsApp</span>
+                    <strong>Urgence ou média instable</strong>
                   </a>
                   <a class="channel-link" href="/suivi-dossier-client-montreal" data-contact-intent="status_channel">
                     <span>Suivi sécurisé</span>
                     <strong>Portail client</strong>
                   </a>
-                  <a class="channel-link" href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer" data-contact-intent="google_channel">
-                    <span>Google</span>
-                    <strong>Profil et avis</strong>
-                  </a>
                 </div>
               </article>
 
-              <article class="contact-card qr-card">
+              <article class="contact-card qr-card contact-card-compact">
                 <h3>QR mobile</h3>
                 <img src="/assets/icons/contact-qr.png" alt="QR code de contact NEXURADATA" class="contact-qr" loading="lazy" width="220" height="220">
-                <p>Scannez pour ouvrir le contact NEXURADATA sur mobile et garder le lien sous la main.</p>
+                <p>Scannez pour garder le contact sous la main.</p>
               </article>
 
-              <article class="contact-card">
-                <h3>Avant toute manipulation</h3>
+              <article class="contact-card contact-card-founder">
+                <h3>Réponse du fondateur</h3>
                 <ul class="contact-list">
-                  <li>Ne pas reformater</li>
-                  <li>Ne pas multiplier les redémarrages</li>
-                  <li>Ne pas improviser sur un RAID</li>
+                  <li>Ne reformatez pas.</li>
+                  <li>Ne multipliez pas les redémarrages.</li>
+                  <li>Ne reconstruisez pas un RAID sans plan.</li>
                 </ul>
+                <a href="/mot-du-fondateur" data-contact-intent="founder_rail">Lire le mot du fondateur</a>
               </article>
 
               <article class="contact-card">
-                <h3>Coordonnées</h3>
+                <h3>Coordonnées directes</h3>
                 <a href="tel:+14388130592" data-contact-intent="phone_rail">+1 438 813-0592</a>
                 <a href="mailto:contact@nexuradata.ca" data-contact-intent="email_rail">contact@nexuradata.ca</a>
-                <a href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20."
-                  rel="noopener noreferrer" target="_blank" class="whatsapp-inline-link" data-contact-intent="whatsapp_emergency_rail">WhatsApp urgence +1 438 813-0592</a>
-                <a href="/suivi-dossier-client-montreal" data-contact-intent="status_rail">Suivi de dossier</a>
-                <a href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer" data-contact-intent="google_rail">Google / avis</a>
                 <p class="service-area">
                   Zone de service: Montréal et Grand Montréal<br>
                   Réception sécurisée sur rendez-vous confirmé seulement
                 </p>
-                <p><strong>Ouvert 7/7</strong> — 9 h à 18 h</p>
-                <p>Urgences acceptées en tout temps par courriel.</p>
+                <p><strong>Ouvert 7/7</strong> — 9 h à 18 h. Urgences acceptées en tout temps par courriel.</p>
               </article>
             </div>
           </div>

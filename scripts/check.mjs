@@ -23,8 +23,8 @@ import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SITE_CSS_VERSION = "20260507e";
-const SITE_JS_VERSION = "20260507e";
+const SITE_CSS_VERSION = "20260507h";
+const SITE_JS_VERSION = "20260507h";
 const errors = [];
 
 function fail(rule, detail) {
@@ -135,8 +135,8 @@ if (existsSync(siteCssPath)) {
         fail("IBM_BODY_FONT", "assets/css/site.css body must use var(--font-sans).");
     }
 
-    if (!siteCss.includes(".chatbot-dock") || !siteCss.includes(".chatbot-brand-tile") || !siteCss.includes(".chatbot-brand-logo") || /\.whatsapp-fab\b/.test(siteCss)) {
-        fail("IBM_CHATBOT_CSS", "assets/css/site.css must expose the branded NEXURADATA square chatbot dock, not the old WhatsApp FAB.");
+    if (!siteCss.includes(".chatbot-dock") || !siteCss.includes(".chatbot-brand-tile") || !siteCss.includes(".chatbot-brand-logo") || !siteCss.includes(".chatbot-message") || /\.whatsapp-fab\b/.test(siteCss)) {
+        fail("CHATBOT_CSS", "assets/css/site.css must expose the branded NEXURADATA conversational case assistant, not the old WhatsApp FAB.");
     }
 
     if (!siteCss.includes(".cookie-consent") || !siteCss.includes(".footer-cookie-button")) {
@@ -158,8 +158,29 @@ if (existsSync(siteCssPath)) {
 const siteJsPath = join(ROOT, "assets", "js", "site.js");
 if (existsSync(siteJsPath)) {
     const siteJs = readFileSync(siteJsPath, "utf8");
-    if (!siteJs.includes("chatbot-dock") || !siteJs.includes("/assets/nexuradata-master.svg") || !siteJs.includes("/assets/nexuradata-icon.png") || !siteJs.includes("data-chatbot-diagnostic") || !siteJs.includes('data-chatbot-action="urgent_whatsapp"') || !siteJs.includes('data-chatbot-action="stripe_payment"') || !siteJs.includes('data-chatbot-action="copy_summary"') || !siteJs.includes("data-chatbot-protocol") || !siteJs.includes("data-chatbot-case-form") || !siteJs.includes("submitAutonomousCase")) {
-        fail("IBM_CHATBOT_JS", "assets/js/site.js must render the branded NEXURADATA square superbot with autonomous case creation, protocol, Stripe handoff, copy summary, and urgent WhatsApp.");
+    const requiredChatbotMarkers = [
+        "chatbot-dock",
+        "/assets/nexuradata-master.svg",
+        "/assets/nexuradata-icon.png",
+        "data-chatbot-diagnostic",
+        "chatbot-message",
+        "inferScenarioFromContext",
+        'data-chatbot-action="email_summary"',
+        'data-chatbot-action="urgent_whatsapp"',
+        "data-chatbot-case-form",
+        "submitAutonomousCase"
+    ];
+    const missingChatbotMarkers = requiredChatbotMarkers.filter((marker) => !siteJs.includes(marker));
+    if (missingChatbotMarkers.length > 0) {
+        fail("CHATBOT_JS", `assets/js/site.js must render the simple NEXURADATA case conversation with case creation, mail fallback, email fallback and urgent WhatsApp. Missing: ${missingChatbotMarkers.join(", ")}.`);
+    }
+
+    if (siteJs.includes('data-chatbot-action="stripe_payment"') || siteJs.includes('data-chatbot-action="copy_summary"') || /<select\s+name=["']support["']/i.test(siteJs) || /<ul\s+class=["']chatbot-protocol["']/i.test(siteJs)) {
+        fail("CHATBOT_OVERCOMPLICATED_UI", "assets/js/site.js must not expose the old selector grid, protocol panel, copy action or payment handoff inside the public case assistant.");
+    }
+
+    if (/super.?bot/i.test(siteJs)) {
+        fail("CHATBOT_OVERENGINEERED_COPY", "assets/js/site.js must not expose or track the public assistant as an overengineered bot.");
     }
 
     if (!siteJs.includes("data-stripe-checkout-link") || !siteJs.includes("nexuradata:payments-rendered")) {
@@ -206,6 +227,28 @@ for (const file of googleFacingFiles) {
     if (/\b(?:href|action)=(['"])(?:(?:\.\.\/)?|\/(?:en\/)?)[A-Za-z0-9-]+\.html(?:[#?][^'"]*)?\1/i.test(content)) {
         fail("GOOGLE_ADS_CLEAN_URLS", `${rel}: public links must use final clean URLs, not .html redirect URLs.`);
     }
+}
+
+const redirectsPath = join(ROOT, "_redirects");
+if (existsSync(redirectsPath)) {
+    const redirectLines = readFileSync(redirectsPath, "utf8").split(/\r?\n/);
+    redirectLines.forEach((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) return;
+
+        const [source, destination, status] = trimmed.split(/\s+/);
+        if (!source || !destination) return;
+
+        if (/\.html(?:$|[?#])/.test(destination)) {
+            fail("REDIRECT_HTML_DESTINATION", `_redirects:${index + 1}: redirect destinations must be final clean URLs, not .html pages.`);
+        }
+
+        if ((source.includes(".html") || source.startsWith("https://www.nexuradata.ca/")) && status !== "301") {
+            fail("REDIRECT_PERMANENT_CANONICAL", `_redirects:${index + 1}: public canonical redirects from .html or www must use status 301.`);
+        }
+    });
+} else {
+    fail("REDIRECTS_MISSING", "_redirects file not found.");
 }
 
 // ─── 2. No hardcoded secrets in functions/ ───────────────────────────────────
@@ -307,6 +350,8 @@ const enHtmlPages = existsSync(enDir)
     : [];
 const enHtmlSet = new Set(enHtmlPages);
 const rootHtmlSet = new Set(rootHtmlPages);
+const sitemapPath = join(ROOT, "sitemap.xml");
+const sitemapContent = existsSync(sitemapPath) ? readFileSync(sitemapPath, "utf8") : "";
 
 for (const file of [...rootHtmlPages.map((page) => join(ROOT, page)), ...enHtmlPages.map((page) => join(enDir, page))]) {
     const rel = relative(ROOT, file).replaceAll("\\", "/");
@@ -322,6 +367,16 @@ for (const file of [...rootHtmlPages.map((page) => join(ROOT, page)), ...enHtmlP
 
     if (content.includes("site.css") && !/IBM\+Plex\+Mono[\s\S]*IBM\+Plex\+Sans/.test(content)) {
         fail("IBM_FONT_LINK_MISSING", `${rel}: missing IBM Plex Sans/Mono Google Fonts link before site.css.`);
+    }
+
+    const isIndexable = /<meta\s+name=["']robots["']\s+content=["']index,\s*follow["']/i.test(content);
+    const canonicalMatch = content.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i);
+    if (isIndexable) {
+        if (!canonicalMatch) {
+            fail("GOOGLE_CANONICAL_MISSING", `${rel}: indexable pages must declare a canonical URL.`);
+        } else if (!sitemapContent.includes(`<loc>${canonicalMatch[1]}</loc>`)) {
+            fail("GOOGLE_SITEMAP_MISSING", `${rel}: indexable canonical URL ${canonicalMatch[1]} must be listed in sitemap.xml.`);
+        }
     }
 }
 

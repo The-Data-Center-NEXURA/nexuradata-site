@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { createHostedCheckoutSession, verifyStripeWebhook } from "../../functions/_lib/stripe.js";
+import { createHostedCheckoutSession, getStripeObjectModeMismatch, verifyStripeWebhook } from "../../functions/_lib/stripe.js";
 
 const checkoutPayload = {
   caseId: "NX-20260507-STRIPE1",
@@ -157,10 +157,12 @@ describe("verifyStripeWebhook()", () => {
     expect(result).toEqual(body);
   });
 
-  it("blocks test webhook events when production is configured for live mode", async () => {
+  it("verifies signed webhook events without enforcing runtime mode", async () => {
     const body = { type: "checkout.session.completed", livemode: false, data: { object: { id: "cs_test_123" } } };
     const request = await makeSignedRequest(body);
+    const result = await verifyStripeWebhook({ ...env, STRIPE_MODE: "live" }, request);
 
-    await expect(verifyStripeWebhook({ ...env, STRIPE_MODE: "live" }, request)).rejects.toThrow("mode test");
+    expect(result).toEqual(body);
+    expect(getStripeObjectModeMismatch({ STRIPE_MODE: "live" }, result)).toContain("mode test");
   });
 });
