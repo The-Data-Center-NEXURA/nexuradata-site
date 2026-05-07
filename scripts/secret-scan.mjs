@@ -112,7 +112,9 @@ function isPlaceholderOrReference(value, location) {
   if (/^(x+|X+)$/.test(normalized)) return true;
   if (/replace|example|placeholder|your-|xxxxx/i.test(normalized)) return true;
   if (/^postgres(?:ql)?:\/\/(?:user|username):password@/i.test(normalized)) return true;
-  if (isFixtureLocation(location) && /^[A-Za-z0-9+/_:.-]+$/.test(normalized) && /test|mock|fixture|wrong|different|other|new|secret|key/i.test(normalized)) return true;
+  if (/^postgres(?:ql)?:\/\/stub\b/i.test(normalized)) return true;
+  if (isFixtureLocation(location) && normalized.length <= 12) return true;
+  if (isFixtureLocation(location) && /^[A-Za-z0-9+/_:.-]+$/.test(normalized) && /test|mock|fixture|wrong|different|other|new|secret|key|stub|fake|dummy|sample/i.test(normalized)) return true;
 
   return false;
 }
