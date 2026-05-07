@@ -1941,6 +1941,37 @@ initKineticCanvas();
     scrollThreadToBottom();
     return node;
   };
+  // Lightweight typing indicator: a single assistant bubble with three dots
+  // animated via textContent rotation. Removed when a real reply arrives so
+  // the IBM bubble stack stays clean.
+  let typingIndicatorNode = null;
+  let typingIndicatorTimer = null;
+  const showTypingIndicator = () => {
+    if (!thread || typingIndicatorNode) return;
+    typingIndicatorNode = document.createElement("p");
+    typingIndicatorNode.className = "chatbot-conversation-line is-assistant is-typing";
+    typingIndicatorNode.setAttribute("aria-label", conciergeCopy.thinking);
+    typingIndicatorNode.textContent = `${conciergeCopy.thinking} ·`;
+    thread.appendChild(typingIndicatorNode);
+    scrollThreadToBottom();
+    let dots = 1;
+    typingIndicatorTimer = window.setInterval(() => {
+      dots = (dots % 3) + 1;
+      if (typingIndicatorNode) {
+        typingIndicatorNode.textContent = `${conciergeCopy.thinking} ${"·".repeat(dots)}`;
+      }
+    }, 480);
+  };
+  const hideTypingIndicator = () => {
+    if (typingIndicatorTimer) {
+      window.clearInterval(typingIndicatorTimer);
+      typingIndicatorTimer = null;
+    }
+    if (typingIndicatorNode?.parentNode) {
+      typingIndicatorNode.parentNode.removeChild(typingIndicatorNode);
+    }
+    typingIndicatorNode = null;
+  };
   const renderConciergeSuggestions = (suggestions = []) => {
     if (!quickActions) return;
     quickActions.replaceChildren();
@@ -1989,24 +2020,38 @@ initKineticCanvas();
     if (contextField) contextField.value = "";
     setConciergeBusy(true);
     if (quickActions) quickActions.replaceChildren();
+    showTypingIndicator();
+
+    // Page context lets the model adapt to where the user came from
+    // (e.g. the RAID page vs the phone page) without leaking PII.
+    const pageContext = {
+      path: window.location.pathname || "/",
+      title: (document.title || "").slice(0, 160)
+    };
 
     let data = null;
     try {
       const response = await fetch(conciergeEndpoint, {
         method: "POST",
         headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({ locale: conciergeLocale, messages: conciergeState.history })
+        body: JSON.stringify({
+          locale: conciergeLocale,
+          messages: conciergeState.history,
+          page: pageContext
+        })
       });
       data = await parseBotJsonResponse(response);
       if (!response.ok || !data?.ok) {
         throw new Error(data?.message || "concierge-unavailable");
       }
     } catch {
+      hideTypingIndicator();
       appendChatBubble("assistant", conciergeCopy.networkError);
       setConciergeBusy(false);
       return;
     }
 
+    hideTypingIndicator();
     const reply = `${data.reply || ""}`.trim();
     if (reply) {
       appendChatBubble("assistant", reply);

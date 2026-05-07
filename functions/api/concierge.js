@@ -154,6 +154,25 @@ const sanitizeHistory = (raw) => {
     .slice(-MAX_HISTORY_MESSAGES);
 };
 
+/**
+ * Caller-supplied page context. Path is matched against an allow-list of
+ * known site paths and the title is hard-truncated. Anything else is dropped.
+ */
+const sanitizePageContext = (raw) => {
+  if (!raw || typeof raw !== "object") return null;
+  const rawPath = typeof raw.path === "string" ? raw.path : "";
+  const path = /^\/[A-Za-z0-9._/-]{0,200}$/.test(rawPath) ? rawPath : "/";
+  const title = sanitizeText(raw.title, 160);
+  return { path, title };
+};
+
+const describePageContext = (page, locale) => {
+  if (!page || page.path === "/") return "";
+  const isEn = locale === "en";
+  const heading = isEn ? "Page context" : "Contexte de la page";
+  return `\n\n[${heading}: path=${page.path}${page.title ? `, title="${page.title}"` : ""}]`;
+};
+
 const lastUserMessage = (history) => {
   for (let index = history.length - 1; index >= 0; index -= 1) {
     if (history[index].role === "user") return history[index].content;
@@ -291,6 +310,7 @@ export const onRequestPost = async (context) => {
 
   const locale = normaliseLocale(payload?.locale);
   const history = sanitizeHistory(payload?.messages);
+  const pageContext = sanitizePageContext(payload?.page);
 
   if (history.length === 0) {
     return json({ ok: false, message: "Conversation vide." }, { status: 400 });
@@ -310,7 +330,8 @@ export const onRequestPost = async (context) => {
     });
   }
 
-  const systemPrompt = locale === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_FR;
+  const systemPrompt = (locale === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_FR)
+    + describePageContext(pageContext, locale);
   const messages = [{ role: "system", content: systemPrompt }, ...history];
 
   const completion = await chatCompletion({
