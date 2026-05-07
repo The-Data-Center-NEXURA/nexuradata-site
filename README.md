@@ -51,12 +51,29 @@ Le depot couvre:
 - `release-cloudflare/` est regenere par `npm run build`; modifier uniquement les sources suivies.
 - Les pages FR racine et leurs versions `en/` doivent rester synchronisees pour le SEO bilingue.
 
-## Architecture references (not wired)
+## Plateforme RemoteLab (Pages Functions)
 
-- [apps/remotelab-portal/](apps/remotelab-portal/) — React/Vite/Tailwind/shadcn client portal reference (`NexuraClientPortal.jsx`). v2 UI track, not built or deployed.
-- [apps/remotelab-api/](apps/remotelab-api/) — Node/Express + Neon TypeScript API reference (`src/server.ts`). Source-of-truth specification for porting into Cloudflare Pages Functions; not built or deployed.
+La specification source-de-verite ([apps/remotelab-api/src/server.ts](apps/remotelab-api/src/server.ts)) est portee sur Cloudflare Pages Functions + Neon HTTP. Toutes les routes sont protegees par Cloudflare Access (sauf `/api/monitoring/health` qui exige une cle d'agent), gardees par un retour 503 quand `DATABASE_URL` n'est pas configure, et utilisent la `cases.case_id` (texte) comme identifiant de dossier.
 
-These trees document the canonical product spec and are intentionally excluded from `npm run build`, CI, and the live site.
+| Domaine | Endpoint | Lib |
+|---|---|---|
+| Cas | POST/GET `/api/cases`, GET `/api/cases/:caseId` | [functions/_lib/remotefix.js](functions/_lib/remotefix.js) |
+| Sessions | POST `/api/sessions` | idem |
+| Consentement | POST `/api/consent` | idem |
+| Diagnostic agent | POST `/api/agent/diagnostics` | idem |
+| Commandes sures | POST `/api/commands` | idem |
+| Monitoring (comptes / agents / health / dashboard / convert) | `/api/monitoring/*` | [functions/_lib/monitor.js](functions/_lib/monitor.js) |
+| Opportunites (rebuild / list / patch) | `/api/cases/:caseId/opportunities/rebuild`, `/api/admin/opportunities[/:id]` | [functions/_lib/opportunities.js](functions/_lib/opportunities.js) |
+| Rapports | POST `/api/reports/cases/:caseId`, GET `/api/reports/:reportId` | [functions/_lib/reports.js](functions/_lib/reports.js) |
+| Devis | POST `/api/opportunities/:opportunityId/quote` | [functions/_lib/quotes.js](functions/_lib/quotes.js) |
+| Tableau de bord admin | GET `/api/admin/dashboard` | [functions/_lib/admin-dashboard.js](functions/_lib/admin-dashboard.js) |
+
+Le schema de plateforme correspondant est [migrations/neon/0004_remotelab_platform.sql](migrations/neon/0004_remotelab_platform.sql) (clients, monitoring_*, service_opportunities, generated_reports, quotes). A appliquer apres `0001_full_schema.sql` pour activer les routes ci-dessus.
+
+### References UI (non wired)
+
+- [apps/remotelab-portal/](apps/remotelab-portal/) — portail client React/Vite/Tailwind/shadcn (`NexuraClientPortal.jsx`, `NexuraAdminConsole.jsx`). Exclu de `npm run build`, CI et du site live ; sert de specification UI v2.
+- [apps/remotelab-api/](apps/remotelab-api/) — implementation Node/Express d'origine, conservee comme reference de comportement pour le portage. Exclue elle aussi de `npm run build` et de CI.
 
 ## Carte canonique du site
 
