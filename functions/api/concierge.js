@@ -40,6 +40,11 @@ import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 const MAX_HISTORY_MESSAGES = 12;
 const MAX_MESSAGE_CHARS = 1800;
 const MAX_REPLY_CHARS = 1400;
+const MAX_IMAGES_PER_TURN = 2;
+// 7 MB ceiling on base64-encoded image string => ~5.2 MB original payload.
+const MAX_IMAGE_BASE64_BYTES = 7 * 1024 * 1024;
+const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const PRIORITY_RISK_LEVELS = new Set(["priority", "critical", "high"]);
 
 const SYSTEM_PROMPT_FR = `Tu es l'assistant principal de NEXURADATA — un laboratoire indépendant de récupération de données et de forensique numérique basé à Montréal. Tu réponds au nom de l'équipe d'Olivier Blanchet.
 
@@ -58,7 +63,18 @@ Règles strictes:
 - Tu n'invoques l'outil "commit_triage" que lorsque tu as au moins: type de support, symptôme principal, et un soupçon d'urgence ou de profil client. Avant ça, tu poses UNE question ciblée à la fois.
 - Quand tu invoques l'outil, tu produis aussi une courte réponse écrite (1–3 phrases) qui résume au client la prochaine étape concrète.
 
-Tu peux orienter vers ces parcours: dossier média (HDD/SSD/USB), continuité RAID/NAS/serveur, dossier mobile, dossier forensique/sensible, correction guidée. L'humain confirme toujours.`;
+Tu peux orienter vers ces parcours: dossier média (HDD/SSD/USB), continuité RAID/NAS/serveur, dossier mobile, dossier forensique/sensible, correction guidée. L'humain confirme toujours.
+
+Faits internes — utilise-les pour répondre, ne les invente pas:
+- Adresse: laboratoire à Montréal. Réception sur rendez-vous. Coursier sécurisé partout au Canada disponible.
+- Évaluation initiale gratuite après réception du support. Aucune intervention n'est facturée sans soumission écrite acceptée.
+- Délais usuels: critique 24-48h, prioritaire 3-5 jours ouvrables, standard sous 10 jours ouvrables. Tout délai dépend du diagnostic réel.
+- Support traité: HDD, SSD, NVMe, clés USB, cartes SD, RAID/NAS/serveurs, téléphones (iOS/Android), supports endommagés physiquement.
+- Bandes de prix publiques observées: fichiers effacés à partir de 79$, externe simple à partir de 129$, téléphone simple à partir de 149$, HDD/SSD logique intermédiaire à partir de 350$, RAID/NAS/serveur et dommages mécaniques sur soumission. Ne donne jamais un prix exact: la soumission part après évaluation.
+- RAID/NAS: aucune reconstruction ni resynchronisation tant que la séquence n'est pas validée. Toujours débrancher et étiqueter chaque disque dans son ordre original.
+- Ransomware: ne paie aucune rançon, isole le poste du réseau, conserve les copies chiffrées. Bascule en revue humaine.
+- Forensique: chaîne de possession documentée, supports en lecture seule, rapport admissible.
+- Ouverture de dossier: formulaire intake → numéro de dossier + code d'accès → portail de suivi → soumission → approbation écrite → intervention.`;
 
 const SYSTEM_PROMPT_EN = `You are the front-line assistant for NEXURADATA — an independent data-recovery and digital-forensics lab in Montreal. You speak on behalf of Olivier Blanchet's team.
 
@@ -77,7 +93,18 @@ Hard rules:
 - Only call the "commit_triage" tool once you have at least: media type, main symptom, and a hint of urgency or client profile. Before that, ask ONE focused question at a time.
 - When you call the tool, also output a short text reply (1–3 sentences) telling the customer the next concrete step.
 
-You may steer toward: media case (HDD/SSD/USB), RAID/NAS/server continuity, mobile case, forensic/sensitive case, guided fix. A human always confirms.`;
+You may steer toward: media case (HDD/SSD/USB), RAID/NAS/server continuity, mobile case, forensic/sensitive case, guided fix. A human always confirms.
+
+Internal facts — use them to answer, do not invent:
+- Address: lab in Montreal. Reception by appointment. Secure courier across Canada available.
+- Initial assessment is free once the device is received. No work is billed without a written, accepted quote.
+- Usual turnaround: critical 24-48h, priority 3-5 business days, standard within 10 business days. Any timeline depends on the real diagnosis.
+- Media handled: HDD, SSD, NVMe, USB sticks, SD cards, RAID/NAS/servers, phones (iOS/Android), physically damaged media.
+- Public price bands observed: deleted files from $79, external simple from $129, phone simple from $149, HDD/SSD intermediate logical from $350, RAID/NAS/server and mechanical damage on quote. Never give an exact price: the quote follows assessment.
+- RAID/NAS: no rebuild or resync until the sequence is validated. Always unplug and label each drive in its original order.
+- Ransomware: never pay the ransom, isolate the host from the network, keep the encrypted copies. Switch to human review.
+- Forensic: documented chain of custody, read-only media, admissible report.
+- Case opening: intake form → case number + access code → tracking portal → quote → written approval → work.`;
 
 const TRIAGE_TOOL = {
   type: "function",
@@ -141,14 +168,65 @@ const normaliseLocale = (raw) => {
   return value.startsWith("en") ? "en" : "fr";
 };
 
+/**
+ * Validate a single image attachment. Only data URLs of allowed mime types
+ * pass through; the encoded body is size-capped before it ever reaches the
+ * upstream API. Anything else is silently dropped.
+ */
+const sanitizeImageUrl = (raw) => {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("data:")) return null;
+  const match = /^data:([a-z0-9.+/-]+);base64,([A-Za-z0-9+/=]+)$/i.exec(trimmed);
+  if (!match) return null;
+  const mime = match[1].toLowerCase();
+  if (!ALLOWED_IMAGE_MIMES.has(mime)) return null;
+  if (match[2].length > MAX_IMAGE_BASE64_BYTES) return null;
+  return `data:${mime};base64,${match[2]}`;
+};
+
+/**
+ * Multimodal-aware content sanitizer. Accepts either a plain string or an
+ * OpenAI-style content parts array. Returns the same shape, with at most
+ * MAX_IMAGES_PER_TURN images and one merged text part. Returns "" when
+ * nothing usable remains.
+ */
+const sanitizeMessageContent = (raw) => {
+  if (typeof raw === "string") return sanitizeText(raw, MAX_MESSAGE_CHARS);
+  if (!Array.isArray(raw)) return "";
+  const textParts = [];
+  const imageParts = [];
+  for (const part of raw) {
+    if (!part || typeof part !== "object") continue;
+    if (part.type === "text") {
+      const text = sanitizeText(part.text, MAX_MESSAGE_CHARS);
+      if (text) textParts.push(text);
+    } else if (part.type === "image_url") {
+      if (imageParts.length >= MAX_IMAGES_PER_TURN) continue;
+      const url = sanitizeImageUrl(part?.image_url?.url);
+      if (!url) continue;
+      imageParts.push({ type: "image_url", image_url: { url, detail: "low" } });
+    }
+  }
+  if (imageParts.length === 0) {
+    return textParts.length > 0 ? textParts.join("\n\n").slice(0, MAX_MESSAGE_CHARS) : "";
+  }
+  const mergedText = textParts.join("\n\n").slice(0, MAX_MESSAGE_CHARS);
+  return [
+    { type: "text", text: mergedText || "(image attachment)" },
+    ...imageParts
+  ];
+};
+
 const sanitizeHistory = (raw) => {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((entry) => entry && typeof entry === "object")
     .map((entry) => {
       const role = entry.role === "assistant" ? "assistant" : "user";
-      const content = sanitizeText(entry.content, MAX_MESSAGE_CHARS);
-      return content ? { role, content } : null;
+      const content = sanitizeMessageContent(entry.content);
+      const empty = typeof content === "string" ? content.length === 0 : content.length === 0;
+      return empty ? null : { role, content };
     })
     .filter(Boolean)
     .slice(-MAX_HISTORY_MESSAGES);
@@ -175,10 +253,19 @@ const describePageContext = (page, locale) => {
 
 const lastUserMessage = (history) => {
   for (let index = history.length - 1; index >= 0; index -= 1) {
-    if (history[index].role === "user") return history[index].content;
+    if (history[index].role !== "user") continue;
+    const content = history[index].content;
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) {
+      const text = content.find((part) => part?.type === "text")?.text;
+      if (text) return text;
+    }
   }
   return "";
 };
+
+const isPriorityTriage = (triage) =>
+  Boolean(triage && PRIORITY_RISK_LEVELS.has(triage.riskLevel));
 
 /**
  * Run the deterministic triage rule engine.
@@ -284,9 +371,15 @@ const buildSuggestions = (locale, triage) => {
       ? ["My drive isn't detected", "Server is down", "I deleted files by mistake"]
       : ["Mon disque n'est plus détecté", "Mon serveur ne démarre plus", "J'ai effacé des fichiers"];
   }
-  const baseFr = ["Ouvrir le dossier maintenant", "Comment se passe la réception?", "Quel est le délai habituel?"];
-  const baseEn = ["Open the case now", "How does intake work?", "What's the usual turnaround?"];
-  return locale === "en" ? baseEn : baseFr;
+  const priority = isPriorityTriage(triage);
+  if (locale === "en") {
+    return priority
+      ? ["Open priority case now", "How does intake work?", "What's the usual turnaround?"]
+      : ["Open the case now", "How does intake work?", "What's the usual turnaround?"];
+  }
+  return priority
+    ? ["Ouvrir un dossier prioritaire", "Comment se passe la réception?", "Quel est le délai habituel?"]
+    : ["Ouvrir le dossier maintenant", "Comment se passe la réception?", "Quel est le délai habituel?"];
 };
 
 const truncateReply = (value) => {
@@ -326,6 +419,7 @@ export const onRequestPost = async (context) => {
       provider: "rules-fallback",
       reply: fallbackReply(locale, triage),
       triage,
+      priorityIntake: isPriorityTriage(triage),
       suggestions: buildSuggestions(locale, triage)
     });
   }
@@ -351,6 +445,7 @@ export const onRequestPost = async (context) => {
       provider: "rules-fallback",
       reply: fallbackReply(locale, triage),
       triage,
+      priorityIntake: isPriorityTriage(triage),
       suggestions: buildSuggestions(locale, triage),
       degraded: completion.error || "upstream-error"
     });
@@ -404,6 +499,7 @@ export const onRequestPost = async (context) => {
       provider: "openai",
       reply,
       triage,
+      priorityIntake: isPriorityTriage(triage),
       suggestions: buildSuggestions(locale, triage)
     });
   }
@@ -414,6 +510,7 @@ export const onRequestPost = async (context) => {
     provider: "openai",
     reply: truncateReply(completion.message?.content || "") || fallbackReply(locale, null),
     triage: null,
+    priorityIntake: false,
     suggestions: buildSuggestions(locale, null)
   });
 };

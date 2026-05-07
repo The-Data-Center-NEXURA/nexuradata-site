@@ -1892,11 +1892,15 @@ initKineticCanvas();
   const conciergeLocale = isEnglishDocument ? "en" : "fr";
   const conciergeMaxHistory = 12;
   const conciergeMaxChars = 1800;
+  const conciergeMaxImages = 2;
+  const conciergeMaxImageBytes = 5 * 1024 * 1024;
+  const conciergeAllowedImageMimes = new Set(["image/jpeg", "image/png", "image/webp"]);
   const conciergeState = {
     history: [],
     busy: false,
     greeted: false,
-    disabled: false
+    disabled: false,
+    pendingImages: []
   };
   const conciergeCopy = isEnglishDocument
     ? {
@@ -1906,7 +1910,12 @@ initKineticCanvas();
       networkError: "I lost the connection for a moment. Send your message again — I'll pick it up.",
       placeholder: "Describe the device, what changed, and the files you need.",
       submitDefault: "Send",
-      submitBusy: "Reading…"
+      submitBusy: "Reading…",
+      attachLabel: "+ Photo",
+      attachRemove: "Remove",
+      attachTooLarge: "Image too large (max 5 MB).",
+      attachBadType: "Use a JPEG, PNG or WebP image.",
+      attachTooMany: "Two images max per message."
     }
     : {
       greeting:
@@ -1915,7 +1924,12 @@ initKineticCanvas();
       networkError: "J'ai perdu la connexion un instant. Renvoyez votre message — je le reprends.",
       placeholder: "Décrivez l'appareil, ce qui a changé et les fichiers dont vous avez besoin.",
       submitDefault: "Envoyer",
-      submitBusy: "Lecture…"
+      submitBusy: "Lecture…",
+      attachLabel: "+ Photo",
+      attachRemove: "Retirer",
+      attachTooLarge: "Image trop lourde (max 5 Mo).",
+      attachBadType: "Utilisez une image JPEG, PNG ou WebP.",
+      attachTooMany: "Deux images maximum par message."
     };
   const submitButton = diagnosticForm.querySelector("[data-chatbot-diagnostic-submit]");
   const contextField = diagnosticForm.querySelector('textarea[name="context"]');
@@ -1972,16 +1986,32 @@ initKineticCanvas();
     }
     typingIndicatorNode = null;
   };
-  const renderConciergeSuggestions = (suggestions = []) => {
+  const renderConciergeSuggestions = (suggestions = [], opts = {}) => {
     if (!quickActions) return;
     quickActions.replaceChildren();
+    // Always offer the attach action so visitors can send a photo of the
+    // damaged drive / error screen on any turn.
+    const attachButton = document.createElement("button");
+    attachButton.type = "button";
+    attachButton.className = "chatbot-quick-choice";
+    attachButton.textContent = conciergeCopy.attachLabel;
+    attachButton.addEventListener("click", () => {
+      if (conciergeState.busy) return;
+      fileInput.click();
+    });
+    quickActions.appendChild(attachButton);
     if (!Array.isArray(suggestions) || suggestions.length === 0) return;
-    suggestions.slice(0, 3).forEach((label) => {
+    suggestions.slice(0, 3).forEach((label, index) => {
       const text = `${label || ""}`.trim().slice(0, 80);
       if (!text) return;
       const button = document.createElement("button");
       button.type = "button";
       button.className = "chatbot-quick-choice";
+      // First chip on a priority-intake turn doubles as the strong CTA.
+      if (opts.priorityIntake && index === 0) {
+        button.setAttribute("data-chatbot-priority-cta", "true");
+        button.style.fontWeight = "600";
+      }
       button.textContent = text;
       button.addEventListener("click", () => {
         if (conciergeState.busy || !contextField) return;
@@ -1996,6 +2026,95 @@ initKineticCanvas();
     conciergeState.greeted = true;
     appendChatBubble("assistant", conciergeCopy.greeting);
   };
+
+  // ── Attachment UI: image previews + hidden file input.
+  // We add a single `+ Photo` chip into the existing quick-actions strip and
+  // a hidden file input. Image previews live in their own row created on
+  // demand. No HTML or CSS changes — everything is JS-driven and reuses the
+  // existing `chatbot-quick-choice` IBM-style chip styling.
+  let attachmentRow = null;
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = Array.from(conciergeAllowedImageMimes).join(",");
+  fileInput.multiple = true;
+  fileInput.hidden = true;
+  fileInput.setAttribute("data-chatbot-image-input", "");
+  diagnosticForm.appendChild(fileInput);
+
+  const ensureAttachmentRow = () => {
+    if (attachmentRow) return attachmentRow;
+    attachmentRow = document.createElement("div");
+    attachmentRow.className = "chatbot-quick-actions";
+    attachmentRow.setAttribute("data-chatbot-attachments", "");
+    attachmentRow.style.marginTop = "0.5rem";
+    if (quickActions?.parentNode) {
+      quickActions.parentNode.insertBefore(attachmentRow, quickActions.nextSibling);
+    } else {
+      diagnosticForm.appendChild(attachmentRow);
+    }
+    return attachmentRow;
+  };
+
+  const renderAttachmentChips = () => {
+    const row = ensureAttachmentRow();
+    row.replaceChildren();
+    if (conciergeState.pendingImages.length === 0) {
+      row.style.display = "none";
+      return;
+    }
+    row.style.display = "";
+    conciergeState.pendingImages.forEach((image, index) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chatbot-quick-choice";
+      chip.textContent = `${image.name} · ${conciergeCopy.attachRemove}`;
+      chip.addEventListener("click", () => {
+        conciergeState.pendingImages.splice(index, 1);
+        renderAttachmentChips();
+      });
+      row.appendChild(chip);
+    });
+  };
+
+  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+
+  const handleAttachFiles = async (fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    for (const file of Array.from(fileList)) {
+      if (conciergeState.pendingImages.length >= conciergeMaxImages) {
+        appendChatBubble("assistant", conciergeCopy.attachTooMany);
+        break;
+      }
+      if (!conciergeAllowedImageMimes.has(file.type)) {
+        appendChatBubble("assistant", conciergeCopy.attachBadType);
+        continue;
+      }
+      if (file.size > conciergeMaxImageBytes) {
+        appendChatBubble("assistant", conciergeCopy.attachTooLarge);
+        continue;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        conciergeState.pendingImages.push({
+          name: `${file.name || "image"}`.slice(0, 60),
+          dataUrl: `${dataUrl}`
+        });
+      } catch {
+        // swallow read errors silently — the user can retry.
+      }
+    }
+    renderAttachmentChips();
+  };
+
+  fileInput.addEventListener("change", () => {
+    handleAttachFiles(fileInput.files);
+    fileInput.value = "";
+  });
   const setConciergeBusy = (busy) => {
     conciergeState.busy = busy;
     if (submitButton) {
@@ -2013,10 +2132,33 @@ initKineticCanvas();
   };
   const handleConciergeTurn = async (rawInput) => {
     const userText = `${rawInput || ""}`.trim().slice(0, conciergeMaxChars);
-    if (!userText || conciergeState.busy) return;
+    const attachments = conciergeState.pendingImages.slice(0, conciergeMaxImages);
+    if (!userText && attachments.length === 0) return;
+    if (conciergeState.busy) return;
     ensureConciergeGreeting();
-    appendChatBubble("user", userText);
-    pushConciergeMessage("user", userText);
+    // Visible bubble: text + a hint about how many images were attached.
+    const visibleText = attachments.length > 0
+      ? `${userText}${userText ? "\n" : ""}[${attachments.length} image${attachments.length > 1 ? "s" : ""}]`
+      : userText;
+    appendChatBubble("user", visibleText || `[${attachments.length} image]`);
+
+    // History payload: multimodal when images are attached, plain string otherwise.
+    let historyContent;
+    if (attachments.length > 0) {
+      historyContent = [
+        ...(userText ? [{ type: "text", text: userText }] : []),
+        ...attachments.map((image) => ({ type: "image_url", image_url: { url: image.dataUrl } }))
+      ];
+    } else {
+      historyContent = userText;
+    }
+    conciergeState.history.push({ role: "user", content: historyContent });
+    if (conciergeState.history.length > conciergeMaxHistory) {
+      conciergeState.history.splice(0, conciergeState.history.length - conciergeMaxHistory);
+    }
+    // Clear pending attachments now that they have been queued.
+    conciergeState.pendingImages = [];
+    renderAttachmentChips();
     if (contextField) contextField.value = "";
     setConciergeBusy(true);
     if (quickActions) quickActions.replaceChildren();
@@ -2057,7 +2199,7 @@ initKineticCanvas();
       appendChatBubble("assistant", reply);
       pushConciergeMessage("assistant", reply);
     }
-    renderConciergeSuggestions(data.suggestions || []);
+    renderConciergeSuggestions(data.suggestions || [], { priorityIntake: Boolean(data.priorityIntake) });
 
     if (data.triage) {
       latestServerDiagnostic = data.triage;
@@ -2067,6 +2209,12 @@ initKineticCanvas();
         event_category: "diagnostic",
         method: data.provider || "openai"
       });
+      if (data.priorityIntake) {
+        trackGaEvent("chatbot_concierge_priority", {
+          event_category: "diagnostic",
+          method: data.provider || "openai"
+        });
+      }
     } else {
       trackGaEvent("chatbot_concierge_turn", {
         event_category: "diagnostic",
@@ -2081,7 +2229,9 @@ initKineticCanvas();
   diagnosticForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const value = contextField ? contextField.value : "";
-    if (`${value || ""}`.trim().length === 0) {
+    const hasText = `${value || ""}`.trim().length > 0;
+    const hasImages = conciergeState.pendingImages.length > 0;
+    if (!hasText && !hasImages) {
       // Empty submit falls back to the legacy local renderer so the dock
       // never feels frozen if the model isn't called yet.
       showDiagnosisResult();

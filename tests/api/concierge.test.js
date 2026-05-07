@@ -158,4 +158,86 @@ describe("api/concierge", () => {
     });
     expect(response.status).toBe(405);
   });
+
+  it("forwards a valid image attachment as multimodal content to OpenAI", async () => {
+    const tinyPng =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9ZWQ7CAAAAAASUVORK5CYII=";
+    const captured = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, init) => {
+      captured.push(JSON.parse(init.body));
+      return new Response(JSON.stringify({
+        choices: [{ message: { role: "assistant", content: "I see the drive. Send the case in." } }]
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    });
+    const ctx = makeContext(
+      {
+        locale: "en",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Here is a photo of the drive." },
+            { type: "image_url", image_url: { url: `data:image/png;base64,${tinyPng}` } }
+          ]
+        }]
+      },
+      { OPENAI_API_KEY: "sk-test" }
+    );
+    const response = await onRequestPost(ctx);
+    expect(response.status).toBe(200);
+    expect(captured.length).toBeGreaterThan(0);
+    const userMsg = captured[0].messages.find((m) => m.role === "user");
+    expect(Array.isArray(userMsg.content)).toBe(true);
+    const imagePart = userMsg.content.find((p) => p.type === "image_url");
+    expect(imagePart).toBeTruthy();
+    expect(imagePart.image_url.url).toMatch(/^data:image\/png;base64,/);
+  });
+
+  it("drops image attachments with disallowed mime types", async () => {
+    const captured = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, init) => {
+      captured.push(JSON.parse(init.body));
+      return new Response(JSON.stringify({
+        choices: [{ message: { role: "assistant", content: "Tell me more." } }]
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    });
+    const ctx = makeContext(
+      {
+        locale: "fr",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Voici une image" },
+            { type: "image_url", image_url: { url: "data:application/pdf;base64,AAAA" } }
+          ]
+        }]
+      },
+      { OPENAI_API_KEY: "sk-test" }
+    );
+    await onRequestPost(ctx);
+    const userMsg = captured[0].messages.find((m) => m.role === "user");
+    // Disallowed mime → image dropped, content collapses back to plain text.
+    if (Array.isArray(userMsg.content)) {
+      expect(userMsg.content.find((p) => p.type === "image_url")).toBeUndefined();
+    } else {
+      expect(typeof userMsg.content).toBe("string");
+    }
+  });
+
+  it("flags priorityIntake on critical triage", async () => {
+    const ctx = makeContext({
+      locale: "fr",
+      messages: [{
+        role: "user",
+        content: "RAID de production en panne, opérations bloquées, dossier juridique critique 24h."
+      }]
+    });
+    const response = await onRequestPost(ctx);
+    const body = await response.json();
+    expect(body.triage).toBeTruthy();
+    expect(typeof body.priorityIntake).toBe("boolean");
+    // The deterministic rule engine assigns priority/critical risk to this prompt.
+    if (["critical", "priority", "high"].includes(body.triage.riskLevel)) {
+      expect(body.priorityIntake).toBe(true);
+    }
+  });
 });
