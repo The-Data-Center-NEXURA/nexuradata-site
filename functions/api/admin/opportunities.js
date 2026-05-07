@@ -1,9 +1,5 @@
-// GET /api/admin/dashboard — rich revenue dashboard aggregating cases, sessions,
-// reports, alerts, opportunities, monitoring accounts and the open pipeline.
-// Replaces the earlier alias that pointed to functions/api/remotefix/admin.js.
-
 import { json, methodNotAllowed, onOptions } from "../../_lib/http.js";
-import { getAdminDashboard } from "../../_lib/admin-dashboard.js";
+import { listOpportunities } from "../../_lib/opportunities.js";
 import { requireRemoteFixPermission } from "../../_lib/remotefix.js";
 
 export const onRequestOptions = (context) => onOptions(context.env, "GET, OPTIONS");
@@ -16,10 +12,12 @@ export const onRequestGet = async (context) => {
     const auth = requireRemoteFixPermission(context.request, context.env, "cases.read");
     if (!auth.ok) return json({ ok: false, message: "Permission insuffisante." }, { status: 403 });
 
-    const overview = await getAdminDashboard(context.env);
-    return json({ ok: true, role: auth.role, ...overview });
+    const url = new URL(context.request.url);
+    const status = url.searchParams.get("status") || "open";
+    const result = await listOpportunities(context.env, status);
+    return json({ ok: true, ...result });
   } catch (error) {
-    return json({ ok: false, message: error.message || "Tableau de bord admin indisponible." }, { status: 400 });
+    return json({ ok: false, message: error.message || "Liste d'opportunités indisponible." }, { status: 400 });
   }
 };
 
