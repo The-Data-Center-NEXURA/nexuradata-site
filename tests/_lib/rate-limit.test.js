@@ -7,6 +7,13 @@ function mockRequest(ip = "1.2.3.4") {
   };
 }
 
+function mockApiRequest(path, ip = "1.2.3.4") {
+  return new Request(`https://nexuradata.ca${path}`, {
+    method: "POST",
+    headers: { "cf-connecting-ip": ip }
+  });
+}
+
 // Reset the internal state between tests by importing fresh
 describe("rate-limit", () => {
   describe("checkRateLimit", () => {
@@ -50,6 +57,17 @@ describe("rate-limit", () => {
       // ipB should still be allowed
       const resultB = checkRateLimit(mockRequest(ipB), 2);
       expect(resultB.allowed).toBe(true);
+    });
+
+    it("tracks endpoint paths independently", () => {
+      const ip = "10.0.0.6";
+      for (let i = 0; i < 3; i++) {
+        checkRateLimit(mockApiRequest("/api/diagnostic", ip), 12);
+      }
+
+      const intakeResult = checkRateLimit(mockApiRequest("/api/intake", ip), 3);
+      expect(intakeResult.allowed).toBe(true);
+      expect(intakeResult.remaining).toBe(2);
     });
 
     it("falls back to x-forwarded-for when cf-connecting-ip is absent", () => {

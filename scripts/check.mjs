@@ -189,6 +189,25 @@ if (!existsSync(join(ROOT, "assets", "nexuradata-icon.png"))) {
     fail("IBM_CHATBOT_IMAGE", "assets/nexuradata-icon.png must exist for the branded square diagnostic chatbot.");
 }
 
+const googleFacingFiles = walkFiles(ROOT).filter((file) => {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (rel.startsWith("operations/")) return false;
+    return rel === "sitemap.xml" || rel === "merchant-feed.xml" || extname(file).toLowerCase() === ".html";
+});
+
+for (const file of googleFacingFiles) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    const content = readFileSync(file, "utf8");
+
+    if (/https:\/\/nexuradata\.ca\/(?:en\/)?[A-Za-z0-9-]+\.html(?:[#?][^"'<>\s]*)?/.test(content)) {
+        fail("GOOGLE_ADS_CLEAN_URLS", `${rel}: absolute Google-facing URLs must use final clean URLs, not .html redirect URLs.`);
+    }
+
+    if (/\b(?:href|action)=(['"])(?:(?:\.\.\/)?|\/(?:en\/)?)[A-Za-z0-9-]+\.html(?:[#?][^'"]*)?\1/i.test(content)) {
+        fail("GOOGLE_ADS_CLEAN_URLS", `${rel}: public links must use final clean URLs, not .html redirect URLs.`);
+    }
+}
+
 // ─── 2. No hardcoded secrets in functions/ ───────────────────────────────────
 const wranglerPath = join(ROOT, "wrangler.jsonc");
 if (existsSync(wranglerPath)) {

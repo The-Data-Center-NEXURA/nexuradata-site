@@ -16,6 +16,23 @@ const WINDOW_MS = 60_000;   // 1-minute window
 const PRUNE_INTERVAL = 300_000; // prune stale entries every 5 min
 let lastPrune = Date.now();
 
+function getClientIp(request) {
+  return request.headers.get("cf-connecting-ip")
+    || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || "unknown";
+}
+
+function getRequestScope(request) {
+  const method = request.method || "REQUEST";
+
+  try {
+    const { pathname } = new URL(request.url);
+    return `${method}:${pathname}`;
+  } catch {
+    return method;
+  }
+}
+
 function pruneStale() {
   const now = Date.now();
   if (now - lastPrune < PRUNE_INTERVAL) return;
@@ -37,13 +54,12 @@ function pruneStale() {
 export function checkRateLimit(request, maxRequests = 10) {
   pruneStale();
 
-  const ip = request.headers.get("cf-connecting-ip")
-    || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || "unknown";
+  const ip = getClientIp(request);
+  const key = `${getRequestScope(request)}:${ip}`;
 
   const now = Date.now();
   const cutoff = now - WINDOW_MS;
-  const timestamps = (windows.get(ip) || []).filter(t => t > cutoff);
+  const timestamps = (windows.get(key) || []).filter(t => t > cutoff);
 
   if (timestamps.length >= maxRequests) {
     const oldestInWindow = timestamps[0];
@@ -52,7 +68,7 @@ export function checkRateLimit(request, maxRequests = 10) {
   }
 
   timestamps.push(now);
-  windows.set(ip, timestamps);
+  windows.set(key, timestamps);
   return { allowed: true, remaining: maxRequests - timestamps.length, retryAfter: 0 };
 }
 
