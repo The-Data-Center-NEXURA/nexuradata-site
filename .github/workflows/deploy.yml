@@ -13,9 +13,6 @@ jobs:
     concurrency:
       group: cloudflare-pages-production
       cancel-in-progress: false
-    environment:
-      name: production
-      url: https://nexuradata.ca
     permissions:
       contents: read
 
