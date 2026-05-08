@@ -475,6 +475,21 @@ renderCookieConsent();
 bindCookiePreferenceTriggers();
 initFacebookVideoEmbeds();
 initKineticCanvas();
+initHeroClock();
+
+function initHeroClock() {
+  const el = document.querySelector("[data-hero-clock]");
+  if (!el) return;
+  const fmt = new Intl.DateTimeFormat("fr-CA", {
+    timeZone: "America/Toronto",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  const tick = () => { try { el.textContent = fmt.format(new Date()); } catch (e) {} };
+  tick();
+  setInterval(tick, 30 * 1000);
+}
 
 // ── IBM square chatbot dock ───────────────────────────────────
 (function () {
@@ -875,6 +890,7 @@ initKineticCanvas();
 
   const dock = document.createElement("aside");
   dock.className = "chatbot-dock";
+  dock.dataset.chatbotPhase = "asking";
   dock.id = "diagnostic-assistant";
   dock.tabIndex = -1;
   dock.dataset.chatbotOpen = "false";
@@ -893,7 +909,8 @@ initKineticCanvas();
       <div class="chatbot-dock-header">
         <img class="chatbot-mark" src="/assets/nexuradata-icon.png" alt="" width="24" height="24" aria-hidden="true" decoding="async">
         <span class="chatbot-kicker">${labels.kicker}</span>
-        <span class="chatbot-status">${labels.status}</span>
+        <span class="chatbot-live" data-chatbot-live aria-hidden="true"><span class="chatbot-live-dot"></span><span data-chatbot-clock>MTL</span></span>
+        <span class="chatbot-step" data-chatbot-step aria-hidden="true"></span>
         <button type="button" class="chatbot-close" data-chatbot-close aria-label="${labels.closeLabel}">X</button>
       </div>
       <p class="chatbot-title">${labels.title}</p>
@@ -957,7 +974,6 @@ initKineticCanvas();
         <a class="chatbot-link chatbot-link-primary" href="${caseHref}" data-chatbot-action="case">${labels.case}</a>
         <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-service>${labels.service}</a>
         <a class="chatbot-link" href="${statusHref}" data-chatbot-action="status">${labels.statusLink}</a>
-        <a class="chatbot-link" href="${statusHref}" data-chatbot-payment>${labels.payment}</a>
         <a class="chatbot-link" href="mailto:contact@nexuradata.ca" data-chatbot-action="email_summary" data-chatbot-email>${labels.emailSummary}</a>
         <a class="chatbot-link" href="${whatsappHref}" target="_blank" rel="noopener noreferrer" data-chatbot-action="urgent_whatsapp" data-chatbot-emergency hidden>${labels.emergency}</a>
       </div>
@@ -1090,7 +1106,7 @@ initKineticCanvas();
       estimatePrefix: "Estimate",
       stripePrefix: "Stripe",
       paymentHint: "The assistant does not charge you blindly. It opens an existing Stripe Checkout link if one is already attached to the case; otherwise payment is sent after written approval.",
-      finalPrompt: "Add one sentence in your own words, then I can open the case.",
+      finalPrompt: "One sentence in your own words. I'll open the case.",
       steps: [
         {
           key: "mood",
@@ -1151,7 +1167,7 @@ initKineticCanvas();
       estimatePrefix: "Estimation",
       stripePrefix: "Stripe",
       paymentHint: "L'assistant ne facture pas à l'aveugle. Il ouvre un lien Stripe Checkout existant si un paiement est déjà attaché au dossier; sinon le paiement part après accord écrit.",
-      finalPrompt: "Ajoutez une phrase dans vos mots, puis je peux ouvrir le dossier.",
+      finalPrompt: "Une phrase dans vos mots. J'ouvre le dossier.",
       steps: [
         {
           key: "mood",
@@ -1616,16 +1632,95 @@ initKineticCanvas();
     });
   };
   const createConversationBubble = (role, text) => {
-    const item = document.createElement("p");
-    item.className = `chatbot-conversation-line is-${role}`;
-    item.textContent = text;
-    return item;
+    const row = document.createElement("div");
+    row.className = `chatbot-conversation-row is-${role}`;
+    if (role === "assistant") {
+      const avatar = document.createElement("img");
+      avatar.className = "chatbot-conversation-avatar";
+      avatar.src = "/assets/nexuradata-icon.png";
+      avatar.alt = "";
+      avatar.width = 28;
+      avatar.height = 28;
+      avatar.decoding = "async";
+      avatar.loading = "lazy";
+      row.appendChild(avatar);
+    }
+    const bubble = document.createElement("p");
+    bubble.className = `chatbot-conversation-line is-${role}`;
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    return row;
+  };
+  const showTypingThen = (next, delay = 420) => {
+    if (!thread) { next(); return; }
+    const row = document.createElement("div");
+    row.className = "chatbot-conversation-row is-assistant";
+    const avatar = document.createElement("img");
+    avatar.className = "chatbot-conversation-avatar";
+    avatar.src = "/assets/nexuradata-icon.png";
+    avatar.alt = "";
+    avatar.width = 28;
+    avatar.height = 28;
+    avatar.decoding = "async";
+    row.appendChild(avatar);
+    const bubble = document.createElement("p");
+    bubble.className = "chatbot-conversation-line is-assistant";
+    const dots = document.createElement("span");
+    dots.className = "chatbot-typing";
+    dots.textContent = "...";
+    bubble.appendChild(dots);
+    row.appendChild(bubble);
+    thread.appendChild(row);
+    quickActions?.replaceChildren();
+    window.setTimeout(next, delay);
+  };
+  const initLiveClock = () => {
+    const liveBadge = dock.querySelector("[data-chatbot-live]");
+    const clockEl = dock.querySelector("[data-chatbot-clock]");
+    if (!liveBadge || !clockEl) return;
+    const tick = () => {
+      try {
+        const now = new Date();
+        const time = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Toronto",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).format(now);
+        const hourMtl = Number(new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Toronto",
+          hour: "2-digit",
+          hour12: false
+        }).format(now));
+        const dayMtl = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Toronto",
+          weekday: "short"
+        }).format(now);
+        const isWeekday = !["Sat", "Sun"].includes(dayMtl);
+        const open = isWeekday && hourMtl >= 8 && hourMtl < 19;
+        clockEl.textContent = `MTL · ${time}`;
+        liveBadge.dataset.liveState = open ? "open" : "closed";
+      } catch {
+        clockEl.textContent = "MTL";
+      }
+    };
+    tick();
+    window.setInterval(tick, 30000);
   };
   const renderConversation = () => {
     if (!thread || !quickActions) return;
 
     const answeredSteps = conversationCopy.steps.filter((step) => conversationAnswers[step.key]);
     const currentStep = conversationCopy.steps.find((step) => !conversationAnswers[step.key]);
+    dock.dataset.chatbotPhase = currentStep ? "asking" : "open-text";
+
+    const stepBadge = dock.querySelector("[data-chatbot-step]");
+    if (stepBadge) {
+      const total = conversationCopy.steps.length;
+      const current = currentStep ? answeredSteps.length + 1 : total;
+      stepBadge.textContent = `${String(current).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+    }
+
     const lines = [];
 
     if (answeredSteps.length === 0) {
@@ -1654,13 +1749,15 @@ initKineticCanvas();
         button.addEventListener("click", () => {
           conversationAnswers[currentStep.key] = label;
           setDiagnosticValues(values);
-          renderConversation();
-          const scenario = updateDiagnosis();
-          const estimate = buildBotEstimate(scenario);
-          if (estimateTarget) {
-            estimateTarget.hidden = false;
-            estimateTarget.textContent = `${conversationCopy.estimatePrefix}: ${estimate.price}. ${conversationCopy.stripePrefix}: ${estimate.payment}`;
-          }
+          showTypingThen(() => {
+            renderConversation();
+            const scenario = updateDiagnosis();
+            const estimate = buildBotEstimate(scenario);
+            if (estimateTarget) {
+              estimateTarget.hidden = false;
+              estimateTarget.textContent = `${conversationCopy.estimatePrefix}: ${estimate.price}. ${conversationCopy.stripePrefix}: ${estimate.payment}`;
+            }
+          });
           trackGaEvent("chatbot_conversation_answer", { event_category: "diagnostic", method: currentStep.key });
         });
         quickActions.append(button);
@@ -2266,8 +2363,25 @@ initKineticCanvas();
       setDockOpen(false, true);
     }
   });
+  // Close on outside click — but decide from pointerdown so that a re-render
+  // triggered by an in-dock click does not detach the target before we check.
+  let pointerDownInsideDock = false;
+  document.addEventListener("pointerdown", (event) => {
+    if (dock.dataset.chatbotOpen !== "true") {
+      pointerDownInsideDock = false;
+      return;
+    }
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    pointerDownInsideDock = path.includes(dock) || dock.contains(event.target);
+  }, true);
   document.addEventListener("click", (event) => {
-    if (dock.dataset.chatbotOpen !== "true" || dock.contains(event.target)) return;
+    if (dock.dataset.chatbotOpen !== "true") return;
+    if (pointerDownInsideDock) {
+      pointerDownInsideDock = false;
+      return;
+    }
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    if (path.includes(dock) || dock.contains(event.target)) return;
     setDockOpen(false);
   });
   renderConversation();
@@ -2275,6 +2389,7 @@ initKineticCanvas();
   setDiagnosisVisibility(false);
   syncPaymentLink();
   watchHeroMediaOverlap();
+  initLiveClock();
 
   document.querySelectorAll('a[href="#diagnostic-assistant"]').forEach((trigger) => {
     trigger.addEventListener("click", (event) => {
