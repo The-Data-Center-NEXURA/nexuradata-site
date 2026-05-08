@@ -32,12 +32,13 @@
   <link rel="manifest" href="site.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="preload" as="image" href="assets/icons/hero-lab-media.avif" type="image/avif">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/site.css?v=20260507h">
+  <link rel="stylesheet" href="assets/css/site.css?v=20260508c">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -164,7 +165,7 @@
       "url": "https://nexuradata.ca/"
     }
   </script>
-  <script src="assets/js/site.js?v=20260507h" defer></script>
+  <script src="assets/js/site.js?v=20260508c" defer></script>
 </head>
 
 <body>
@@ -192,12 +193,23 @@
   <main id="contenu">
     <section class="hero section" aria-labelledby="hero-title">
       <div class="hero-backdrop" aria-hidden="true">
+        <video class="hero-video" data-motion-video autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+          <source src="/assets/video/hero-loop.mp4" type="video/mp4">
+        </video>
         <canvas class="kinetic-canvas" data-kinetic-canvas></canvas>
       </div>
       <div class="container hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">Récupération de données · Montréal</p>
-          <h1 id="hero-title">Vos données ne sont pas perdues. Pas encore.</h1>
+          <p class="hero-status" data-hero-status>
+            <span class="hero-status-dot" aria-hidden="true"></span>
+            <span class="hero-status-label">LABO ACTIF</span>
+            <span class="hero-status-sep" aria-hidden="true">·</span>
+            <span class="hero-status-clock" data-hero-clock aria-label="Heure de Montréal">--:--</span>
+            <span class="hero-status-sep" aria-hidden="true">·</span>
+            <span class="hero-status-place">MTL</span>
+          </p>
+          <h1 id="hero-title">Vos données ne sont pas <span class="hero-h1-strike">perdues</span>. <span class="hero-h1-coda">Récupérables.</span></h1>
           <p class="hero-lead">
             Disque, SSD, téléphone, NAS, RAID ou serveur inaccessible: décrivez ce qui s'est passé. NEXURADATA
             évalue gratuitement le risque, le prix et la prochaine étape sécurisée avant toute intervention.
