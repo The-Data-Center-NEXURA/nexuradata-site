@@ -16,15 +16,15 @@
  * Exit 0 = all clear. Exit 1 = violations found (with details).
  */
 
-import { execSync } from "node:child_process";
+import * as nodeChild_process from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SITE_CSS_VERSION = "20260507h";
-const SITE_JS_VERSION = "20260507h";
+const SITE_CSS_VERSION = "20260508c";
+const SITE_JS_VERSION = "20260508c";
 const errors = [];
 
 function fail(rule, detail) {
@@ -425,7 +425,7 @@ for (const file of walkFiles(join(ROOT, "assets"))) {
 
 // ─── 5. release-cloudflare/ in sync with source ──────────────────────────────
 try {
-    execSync("npm run build --silent", { cwd: ROOT, stdio: "pipe" });
+    nodeChild_process.execSync("npm run build --silent", { cwd: ROOT, stdio: "pipe" });
     const releaseHeadersPath = join(ROOT, "release-cloudflare", "_headers");
     const releaseHeadersContent = existsSync(releaseHeadersPath) ? readFileSync(releaseHeadersPath, "utf8") : "";
     const jsonLdHashes = collectJsonLdCspHashes(ROOT);
@@ -446,7 +446,7 @@ try {
         }
     }
 
-    const dirty = execSync("git status --porcelain release-cloudflare/", { cwd: ROOT, encoding: "utf8" }).trim();
+    const dirty = nodeChild_process.execSync("git status --porcelain release-cloudflare/", { cwd: ROOT, encoding: "utf8" }).trim();
     if (dirty) {
         fail(
             "BUILD_OUT_OF_SYNC",
@@ -488,7 +488,7 @@ for (const file of walkFiles(ROOT)) {
 // ─── Report ───────────────────────────────────────────────────────────────────
 if (errors.length === 0) {
     try {
-        execSync("node ./scripts/check-imports.mjs", { cwd: ROOT, stdio: "inherit" });
+        nodeChild_process.execSync("node ./scripts/check-imports.mjs", { cwd: ROOT, stdio: "inherit" });
     } catch {
         process.exit(1);
     }
