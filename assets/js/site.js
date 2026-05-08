@@ -1028,6 +1028,9 @@ function initHeroClock() {
     dock.dataset.chatbotOpen = isOpen ? "true" : "false";
     toggleButton?.setAttribute("aria-expanded", isOpen ? "true" : "false");
     if (panel) panel.hidden = !isOpen;
+    if (isOpen) {
+      try { ensureConciergeGreeting(); } catch (_) { /* greeting helper not ready yet */ }
+    }
 
     if (!restoreFocus) return;
 
@@ -1708,6 +1711,15 @@ function initHeroClock() {
     window.setInterval(tick, 30000);
   };
   const renderConversation = () => {
+    // Legacy step-by-step quiz disabled. The /api/concierge LLM now drives
+    // the conversation end-to-end via free-text input. We only clear the step
+    // badge so it does not display a stale "01 / 04" indicator.
+    const stepBadge = dock.querySelector("[data-chatbot-step]");
+    if (stepBadge) stepBadge.textContent = "";
+    if (quickActions) quickActions.replaceChildren();
+    dock.dataset.chatbotPhase = "open-text";
+    return;
+    // eslint-disable-next-line no-unreachable
     if (!thread || !quickActions) return;
 
     const answeredSteps = conversationCopy.steps.filter((step) => conversationAnswers[step.key]);
