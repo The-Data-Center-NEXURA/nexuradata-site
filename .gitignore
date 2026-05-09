@@ -18,6 +18,7 @@ coverage/
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
+scripts/hooks/service_role_key.yml
 
 # Cloudflare / build artifacts
 .wrangler/
