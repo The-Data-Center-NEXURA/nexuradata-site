@@ -44,7 +44,7 @@ async function main() {
   const output = chunks.join("");
 
   // Compare to the existing site.css for safety: a silent mismatch would mean
-  // the partials drifted from the served artifact. We still write, but log.
+  // the partials drifted from the served artifact.
   let prevHash = null;
   try {
     const prev = await readFile(target, "utf8");
@@ -54,10 +54,15 @@ async function main() {
   }
   const newHash = createHash("sha256").update(output).digest("hex");
 
+  const rel = path.relative(projectRoot, target);
+  if (prevHash && prevHash === newHash) {
+    console.log(`build-css: ${rel} already up to date (${partials.length} partials, sha256 ${newHash.slice(0, 12)}…).`);
+    return;
+  }
+
   await writeFile(target, output, "utf8");
 
-  const rel = path.relative(projectRoot, target);
-  if (prevHash && prevHash !== newHash) {
+  if (prevHash) {
     console.log(`build-css: ${rel} regenerated from ${partials.length} partials (sha256 ${newHash.slice(0, 12)}…, was ${prevHash.slice(0, 12)}…).`);
   } else {
     console.log(`build-css: ${rel} concatenated from ${partials.length} partials (sha256 ${newHash.slice(0, 12)}…).`);

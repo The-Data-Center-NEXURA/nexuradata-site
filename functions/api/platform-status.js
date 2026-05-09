@@ -11,18 +11,34 @@ import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 const STATUS_OK = "operational";
 const STATUS_DEGRADED = "degraded";
 const STATUS_DOWN = "down";
+const DB_TIMEOUT_MS = 800;
 
 const componentTemplate = (id, label) => ({ id, label, status: STATUS_OK, detail: "" });
 
+const withTimeout = (promise, ms) => {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("timeout")), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+};
+
 const pingDatabase = async (env) => {
+  if (!env?.DATABASE_URL) {
+    return { status: STATUS_DOWN, detail: "Configuration manquante: DATABASE_URL" };
+  }
+
   try {
     const sql = getDb(env);
     const start = Date.now();
-    const rows = await sql`select 1 as ok`;
+    const rows = await withTimeout(sql`select 1 as ok`, DB_TIMEOUT_MS);
     const ms = Date.now() - start;
     if (!rows?.length) return { status: STATUS_DEGRADED, detail: "Réponse vide", ms };
     return { status: STATUS_OK, detail: `Réponse en ${ms} ms`, ms };
   } catch (error) {
+    if (error?.message === "timeout") {
+      return { status: STATUS_DEGRADED, detail: `Latence > ${DB_TIMEOUT_MS} ms` };
+    }
     return { status: STATUS_DOWN, detail: "Connexion Neon impossible", error };
   }
 };

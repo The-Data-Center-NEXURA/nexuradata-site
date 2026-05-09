@@ -37,6 +37,7 @@ describe("functions/api/platform-status — empty env", () => {
         expect(map.payments.status).toBe("down");
         expect(map.email.status).toBe("down");
         expect(map.database.status).toBe("down");
+        expect(map.database.detail).toMatch(/DATABASE_URL/);
         expect(data.overall).toBe("down");
     });
 });

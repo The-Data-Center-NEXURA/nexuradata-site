@@ -4,6 +4,10 @@
   var board = document.querySelector("[data-status-board]");
   if (!board) return;
 
+  var CACHE_KEY = "nexuradata:platform-status";
+  var CACHE_MAX_AGE_MS = 10 * 60 * 1000;
+  var RETRY_DELAYS = [1500, 3000];
+
   var locale = board.getAttribute("data-status-locale") || "fr";
   var labels = locale === "en"
     ? {
@@ -33,50 +37,105 @@
     }
   }
 
-  fetch("/api/platform-status", {
-    headers: { accept: "application/json" },
-    credentials: "omit"
-  })
-    .then(function (r) {
-      if (!r.ok) throw new Error("http " + r.status);
-      return r.json();
-    })
-    .then(function (data) {
-      if (!data || !data.ok || !Array.isArray(data.components)) return;
+  function readCache() {
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !parsed.checkedAt || !Array.isArray(parsed.components)) return null;
+      var age = Date.now() - Date.parse(parsed.checkedAt);
+      if (!isFinite(age) || age > CACHE_MAX_AGE_MS) return null;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
 
-      var checked = document.querySelector("[data-status-checked-at]");
-      if (checked && data.checkedAt) {
-        checked.setAttribute("datetime", data.checkedAt);
-        checked.textContent = fmtTime(data.checkedAt);
+  function writeCache(data) {
+    try {
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({
+          checkedAt: data.checkedAt,
+          overall: data.overall,
+          components: data.components
+        })
+      );
+    } catch (e) {
+      /* localStorage unavailable */
+    }
+  }
+
+  function applyData(data) {
+    if (!data || !data.ok || !Array.isArray(data.components)) return false;
+
+    var checked = document.querySelector("[data-status-checked-at]");
+    if (checked && data.checkedAt) {
+      checked.setAttribute("datetime", data.checkedAt);
+      checked.textContent = fmtTime(data.checkedAt);
+    }
+
+    var headline = document.querySelector("[data-status-headline]");
+    if (headline) {
+      headline.textContent = data.overall === "down"
+        ? labels.headlineDown
+        : data.overall === "degraded"
+          ? labels.headlineDegraded
+          : labels.headlineOk;
+    }
+
+    data.components.forEach(function (c) {
+      var card = board.querySelector('[data-status-component="' + c.id + '"]');
+      if (!card) return;
+      var lbl = card.querySelector("[data-status-label]");
+      var det = card.querySelector("[data-status-detail]");
+      card.setAttribute("data-status-state", c.status);
+      if (lbl) {
+        lbl.textContent = c.status === "down"
+          ? labels.down
+          : c.status === "degraded"
+            ? labels.degraded
+            : labels.operational;
       }
-
-      var headline = document.querySelector("[data-status-headline]");
-      if (headline) {
-        headline.textContent = data.overall === "down"
-          ? labels.headlineDown
-          : data.overall === "degraded"
-            ? labels.headlineDegraded
-            : labels.headlineOk;
-      }
-
-      data.components.forEach(function (c) {
-        var card = board.querySelector('[data-status-component="' + c.id + '"]');
-        if (!card) return;
-        var lbl = card.querySelector("[data-status-label]");
-        var det = card.querySelector("[data-status-detail]");
-        card.setAttribute("data-status-state", c.status);
-        if (lbl) {
-          lbl.textContent = c.status === "down"
-            ? labels.down
-            : c.status === "degraded"
-              ? labels.degraded
-              : labels.operational;
-        }
-        if (det && c.detail) det.textContent = c.detail;
-      });
-    })
-    .catch(function () {
-      var checked = document.querySelector("[data-status-checked-at]");
-      if (checked) checked.textContent = labels.failed;
+      if (det && c.detail) det.textContent = c.detail;
     });
+
+    return true;
+  }
+
+  var cacheApplied = false;
+  var cached = readCache();
+  if (cached) {
+    cacheApplied = applyData(cached);
+  }
+
+  function fetchStatus(attempt) {
+    fetch("/api/platform-status", {
+      headers: { accept: "application/json" },
+      credentials: "omit"
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (!applyData(data)) return;
+        writeCache(data);
+      })
+      .catch(function () {
+        if (attempt < RETRY_DELAYS.length) {
+          setTimeout(function () {
+            fetchStatus(attempt + 1);
+          }, RETRY_DELAYS[attempt]);
+          return;
+        }
+
+        if (!cacheApplied) {
+          var checked = document.querySelector("[data-status-checked-at]");
+          if (checked) checked.textContent = labels.failed;
+        }
+      });
+  }
+
+  fetchStatus(0);
 })();
