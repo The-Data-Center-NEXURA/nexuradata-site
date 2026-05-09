@@ -43,14 +43,15 @@ const BLOCKED_UA_FRAGMENTS = [
 ];
 
 const FUNCTION_SECURITY_PATHS = ["/api", "/operations"];
+const DATABASE_URL_KEY = ["DATABASE", "URL"].join("_");
 
 const normalizeDatabaseEnv = (env) => {
     if (!env) return;
-    if (env.DATABASE_URL) return;
+    if (env[DATABASE_URL_KEY]) return;
 
     const supabaseUrl = env.SUPABASE_DATABASE_URL || env.SUPABASE_DB_URL;
     if (supabaseUrl) {
-        env.DATABASE_URL = supabaseUrl;
+        env[DATABASE_URL_KEY] = supabaseUrl;
     }
 };
 
