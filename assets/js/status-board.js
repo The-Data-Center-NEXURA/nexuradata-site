@@ -9,6 +9,7 @@
   var RETRY_DELAYS = [1500, 3000];
   var FETCH_TIMEOUT_MS = 5000;
   var requestId = 0;
+  var warnedFailure = false;
 
   var locale = board.getAttribute("data-status-locale") || "fr";
   var labels = locale === "en"
@@ -125,6 +126,17 @@
     });
   }
 
+  function notifyFailure(error) {
+    if (!warnedFailure && typeof console !== "undefined" && console.warn) {
+      console.warn("status-board: live update failed", error || "unknown error");
+      warnedFailure = true;
+    }
+    if (!cacheApplied) {
+      var checked = document.querySelector("[data-status-checked-at]");
+      if (checked) checked.textContent = labels.failed;
+    }
+  }
+
   var cacheApplied = false;
   var cached = readCache();
   if (cached) {
@@ -148,10 +160,10 @@
       })
       .then(function (data) {
         if (currentRequest !== requestId) return;
-        if (!applyDataSafe(data)) return;
+        if (!applyDataSafe(data)) throw new Error("status-board: apply failed");
         writeCache(data);
       })
-      .catch(function () {
+      .catch(function (error) {
         if (currentRequest !== requestId) return;
         if (attempt < RETRY_DELAYS.length) {
           setTimeout(function () {
@@ -159,11 +171,7 @@
           }, RETRY_DELAYS[attempt]);
           return;
         }
-
-        if (!cacheApplied) {
-          var checked = document.querySelector("[data-status-checked-at]");
-          if (checked) checked.textContent = labels.failed;
-        }
+        notifyFailure(error);
       });
   }
 

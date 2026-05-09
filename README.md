@@ -20,16 +20,20 @@ Le depot couvre:
 - `suivi-dossier-client-montreal.html` : portail client `noindex`
 - `operations/index.html` : console interne a proteger via Cloudflare Access
 - `assets/css/site.css` : styles partages
+- `assets/css/src/` : sources CSS decoupees; `assets/css/site.css` est genere par build
 - `assets/js/site.js` : interactions publiques et console operateur
+- `assets/js/status-board.js` : mise a jour live de la page statut services (CSP-safe)
 - `functions/api/diagnostic.js` : prequalification serveur sans creation de dossier, utilisee par le bot public avec fallback local
 - `functions/api/intake.js` : ouverture de dossier
 - `functions/api/status.js` : suivi client par numero + code
+- `functions/api/platform-status.js` : healthcheck public pour la page statut services
 - `functions/api/ops/cases.js` : recherche, actions operateur, concierge et application du plan automatise
 - `functions/_lib/automation.js` : triage deterministe, besoin client, signal emotionnel, proposition, SLA, timeline et garde-fous
 - `functions/_lib/concierge.js` : messages client / operateur a partir du plan automatise
 - `functions/_lib/` : logique partagee (DB, auth, emails, Stripe, rate-limit)
 - `migrations/neon/0001_full_schema.sql` : schema Postgres consolide
 - `migrations/d1-archive/` : ancienne base D1 (archive historique uniquement)
+- `scripts/build-css.mjs` : concatene `assets/css/src/*.css` vers `assets/css/site.css`
 - `wrangler.jsonc` : configuration Pages/Functions avec uniquement des valeurs de role non personnelles
 - `.dev.vars.example` : modele local sans secrets ni adresse personnelle, a copier vers `.dev.vars`
 
