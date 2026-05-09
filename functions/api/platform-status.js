@@ -31,8 +31,18 @@ const pingDatabase = async (env) => {
   try {
     const sql = getDb(env);
     const start = Date.now();
-    const rows = await withTimeout(sql`select 1 as ok`, DB_TIMEOUT_MS);
+    const result = await withTimeout(
+      sql`select 1 as ok`.then(
+        (rows) => ({ ok: true, rows }),
+        (error) => ({ ok: false, error })
+      ),
+      DB_TIMEOUT_MS
+    );
     const ms = Date.now() - start;
+    if (!result.ok) {
+      return { status: STATUS_DOWN, detail: "Connexion Neon impossible", error: result.error };
+    }
+    const rows = result.rows;
     if (!rows?.length) return { status: STATUS_DEGRADED, detail: "Réponse vide", ms };
     return { status: STATUS_OK, detail: `Réponse en ${ms} ms`, ms };
   } catch (error) {

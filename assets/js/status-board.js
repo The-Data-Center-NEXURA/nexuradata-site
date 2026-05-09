@@ -7,6 +7,8 @@
   var CACHE_KEY = "nexuradata:platform-status";
   var CACHE_MAX_AGE_MS = 10 * 60 * 1000;
   var RETRY_DELAYS = [1500, 3000];
+  var FETCH_TIMEOUT_MS = 5000;
+  var requestId = 0;
 
   var locale = board.getAttribute("data-status-locale") || "fr";
   var labels = locale === "en"
@@ -97,32 +99,60 @@
             ? labels.degraded
             : labels.operational;
       }
-      if (det && c.detail) det.textContent = c.detail;
+      if (det) det.textContent = c.detail || "";
     });
 
     return true;
   }
 
+  function applyDataSafe(data) {
+    try {
+      return applyData(data);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function fetchWithTimeout(url, options, ms) {
+    if (typeof AbortController === "undefined") return fetch(url, options);
+    var controller = new AbortController();
+    var timer = setTimeout(function () {
+      controller.abort();
+    }, ms);
+    var opts = Object.assign({}, options, { signal: controller.signal });
+    return fetch(url, opts).finally(function () {
+      clearTimeout(timer);
+    });
+  }
+
   var cacheApplied = false;
   var cached = readCache();
   if (cached) {
-    cacheApplied = applyData(cached);
+    cacheApplied = applyDataSafe(cached);
   }
 
   function fetchStatus(attempt) {
-    fetch("/api/platform-status", {
-      headers: { accept: "application/json" },
-      credentials: "omit"
-    })
+    requestId += 1;
+    var currentRequest = requestId;
+    fetchWithTimeout(
+      "/api/platform-status",
+      {
+        headers: { accept: "application/json" },
+        credentials: "omit"
+      },
+      FETCH_TIMEOUT_MS
+    )
       .then(function (r) {
         if (!r.ok) throw new Error("http " + r.status);
         return r.json();
       })
       .then(function (data) {
-        if (!applyData(data)) return;
+        if (currentRequest !== requestId) return;
+        if (!applyDataSafe(data)) return;
         writeCache(data);
       })
       .catch(function () {
+        if (currentRequest !== requestId) return;
         if (attempt < RETRY_DELAYS.length) {
           setTimeout(function () {
             fetchStatus(attempt + 1);
