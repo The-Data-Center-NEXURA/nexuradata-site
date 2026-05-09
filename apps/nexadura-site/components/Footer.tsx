@@ -1,19 +1,24 @@
+import Image from "next/image";
 import Link from "next/link";
-import { brand, navItems } from "@/data/site";
 
-export function Footer() {
+const navItems = [
+  { href: "/services", label: "Services" },
+  { href: "/case-studies", label: "Case Studies" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+];
+
+export default function Footer() {
   return (
-    <footer className="border-t border-line py-10">
-      <div className="section-shell grid gap-8 md:grid-cols-[1.4fr_1fr]">
-        <div>
-          <p className="text-sm font-black tracking-[0.18em]">{brand.name}</p>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            Practical automation strategy, implementation, and measurement for service businesses with real operational constraints.
-          </p>
+    <footer className="border-t border-slate-800 px-6 py-10">
+      <div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 text-sm text-slate-400 md:flex-row">
+        <div className="max-w-xl">
+          <Image src="/nexadura-logo.svg" alt="Nexadura" width={184} height={42} className="mb-4 h-7 w-auto" />
+          <p>© 2026 Nexadura. AI automation and operational intelligence infrastructure.</p>
         </div>
-        <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
+        <div className="flex flex-wrap gap-6">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="focus-ring hover:text-ink">
+            <Link key={item.href} href={item.href} className="hover:text-white">
               {item.label}
             </Link>
           ))}

@@ -1,22 +1,23 @@
-import { CaseStudyPreview } from "@/components/CaseStudyPreview";
-import { CTASection } from "@/components/CTASection";
-import { Hero } from "@/components/Hero";
-import { OfferSection } from "@/components/OfferSection";
-import { ProblemSection } from "@/components/ProblemSection";
-import { ProcessSection } from "@/components/ProcessSection";
-import { SolutionGrid } from "@/components/SolutionGrid";
-import { auditOffer, caseStudies, painPoints, processSteps, solutions } from "@/data/site";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import Problems from "@/components/Problems";
+import Solutions from "@/components/Solutions";
+import Process from "@/components/Process";
+import Offer from "@/components/Offer";
+import AuditForm from "@/components/AuditForm";
+import Footer from "@/components/Footer";
 
 export default function HomePage() {
   return (
-    <>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <Navbar />
       <Hero />
-      <ProblemSection problems={painPoints} />
-      <SolutionGrid solutions={solutions} />
-      <ProcessSection steps={processSteps} />
-      <OfferSection offer={auditOffer} />
-      <CaseStudyPreview studies={caseStudies} />
-      <CTASection />
-    </>
+      <Problems />
+      <Solutions />
+      <Process />
+      <Offer />
+      <AuditForm />
+      <Footer />
+    </main>
   );
 }

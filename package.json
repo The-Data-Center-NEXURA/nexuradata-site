@@ -45,6 +45,8 @@
     "@neondatabase/serverless": "^1.1.0",
     "framer-motion": "12.38.0",
     "lucide-react": "1.14.0",
+    "react-email": "6.1.1",
+    "resend": "6.12.3",
     "zod": "4.4.3"
   }
 }

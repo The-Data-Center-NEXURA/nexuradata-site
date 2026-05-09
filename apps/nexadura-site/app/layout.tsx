@@ -1,34 +1,44 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
-import { Analytics } from "@/components/Analytics";
-import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
-import { brand } from "@/data/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nexadura.ca"),
-  title: {
-    default: `${brand.name} - Automation audit and implementation`,
-    template: `%s - ${brand.name}`,
-  },
-  description: brand.subheadline,
+  title: "Nexadura | AI Automation Infrastructure",
+  description:
+    "Nexadura builds AI-powered operational systems that help companies automate workflows, scale execution, and eliminate bottlenecks.",
+  keywords: [
+    "AI automation",
+    "business automation",
+    "workflow automation",
+    "AI systems",
+    "operational intelligence",
+    "Nexadura",
+  ],
   openGraph: {
-    title: `${brand.name} - Automation audit and implementation`,
-    description: brand.subheadline,
+    title: "Nexadura | AI Automation Infrastructure",
+    description:
+      "AI-powered systems that eliminate operational bottlenecks and help companies scale execution.",
     url: "https://nexadura.ca",
-    siteName: brand.name,
+    siteName: "Nexadura",
     type: "website",
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
   return (
     <html lang="en">
       <body>
-        <Analytics />
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        {gaId ? (
+          <>
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
+            <Script id="ga4" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} window.gtag = gtag; gtag('js', new Date()); gtag('config', '${gaId}');`}
+            </Script>
+          </>
+        ) : null}
+        {children}
       </body>
     </html>
   );

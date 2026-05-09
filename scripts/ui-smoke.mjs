@@ -4,7 +4,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SKIP = new Set([".git", ".wrangler", "coverage", "docs", "functions", "migrations", "node_modules", "release-cloudflare", "scripts", "tests"]);
+const SKIP = new Set([".git", ".next", ".wrangler", "coverage", "docs", "functions", "migrations", "node_modules", "out", "release-cloudflare", "scripts", "tests"]);
 const ROOT_EXCLUDES = new Set(["404.html"]);
 const errors = [];
 

@@ -37,7 +37,7 @@ function walkFiles(dir, files = []) {
     }
 
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        if ([".git", "node_modules", ".wrangler", "coverage", "release-cloudflare"].includes(entry.name)) {
+        if ([".git", ".next", ".wrangler", "coverage", "node_modules", "out", "release-cloudflare"].includes(entry.name)) {
             continue;
         }
 
