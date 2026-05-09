@@ -6825,6 +6825,33 @@ select {
   font-feature-settings: "kern", "liga";
 }
 
+/* Content-link affordance: keep links discoverable in long-form copy */
+.hero-lead a:not(.button),
+.section-intro a:not(.button),
+.page-intro a:not(.button),
+.page-content a:not(.button),
+.footer-copy a:not(.button) {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: rgba(232, 228, 220, 0.42);
+  transition: color 200ms var(--ease-out), text-decoration-color 200ms var(--ease-out);
+}
+
+.hero-lead a:not(.button):hover,
+.section-intro a:not(.button):hover,
+.page-intro a:not(.button):hover,
+.page-content a:not(.button):hover,
+.footer-copy a:not(.button):hover,
+.hero-lead a:not(.button):focus-visible,
+.section-intro a:not(.button):focus-visible,
+.page-intro a:not(.button):focus-visible,
+.page-content a:not(.button):focus-visible,
+.footer-copy a:not(.button):focus-visible {
+  color: var(--color-text);
+  text-decoration-color: rgba(232, 228, 220, 0.78);
+}
+
 /* ── Signature shape: buttons ─────────────────────────────── */
 .button,
 .button-primary,
@@ -6915,6 +6942,11 @@ select {
 .field textarea {
   border-radius: var(--radius-asym);
   transition: border-color 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgba(232, 228, 220, 0.5);
 }
 .field input:focus,
 .field select:focus,

@@ -20,6 +20,24 @@ Configure export outside source control:
 3. Preserve JSON fields at ingestion.
 4. Verify with a known `x-request-id` that appears in both response headers and the log destination.
 
+## AI Audit Retention
+
+The concierge route emits structured AI audit events with:
+
+- `event = "api.concierge.openai.audit"`
+- phase and result (`skipped`, `primary_completion`, `followup_completion`)
+- model/usage metadata when available
+- locale, message/image counts and priority flags
+
+To make this audit usable for compliance and incident review:
+
+1. Export runtime logs to a retained destination (R2, SIEM, or analytics warehouse).
+2. Keep at least one indexed field for `event` and one for `requestId`.
+3. Keep retention and access controls aligned with privacy policy and Loi 25 requirements.
+4. Validate the pipeline by triggering `POST /api/concierge` and searching for `api.concierge.openai.audit`.
+
+See `docs/LOG-EXPORT-CLOUDFLARE.md` for the concrete checklist.
+
 ## Container Decision
 
 Do not containerise the current production deployment. Cloudflare Pages deploys static output plus Pages Functions, so a container would add maintenance without improving the release path.

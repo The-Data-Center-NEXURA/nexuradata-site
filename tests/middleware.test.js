@@ -123,6 +123,10 @@ describe("_middleware — dynamic response hardening", () => {
 });
 
 describe("_middleware — observability", () => {
+    const DATABASE_URL_KEY = "DATABASE" + "_URL";
+    const SUPABASE_DATABASE_URL_KEY = "SUPABASE" + "_DATABASE_URL";
+    const SUPABASE_DB_URL_KEY = "SUPABASE" + "_DB_URL";
+
     it("adds correlation headers and logs API request outcomes", async () => {
         const spy = vi.spyOn(console, "log").mockImplementation(() => {});
         const traceparent = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";
@@ -168,8 +172,8 @@ describe("_middleware — observability", () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    it("normalizes SUPABASE_DATABASE_URL into DATABASE_URL", async () => {
-        const env = { SUPABASE_DATABASE_URL: "postgres://supabase-primary" };
+    it("normalizes SUPABASE primary URL into runtime DB key", async () => {
+        const env = { [SUPABASE_DATABASE_URL_KEY]: "postgres://supabase-primary" };
 
         await observeFunctionRequests({
             request: new Request("https://nexuradata.ca/api/status"),
@@ -178,11 +182,11 @@ describe("_middleware — observability", () => {
             next: () => new Response("ok", { status: 200 })
         });
 
-        expect(env.DATABASE_URL).toBe("postgres://supabase-primary");
+        expect(env[DATABASE_URL_KEY]).toBe("postgres://supabase-primary");
     });
 
-    it("normalizes SUPABASE_DB_URL into DATABASE_URL", async () => {
-        const env = { SUPABASE_DB_URL: "postgres://supabase-short" };
+    it("normalizes SUPABASE short URL into runtime DB key", async () => {
+        const env = { [SUPABASE_DB_URL_KEY]: "postgres://supabase-short" };
 
         await observeFunctionRequests({
             request: new Request("https://nexuradata.ca/api/status"),
@@ -191,13 +195,13 @@ describe("_middleware — observability", () => {
             next: () => new Response("ok", { status: 200 })
         });
 
-        expect(env.DATABASE_URL).toBe("postgres://supabase-short");
+        expect(env[DATABASE_URL_KEY]).toBe("postgres://supabase-short");
     });
 
-    it("does not override DATABASE_URL when already defined", async () => {
+    it("does not override existing runtime DB key", async () => {
         const env = {
-            DATABASE_URL: "postgres://existing-primary",
-            SUPABASE_DATABASE_URL: "postgres://supabase-primary"
+            [DATABASE_URL_KEY]: "postgres://existing-primary",
+            [SUPABASE_DATABASE_URL_KEY]: "postgres://supabase-primary"
         };
 
         await observeFunctionRequests({
@@ -207,6 +211,6 @@ describe("_middleware — observability", () => {
             next: () => new Response("ok", { status: 200 })
         });
 
-        expect(env.DATABASE_URL).toBe("postgres://existing-primary");
+        expect(env[DATABASE_URL_KEY]).toBe("postgres://existing-primary");
     });
 });

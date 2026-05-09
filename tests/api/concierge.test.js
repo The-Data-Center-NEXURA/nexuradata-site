@@ -73,6 +73,8 @@ describe("api/concierge", () => {
       message: "External hard drive no longer detected, family photos."
     };
     const calls = [];
+    const logs = [];
+    vi.spyOn(console, "log").mockImplementation((line) => logs.push(`${line}`));
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (url, init) => {
       calls.push({ url, body: JSON.parse(init.body) });
       if (calls.length === 1) {
@@ -121,6 +123,19 @@ describe("api/concierge", () => {
     expect(body.triage).toBeTruthy();
     expect(body.triage.brief?.title).toBeTruthy();
     expect(fetchMock).toHaveBeenCalled();
+
+    const auditEvents = logs
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch {
+          return null;
+        }
+      })
+      .filter((record) => record?.event === "api.concierge.openai.audit");
+
+    expect(auditEvents.length).toBeGreaterThan(0);
+    expect(auditEvents.some((record) => record.phase === "primary_completion" && record.result === "ok")).toBe(true);
   });
 
   it("falls back gracefully when OpenAI returns an error", async () => {

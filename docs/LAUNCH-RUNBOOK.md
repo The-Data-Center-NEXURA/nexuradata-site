@@ -153,3 +153,16 @@ Secrets:
 - `ACCESS_CODE_SECRET`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+
+## 7. Export des logs (audit IA)
+
+Objectif: conserver et rechercher les evenements d'audit OpenAI hors des logs temporaires.
+
+1. Activer un job d'export Cloudflare Logs/Logpush vers une destination retenue (R2, SIEM ou entrepot analytique).
+2. Conserver les champs JSON sans transformation destructive.
+3. Verifier que `event`, `requestId`, `route` et `timestamp` sont indexes/recherchables.
+4. Lancer un appel de verification:
+   - `POST https://www.nexuradata.ca/api/concierge`
+5. Confirmer la presence d'un evenement `api.concierge.openai.audit` dans la destination.
+
+Reference detaillee: `docs/LOG-EXPORT-CLOUDFLARE.md`.

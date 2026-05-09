@@ -34,6 +34,7 @@
 
 import { buildCaseAutomationDraft } from "../_lib/automation.js";
 import { json, methodNotAllowed, onOptions, parsePayload } from "../_lib/http.js";
+import { logEvent } from "../_lib/observability.js";
 import { chatCompletion } from "../_lib/openai.js";
 import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 
@@ -322,6 +323,15 @@ const lastUserMessage = (history) => {
   return "";
 };
 
+const countImageParts = (history) => history.reduce((total, message) => {
+  if (!Array.isArray(message?.content)) return total;
+  return total + message.content.filter((part) => part?.type === "image_url").length;
+}, 0);
+
+const auditOpenAi = (context, fields = {}, level = "info") => {
+  logEvent(context, level, "api.concierge.openai.audit", fields);
+};
+
 const isPriorityTriage = (triage) =>
   Boolean(triage && PRIORITY_RISK_LEVELS.has(triage.riskLevel));
 
@@ -469,9 +479,24 @@ export const onRequestPost = async (context) => {
 
   const apiKey = context.env?.OPENAI_API_KEY;
 
+  const auditBase = {
+    locale,
+    historyMessages: history.length,
+    imageAttachments: countImageParts(history),
+    pagePath: pageContext?.path || "/"
+  };
+
   // ── Hard fallback: no key configured.
   if (!apiKey) {
     const triage = runTriage({ message: lastUserMessage(history) });
+    auditOpenAi(context, {
+      ...auditBase,
+      provider: "rules-fallback",
+      phase: "skipped",
+      reason: "missing-openai-api-key",
+      triageRiskLevel: triage?.riskLevel || "unknown",
+      priorityIntake: isPriorityTriage(triage)
+    });
     return json({
       ok: true,
       provider: "rules-fallback",
@@ -486,6 +511,7 @@ export const onRequestPost = async (context) => {
     + describePageContext(pageContext, locale);
   const messages = [{ role: "system", content: systemPrompt }, ...history];
 
+  const startedAt = Date.now();
   const completion = await chatCompletion({
     apiKey,
     messages,
@@ -498,6 +524,22 @@ export const onRequestPost = async (context) => {
   // ── Soft fallback: upstream failure.
   if (!completion.ok) {
     const triage = runTriage({ message: lastUserMessage(history) });
+    const durationMs = Date.now() - startedAt;
+    auditOpenAi(context, {
+      ...auditBase,
+      provider: "rules-fallback",
+      phase: "primary_completion",
+      result: "error",
+      reason: completion.error || "upstream-error",
+      durationMs,
+      model: completion?.meta?.model || "",
+      finishReason: completion?.meta?.finishReason || "",
+      usageIn: completion?.meta?.usage?.input || 0,
+      usageOut: completion?.meta?.usage?.output || 0,
+      usageTotal: completion?.meta?.usage?.total || 0,
+      triageRiskLevel: triage?.riskLevel || "unknown",
+      priorityIntake: isPriorityTriage(triage)
+    }, "warn");
     return json({
       ok: true,
       provider: "rules-fallback",
@@ -512,11 +554,29 @@ export const onRequestPost = async (context) => {
   // ── Tool call → execute deterministic triage and re-prompt model for closer.
   if (completion.toolCall?.name === "commit_triage") {
     const triage = runTriage(completion.toolCall.args || {});
+    const durationMs = Date.now() - startedAt;
     let reply = truncateReply(completion.message?.content || "");
+
+    auditOpenAi(context, {
+      ...auditBase,
+      provider: "openai",
+      phase: "primary_completion",
+      result: "ok",
+      durationMs,
+      model: completion?.meta?.model || "",
+      finishReason: completion?.meta?.finishReason || "",
+      usageIn: completion?.meta?.usage?.input || 0,
+      usageOut: completion?.meta?.usage?.output || 0,
+      usageTotal: completion?.meta?.usage?.total || 0,
+      toolCall: completion.toolCall?.name || "",
+      triageRiskLevel: triage?.riskLevel || "unknown",
+      priorityIntake: isPriorityTriage(triage)
+    });
 
     // If the model emitted no closing text alongside the tool call, ask it
     // to produce one, feeding the triage result back into the conversation.
     if (!reply) {
+      const followUpStartedAt = Date.now();
       const followUp = await chatCompletion({
         apiKey,
         messages: [
@@ -549,6 +609,23 @@ export const onRequestPost = async (context) => {
         temperature: 0.4,
         maxTokens: 220
       });
+
+      auditOpenAi(context, {
+        ...auditBase,
+        provider: followUp.ok ? "openai" : "rules-fallback",
+        phase: "followup_completion",
+        result: followUp.ok ? "ok" : "error",
+        reason: followUp.ok ? "" : (followUp.error || "upstream-error"),
+        durationMs: Date.now() - followUpStartedAt,
+        model: followUp?.meta?.model || "",
+        finishReason: followUp?.meta?.finishReason || "",
+        usageIn: followUp?.meta?.usage?.input || 0,
+        usageOut: followUp?.meta?.usage?.output || 0,
+        usageTotal: followUp?.meta?.usage?.total || 0,
+        triageRiskLevel: triage?.riskLevel || "unknown",
+        priorityIntake: isPriorityTriage(triage)
+      }, followUp.ok ? "info" : "warn");
+
       reply = truncateReply(followUp.ok ? followUp.message?.content || "" : "") || fallbackReply(locale, triage);
     }
 
@@ -563,6 +640,22 @@ export const onRequestPost = async (context) => {
   }
 
   // ── Plain assistant turn — no triage yet.
+  auditOpenAi(context, {
+    ...auditBase,
+    provider: "openai",
+    phase: "primary_completion",
+    result: "ok",
+    durationMs: Date.now() - startedAt,
+    model: completion?.meta?.model || "",
+    finishReason: completion?.meta?.finishReason || "",
+    usageIn: completion?.meta?.usage?.input || 0,
+    usageOut: completion?.meta?.usage?.output || 0,
+    usageTotal: completion?.meta?.usage?.total || 0,
+    toolCall: "",
+    triageRiskLevel: "none",
+    priorityIntake: false
+  });
+
   return json({
     ok: true,
     provider: "openai",

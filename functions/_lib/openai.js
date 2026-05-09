@@ -23,6 +23,17 @@ const safeJson = async (response) => {
   }
 };
 
+const buildMeta = (parsed, choice) => ({
+  responseId: typeof parsed?.id === "string" ? parsed.id : "",
+  model: typeof parsed?.model === "string" ? parsed.model : "",
+  finishReason: typeof choice?.finish_reason === "string" ? choice.finish_reason : "",
+  usage: {
+    input: Number.isFinite(parsed?.usage?.prompt_tokens) ? parsed.usage.prompt_tokens : 0,
+    output: Number.isFinite(parsed?.usage?.completion_tokens) ? parsed.usage.completion_tokens : 0,
+    total: Number.isFinite(parsed?.usage?.total_tokens) ? parsed.usage.total_tokens : 0
+  }
+});
+
 /**
  * @param {Object} input
  * @param {string} input.apiKey
@@ -87,13 +98,43 @@ export async function chatCompletion({
   const parsed = await safeJson(response);
 
   if (!response.ok) {
-    return { ok: false, error: `upstream-${response.status}`, raw: parsed };
+    return {
+      ok: false,
+      error: `upstream-${response.status}`,
+      meta: {
+        responseId: typeof parsed?.id === "string" ? parsed.id : "",
+        model: typeof parsed?.model === "string" ? parsed.model : "",
+        finishReason: "",
+        usage: {
+          input: Number.isFinite(parsed?.usage?.prompt_tokens) ? parsed.usage.prompt_tokens : 0,
+          output: Number.isFinite(parsed?.usage?.completion_tokens) ? parsed.usage.completion_tokens : 0,
+          total: Number.isFinite(parsed?.usage?.total_tokens) ? parsed.usage.total_tokens : 0
+        }
+      },
+      raw: parsed
+    };
   }
 
   const choice = parsed?.choices?.[0];
   if (!choice) {
-    return { ok: false, error: "empty-completion", raw: parsed };
+    return {
+      ok: false,
+      error: "empty-completion",
+      meta: {
+        responseId: typeof parsed?.id === "string" ? parsed.id : "",
+        model: typeof parsed?.model === "string" ? parsed.model : "",
+        finishReason: "",
+        usage: {
+          input: Number.isFinite(parsed?.usage?.prompt_tokens) ? parsed.usage.prompt_tokens : 0,
+          output: Number.isFinite(parsed?.usage?.completion_tokens) ? parsed.usage.completion_tokens : 0,
+          total: Number.isFinite(parsed?.usage?.total_tokens) ? parsed.usage.total_tokens : 0
+        }
+      },
+      raw: parsed
+    };
   }
+
+  const meta = buildMeta(parsed, choice);
 
   const toolCalls = choice.message?.tool_calls;
   if (Array.isArray(toolCalls) && toolCalls.length > 0) {
@@ -114,6 +155,7 @@ export async function chatCompletion({
       message: choice.message?.content
         ? { role: "assistant", content: choice.message.content }
         : null,
+      meta,
       raw: parsed
     };
   }
@@ -121,6 +163,7 @@ export async function chatCompletion({
   return {
     ok: true,
     message: { role: "assistant", content: choice.message?.content || "" },
+    meta,
     raw: parsed
   };
 }

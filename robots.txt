@@ -3,6 +3,6 @@ Allow: /
 Disallow: /operations/
 Disallow: /api/ops/
 
-Sitemap: https://nexuradata.ca/sitemap.xml
-Sitemap: https://nexuradata.ca/merchant-feed.xml
-Sitemap: https://nexuradata.ca/merchant-feed-en.xml
+Sitemap: https://www.nexuradata.ca/sitemap.xml
+Sitemap: https://www.nexuradata.ca/merchant-feed.xml
+Sitemap: https://www.nexuradata.ca/merchant-feed-en.xml
