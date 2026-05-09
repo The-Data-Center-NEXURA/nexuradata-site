@@ -1,0 +1,12 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/_not-found/page.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0k0tl-d._.js")
+R.c("server/chunks/ssr/0ih3_next_dist_esm_build_templates_app-page_0re19mk.js")
+R.c("server/chunks/ssr/[root-of-the-server]__00~8q03._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0r._p_~._.js")
+R.c("server/chunks/ssr/apps_nexadura-site_0a5em7e._.js")
+R.c("server/chunks/ssr/0ih3_next_dist_client_components_0rl5gy4._.js")
+R.c("server/chunks/ssr/0ih3_next_dist_client_components_builtin_forbidden_0~y0k.f.js")
+R.c("server/chunks/ssr/0ih3_next_dist_client_components_builtin_unauthorized_10_nz83.js")
+R.c("server/chunks/ssr/apps_nexadura-site__next-internal_server_app__not-found_page_actions_0-z66kw.js")
+R.m(10789)
+module.exports=R.m(10789).exports

@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/about/page": "/about",
+  "/api/leads/route": "/api/leads",
+  "/automation-audit/page": "/automation-audit",
+  "/case-studies/page": "/case-studies",
+  "/contact/page": "/contact",
+  "/page": "/",
+  "/services/page": "/services"
+}
