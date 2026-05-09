@@ -5,3 +5,4 @@ Disallow: /api/ops/
 
 Sitemap: https://nexuradata.ca/sitemap.xml
 Sitemap: https://nexuradata.ca/merchant-feed.xml
+Sitemap: https://nexuradata.ca/merchant-feed-en.xml

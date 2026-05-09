@@ -81,46 +81,51 @@
     <div class="container">
       <header class="page-hero">
         <p class="eyebrow">Operational status</p>
-        <h1>All services operational</h1>
+        <h1 data-status-headline>All services operational</h1>
         <p class="page-intro">
           This page reports the operational state of NEXURADATA's critical components: public website,
-          intake form, client case tracking, payment processing, transactional email and lab operations.
-          Incidents are recorded here as soon as they are confirmed.
+          intake form, client case tracking, payment processing, transactional email, database and lab
+          operations. Components are checked live when the page loads.
         </p>
         <p class="page-intro">
-          <strong>Last updated:</strong> <time datetime="2026-04-20">April 20, 2026</time>
+          <strong>Last checked:</strong> <time data-status-checked-at datetime="">just now</time>
         </p>
       </header>
 
-      <div class="page-grid">
-        <section class="page-card page-content">
+      <div class="page-grid" data-status-board data-status-locale="en">
+        <section class="page-card page-content" data-status-component="site">
           <h2>Public website</h2>
-          <p><strong>Operational.</strong> Global edge delivery via Cloudflare Pages. No known degradation.</p>
+          <p><strong data-status-label>Operational.</strong> <span data-status-detail>Global edge delivery via Cloudflare Pages.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="intake">
           <h2>Intake form</h2>
-          <p><strong>Operational.</strong> Case submission, server-side validation and email confirmation delivery.</p>
+          <p><strong data-status-label>Operational.</strong> <span data-status-detail>Case submission, server-side validation and email confirmation delivery.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="status">
           <h2>Client case tracking</h2>
-          <p><strong>Operational.</strong> Code-based authentication and case step lookup.</p>
+          <p><strong data-status-label>Operational.</strong> <span data-status-detail>Code-based authentication and case step lookup.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="payments">
           <h2>Payments</h2>
-          <p><strong>Operational.</strong> Stripe Checkout, webhooks and post-payment confirmation.</p>
+          <p><strong data-status-label>Operational.</strong> <span data-status-detail>Stripe Checkout, webhooks and post-payment confirmation.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="email">
           <h2>Transactional email</h2>
-          <p><strong>Operational.</strong> Intake confirmations, case updates and payment receipts via Resend.</p>
+          <p><strong data-status-label>Operational.</strong> <span data-status-detail>Intake confirmations, case updates and payment receipts via Resend.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="database">
+          <h2>Database</h2>
+          <p><strong data-status-label>Operational.</strong> <span data-status-detail>Neon Postgres — verifying.</span></p>
+        </section>
+
+        <section class="page-card page-content" data-status-component="lab">
           <h2>Lab</h2>
-          <p><strong>Operational.</strong> Media intake, evaluation, intervention and return on the announced timeline.</p>
+          <p><strong data-status-label>Operational.</strong> <span data-status-detail>Media intake, evaluation, intervention and return on the announced timeline.</span></p>
         </section>
       </div>
 
@@ -197,5 +202,6 @@
       </section>
     </div>
   </footer>
+  <script src="/assets/js/status-board.js?v=20260509a" defer></script>
 </body>
 </html>

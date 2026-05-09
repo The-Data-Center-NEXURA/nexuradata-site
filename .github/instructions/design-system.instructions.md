@@ -9,7 +9,7 @@ applyTo: "**/*.{html,css,js}"
 - Single CSS file (`assets/css/site.css`), no framework.
 - No JS except for form logic and static UI state (`assets/js/site.js`).
 - Typography: IBM Plex Sans for body, headings, and UI; IBM Plex Mono for eyebrows, labels, and technical readouts. Fonts loaded from Google Fonts (`fonts.googleapis.com`).
-- No automatic motion: no autoplay media, CSS animations, scroll reveal, smooth scrolling, animated counters, or hover lifts.
+- Motion: no scroll reveal, no animated counters, no autoplay media that distracts, no hover lifts. Calm color/border/shadow transitions on interactive elements (buttons, links, fields) are allowed. The kinetic hero on the homepage and headline sections may use `transform`/`@keyframes`, but **every** such block MUST be wrapped in `@media (prefers-reduced-motion: no-preference)` (or be inside the existing reduced-motion override) so users with reduced-motion preferences see a static frame.
 
 ## CSS Tokens
 
@@ -23,7 +23,8 @@ Branding tokens are **locked** — see `.github/instructions/branding.instructio
   --os-dim: rgba(232, 228, 220, 0.22);
   --os-ghost: rgba(232, 228, 220, 0.08);
   --rule: 0.5px solid rgba(232, 228, 220, 0.1);
-  --serif: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans-locked: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* --serif is a deprecated alias for --font-sans-locked. Do not use in new code. */
   --tracking-wide: 0.35em;
   --tracking-xwide: 0.55em;
 
@@ -107,7 +108,9 @@ Legal pages (mentions-legales, politique-confidentialite, conditions-interventio
 - Always include `<link rel="canonical">`, `<link rel="alternate" hreflang>` pairs.
 
 ## Motion
-Do not add automatic motion. Keep interactions immediate and static: no autoplay media, CSS animations, smooth scrolling, scroll reveal, animated counters, or hover lifts.
+Keep interactions calm and predictable. Permitted: short color/border/shadow transitions on interactive elements (buttons, links, fields, nav-link underline reveals). Forbidden: scroll reveal, smooth-scrolling document, animated counters, autoplay video/audio, hover lifts (`transform: translateY(...)` on hover).
+
+The homepage kinetic hero (`@keyframes motion-*`) is the documented exception. Every animated block MUST be inside `@media (prefers-reduced-motion: no-preference)` and the global reduced-motion override at the end of `site.css` MUST disable it.
 
 ## Editorial Rules
 - Never more than 2 levels of visual hierarchy per section.

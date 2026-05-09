@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>NEXURADATA — Data recovery services</title>
+    <link>https://nexuradata.ca/en/</link>
+    <description>Data recovery and digital forensics services in Montréal</description>
+
+    <item>
+      <g:id>svc-deleted-files-en</g:id>
+      <g:title>Deleted file recovery — Montréal</g:title>
+      <g:description>Accidental deletion, emptied recycle bin or missing folder. Targeted recovery with no apparent physical damage. Initial assessment at no charge.</g:description>
+      <g:link>https://nexuradata.ca/en/tarifs-recuperation-donnees-montreal</g:link>
+      <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
+      <g:price>79.00 CAD</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:condition>new</g:condition>
+      <g:brand>NEXURADATA</g:brand>
+      <g:google_product_category>5032</g:google_product_category>
+      <g:product_type>Services &gt; Data recovery &gt; Deleted files</g:product_type>
+    </item>
+
+    <item>
+      <g:id>svc-external-usb-card-en</g:id>
+      <g:title>External drive, USB and memory card recovery — Montréal</g:title>
+      <g:description>Storage media still detected or partially readable, unstable access, recovery of photos, videos and common documents. Initial assessment at no charge.</g:description>
+      <g:link>https://nexuradata.ca/en/tarifs-recuperation-donnees-montreal</g:link>
+      <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
+      <g:price>129.00 CAD</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:condition>new</g:condition>
+      <g:brand>NEXURADATA</g:brand>
+      <g:google_product_category>5032</g:google_product_category>
+      <g:product_type>Services &gt; Data recovery &gt; External media</g:product_type>
+    </item>
+
+    <item>
+      <g:id>svc-phone-mobile-en</g:id>
+      <g:title>Phone and mobile recovery — Montréal</g:title>
+      <g:description>Photos, videos, messages or files on a mobile device. Cases that do not require board-level micro-soldering. Initial assessment at no charge.</g:description>
+      <g:link>https://nexuradata.ca/en/recuperation-telephone-montreal</g:link>
+      <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
+      <g:price>149.00 CAD</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:condition>new</g:condition>
+      <g:brand>NEXURADATA</g:brand>
+      <g:google_product_category>5032</g:google_product_category>
+      <g:product_type>Services &gt; Data recovery &gt; Mobile device</g:product_type>
+    </item>
+
+    <item>
+      <g:id>svc-hdd-ssd-intermediate-en</g:id>
+      <g:title>Hard drive and SSD recovery — Montréal</g:title>
+      <g:description>Inaccessible drive or SSD, damaged logical structure, specialised work without confirmed heavy mechanical repair. Initial assessment at no charge.</g:description>
+      <g:link>https://nexuradata.ca/en/recuperation-donnees-montreal</g:link>
+      <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
+      <g:price>350.00 CAD</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:condition>new</g:condition>
+      <g:brand>NEXURADATA</g:brand>
+      <g:google_product_category>5032</g:google_product_category>
+      <g:product_type>Services &gt; Data recovery &gt; Hard drive and SSD</g:product_type>
+    </item>
+
+    <item>
+      <g:id>svc-raid-nas-server-en</g:id>
+      <g:title>RAID, NAS and server recovery — Montréal</g:title>
+      <g:description>RAID arrays, NAS units and servers. Pricing depends on disk count, failure type, urgency and prior recovery attempts. Initial assessment at no charge.</g:description>
+      <g:link>https://nexuradata.ca/en/recuperation-raid-ssd-montreal</g:link>
+      <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
+      <g:price>650.00 CAD</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:condition>new</g:condition>
+      <g:brand>NEXURADATA</g:brand>
+      <g:google_product_category>5032</g:google_product_category>
+      <g:product_type>Services &gt; Data recovery &gt; RAID and server</g:product_type>
+    </item>
+
+    <item>
+      <g:id>svc-digital-forensics-en</g:id>
+      <g:title>Digital forensics — Montréal</g:title>
+      <g:description>Preservation, incident analysis, chronological documentation and handling of sensitive matters. For HR, legal, insurance and cybersecurity contexts.</g:description>
+      <g:link>https://nexuradata.ca/en/forensique-numerique-montreal</g:link>
+      <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
+      <g:price>500.00 CAD</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:condition>new</g:condition>
+      <g:brand>NEXURADATA</g:brand>
+      <g:google_product_category>5032</g:google_product_category>
+      <g:product_type>Services &gt; Digital forensics</g:product_type>
+    </item>
+  </channel>
+</rss>

@@ -17,6 +17,7 @@ const rootFiles = new Set([
   "robots.txt",
   "site.webmanifest",
   "merchant-feed.xml",
+  "merchant-feed-en.xml",
   "sitemap.xml"
 ]);
 

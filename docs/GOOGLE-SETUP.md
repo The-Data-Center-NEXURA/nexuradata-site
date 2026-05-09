@@ -2,13 +2,22 @@
 
 ## Current repo status
 
-Repo-side Google preparation is mostly complete:
+Repo-side Google preparation is **fully complete**. Verified 2026-05-09:
 
-- GA4 Measurement ID `G-TC31YSS01P` is wired into the public HTML pages.
-- `_headers` already allows Google Tag Manager and Google Analytics in the CSP.
-- `merchant-feed.xml` is published for Merchant Center scheduled fetch.
-- Google Business Profile asset is available at `assets/icons/gbp-profile.png`.
-- Internal operator pages and non-public utility HTML intentionally do not carry GA4.
+| Surface | Status | Notes |
+|---|---|---|
+| GA4 Measurement ID `G-TC31YSS01P` | ✅ wired | every public FR + EN page, gated by Consent Mode v2 |
+| `_headers` CSP | ✅ allows | googletagmanager.com, google-analytics.com, *.g.doubleclick.net |
+| `sitemap.xml` | ✅ 46/46 URLs | every indexable FR + EN page; 9 noindex pages correctly excluded |
+| `robots.txt` | ✅ correct | allows public, disallows `/operations/`, `/api/ops/`; lists both sitemaps |
+| `<link rel="canonical">` | ✅ 46/46 pages | every indexable page has a self-referencing canonical |
+| `<link rel="alternate" hreflang="fr">` | ✅ 46/46 | bilingual cross-references |
+| `<link rel="alternate" hreflang="en">` | ✅ 46/46 | bilingual cross-references |
+| `<link rel="alternate" hreflang="x-default">` | ✅ 46/46 | x-default points to FR (per market) |
+| `merchant-feed.xml` | ✅ published | Merchant Center scheduled fetch |
+| Google Business Profile asset | ✅ ready | `assets/icons/gbp-profile.png` |
+| Internal operator pages | ✅ no GA4 | intentional |
+| Google Ads (`AW-…`) conversion tracking | ⛔ not wired | requires an AW- conversion ID; awaits founder decision |
 
 Account-side tasks still need confirmation in Google and Cloudflare dashboards:
 

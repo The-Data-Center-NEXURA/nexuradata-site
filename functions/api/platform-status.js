@@ -1,0 +1,131 @@
+// Public, unauthenticated platform health endpoint.
+// Returns per-component status for the public statut page.
+// Designed for low cost: env presence checks + a single `select 1` Neon ping.
+// Cache: 60 s at the edge to avoid hammering Neon.
+
+import { getDb } from "../_lib/db.js";
+import { json, methodNotAllowed, onOptions } from "../_lib/http.js";
+import { logError } from "../_lib/observability.js";
+import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
+
+const STATUS_OK = "operational";
+const STATUS_DEGRADED = "degraded";
+const STATUS_DOWN = "down";
+
+const componentTemplate = (id, label) => ({ id, label, status: STATUS_OK, detail: "" });
+
+const pingDatabase = async (env) => {
+  try {
+    const sql = getDb(env);
+    const start = Date.now();
+    const rows = await sql`select 1 as ok`;
+    const ms = Date.now() - start;
+    if (!rows?.length) return { status: STATUS_DEGRADED, detail: "Réponse vide", ms };
+    return { status: STATUS_OK, detail: `Réponse en ${ms} ms`, ms };
+  } catch (error) {
+    return { status: STATUS_DOWN, detail: "Connexion Neon impossible", error };
+  }
+};
+
+const checkEnvPresence = (env, keys) => {
+  const missing = keys.filter((k) => !env?.[k]);
+  if (missing.length === 0) return { status: STATUS_OK, detail: "" };
+  return {
+    status: STATUS_DOWN,
+    detail: `Configuration manquante: ${missing.join(", ")}`
+  };
+};
+
+export const onRequestOptions = (context) => onOptions(context.env, "GET, OPTIONS");
+
+export const onRequestGet = async (context) => {
+  const limit = checkRateLimit(context.request, 60);
+  if (!limit.allowed) return tooManyRequests(limit.retryAfter);
+
+  const env = context.env || {};
+  const checkedAt = new Date().toISOString();
+
+  const components = [
+    componentTemplate("site", "Site public"),
+    componentTemplate("intake", "Formulaire d'intake"),
+    componentTemplate("status", "Suivi de dossier client"),
+    componentTemplate("payments", "Paiements"),
+    componentTemplate("email", "Courriels transactionnels"),
+    componentTemplate("database", "Base de données"),
+    componentTemplate("lab", "Laboratoire")
+  ];
+
+  const byId = Object.fromEntries(components.map((c) => [c.id, c]));
+
+  // site: this response itself is proof the edge is serving.
+  byId.site.detail = "Distribution edge Cloudflare Pages.";
+
+  // intake / status both depend on Neon + access secret
+  {
+    const r = checkEnvPresence(env, ["DATABASE_URL", "ACCESS_CODE_SECRET"]);
+    byId.intake.status = r.status;
+    byId.intake.detail = r.status === STATUS_OK ? "Validation, persistance et email actifs." : r.detail;
+    byId.status.status = r.status;
+    byId.status.detail = r.status === STATUS_OK ? "Authentification par code et lecture du dossier." : r.detail;
+  }
+
+  // payments: Stripe secret + webhook secret
+  {
+    const r = checkEnvPresence(env, ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]);
+    byId.payments.status = r.status;
+    byId.payments.detail = r.status === STATUS_OK ? "Stripe Checkout et webhooks armés." : r.detail;
+  }
+
+  // email: Resend
+  {
+    const r = checkEnvPresence(env, ["RESEND_API_KEY"]);
+    byId.email.status = r.status;
+    byId.email.detail = r.status === STATUS_OK ? "Envoi via Resend." : r.detail;
+  }
+
+  // database: live ping
+  try {
+    const r = await pingDatabase(env);
+    if (r.error) logError(context, "api.platform_status.db_ping", r.error);
+    byId.database.status = r.status;
+    byId.database.detail = r.detail;
+  } catch (error) {
+    logError(context, "api.platform_status.db_unexpected", error);
+    byId.database.status = STATUS_DOWN;
+    byId.database.detail = "Vérification impossible.";
+  }
+
+  // lab: static signal — operational unless an operator overrides via env.
+  if (env.LAB_STATUS_OVERRIDE) {
+    const value = String(env.LAB_STATUS_OVERRIDE).toLowerCase();
+    if (value === STATUS_DEGRADED || value === STATUS_DOWN) {
+      byId.lab.status = value;
+    }
+    if (env.LAB_STATUS_DETAIL) {
+      byId.lab.detail = String(env.LAB_STATUS_DETAIL).slice(0, 280);
+    }
+  } else {
+    byId.lab.detail = "Réception, évaluation, intervention et restitution selon le calendrier.";
+  }
+
+  // overall = worst-of
+  const order = { [STATUS_OK]: 0, [STATUS_DEGRADED]: 1, [STATUS_DOWN]: 2 };
+  const overall = components.reduce((acc, c) => (order[c.status] > order[acc] ? c.status : acc), STATUS_OK);
+
+  return json(
+    {
+      ok: true,
+      checkedAt,
+      overall,
+      components
+    },
+    {
+      headers: {
+        // 60 s public cache + SWR; safe because data is non-sensitive.
+        "cache-control": "public, max-age=60, stale-while-revalidate=120"
+      }
+    }
+  );
+};
+
+export const onRequest = methodNotAllowed;

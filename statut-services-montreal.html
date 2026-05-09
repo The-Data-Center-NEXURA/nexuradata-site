@@ -81,46 +81,52 @@
     <div class="container">
       <header class="page-hero">
         <p class="eyebrow">Statut opérationnel</p>
-        <h1>Tous les services sont opérationnels</h1>
+        <h1 data-status-headline>Tous les services sont opérationnels</h1>
         <p class="page-intro">
           Cette page indique l'état des composants critiques de NEXURADATA: site public, formulaire
-          d'intake, suivi de dossier client, traitement des paiements, courriels transactionnels et
-          opérations du laboratoire. Les incidents sont consignés ici dès qu'ils sont confirmés.
+          d'intake, suivi de dossier client, traitement des paiements, courriels transactionnels,
+          base de données et opérations du laboratoire. Les composants sont vérifiés en direct au
+          chargement de la page.
         </p>
         <p class="page-intro">
-          <strong>Dernière mise à jour:</strong> <time datetime="2026-04-20">20 avril 2026</time>
+          <strong>Dernière vérification:</strong> <time data-status-checked-at datetime="">à l'instant</time>
         </p>
       </header>
 
-      <div class="page-grid">
-        <section class="page-card page-content">
+      <div class="page-grid" data-status-board data-status-locale="fr">
+        <section class="page-card page-content" data-status-component="site">
           <h2>Site public</h2>
-          <p><strong>Opérationnel.</strong> Distribution edge mondiale via Cloudflare Pages. Aucune dégradation connue.</p>
+          <p><strong data-status-label>Opérationnel.</strong> <span data-status-detail>Distribution edge mondiale via Cloudflare Pages.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="intake">
           <h2>Formulaire d'intake</h2>
-          <p><strong>Opérationnel.</strong> Soumission des dossiers, validation côté serveur et envoi de la confirmation par courriel.</p>
+          <p><strong data-status-label>Opérationnel.</strong> <span data-status-detail>Soumission des dossiers, validation côté serveur et envoi de la confirmation par courriel.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="status">
           <h2>Suivi de dossier client</h2>
-          <p><strong>Opérationnel.</strong> Authentification par code et lecture des étapes du dossier.</p>
+          <p><strong data-status-label>Opérationnel.</strong> <span data-status-detail>Authentification par code et lecture des étapes du dossier.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="payments">
           <h2>Paiements</h2>
-          <p><strong>Opérationnel.</strong> Stripe Checkout, webhooks et confirmation après paiement.</p>
+          <p><strong data-status-label>Opérationnel.</strong> <span data-status-detail>Stripe Checkout, webhooks et confirmation après paiement.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="email">
           <h2>Courriels transactionnels</h2>
-          <p><strong>Opérationnel.</strong> Envoi des confirmations d'intake, mises à jour de dossier et reçus de paiement via Resend.</p>
+          <p><strong data-status-label>Opérationnel.</strong> <span data-status-detail>Envoi des confirmations d'intake, mises à jour de dossier et reçus de paiement via Resend.</span></p>
         </section>
 
-        <section class="page-card page-content">
+        <section class="page-card page-content" data-status-component="database">
+          <h2>Base de données</h2>
+          <p><strong data-status-label>Opérationnel.</strong> <span data-status-detail>Postgres Neon — vérification en cours.</span></p>
+        </section>
+
+        <section class="page-card page-content" data-status-component="lab">
           <h2>Laboratoire</h2>
-          <p><strong>Opérationnel.</strong> Réception des supports, évaluation, intervention et restitution selon le calendrier annoncé.</p>
+          <p><strong data-status-label>Opérationnel.</strong> <span data-status-detail>Réception des supports, évaluation, intervention et restitution selon le calendrier annoncé.</span></p>
         </section>
       </div>
 
@@ -199,5 +205,6 @@
       </section>
     </div>
   </footer>
+  <script src="/assets/js/status-board.js?v=20260509a" defer></script>
 </body>
 </html>

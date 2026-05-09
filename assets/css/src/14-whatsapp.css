@@ -1,0 +1,17 @@
+/* ── WhatsApp inline link (contact card) ─────────────────────── */
+.whatsapp-inline-link {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #25d366;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.whatsapp-inline-link:hover,
+.whatsapp-inline-link:focus-visible {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+

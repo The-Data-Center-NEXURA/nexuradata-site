@@ -1,0 +1,326 @@
+/* ── Ops filtered view pages (quotes, payments, follow-up) ── */
+
+.ops-view-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.ops-view-filters .field {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.ops-view-filters .form-actions {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.ops-view-table-wrap {
+  overflow-x: auto;
+}
+
+.ops-view-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.ops-view-table th {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ops-view-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--color-text);
+  vertical-align: top;
+}
+
+.ops-view-row:hover td {
+  background: rgba(232, 228, 220, 0.03);
+}
+
+.ops-view-link {
+  color: var(--color-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ops-view-link:hover {
+  text-decoration: underline;
+}
+
+.ops-view-mono {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+}
+
+.ops-view-muted {
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+.ops-view-empty {
+  padding: 2rem 0.75rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.ops-view-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ops-view-badge.is-quote-sent,
+.ops-view-badge.is-payment-open {
+  border-color: rgba(232, 228, 220, 0.22);
+  color: var(--color-info);
+}
+
+.ops-view-badge.is-quote-approved,
+.ops-view-badge.is-payment-paid {
+  border-color: rgba(232, 228, 220, 0.22);
+  color: var(--color-text);
+}
+
+.ops-view-badge.is-quote-expired,
+.ops-view-badge.is-quote-declined,
+.ops-view-badge.is-payment-expired,
+.ops-view-badge.is-payment-failed {
+  border-color: rgba(168, 92, 72, 0.28);
+  color: var(--color-warning);
+}
+
+.ops-view-badge.is-quote-draft {
+  color: var(--color-text-soft);
+}
+
+.ops-view-badge.is-quote-none {
+  color: var(--color-text-muted);
+}
+
+.ops-view-badge.is-reminder-urgent {
+  border-color: rgba(168, 92, 72, 0.28);
+  color: var(--color-warning);
+}
+
+.ops-view-badge.is-reminder-suggested {
+  border-color: rgba(232, 228, 220, 0.18);
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 1100px) {
+  .ops-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-payout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-automation-suite-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .ops-payout-card {
+    padding: 1rem;
+  }
+
+  .ops-payout-state {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-payout-card .button {
+    min-width: 0;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-pricing-state {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-pricing-card .button {
+    min-width: 0;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-automation-suite-card {
+    padding: 1rem;
+  }
+
+  .ops-automation-suite-card .button,
+  .ops-automation-suite-score {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ops-step-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-steps-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ops-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-view-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ops-view-table {
+    font-size: 0.84rem;
+  }
+
+  .ops-view-table th,
+  .ops-view-table td {
+    padding: 0.5rem;
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.catalog-card,
+.info-card {
+  height: 100%;
+}
+
+.catalog-card ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-text-soft);
+}
+
+.catalog-card li+li,
+.page-content li+li {
+  margin-top: 0.55rem;
+}
+
+.info-card p {
+  margin: 0;
+}
+
+.faq-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 1.25rem 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
+}
+
+.faq-item summary:hover {
+  background: rgba(232, 228, 220, 0.03);
+}
+
+.faq-item summary::after {
+  content: "+";
+  font-weight: 400;
+  font-size: 1.25rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: transform 260ms var(--ease-out), color 180ms;
+}
+
+.faq-item[open] summary::after {
+  transform: rotate(45deg);
+  color: var(--color-text-soft);
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item p {
+  margin: 0;
+  padding: 0 1.4rem 1.4rem;
+  color: var(--color-text-soft);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 320ms var(--ease-out),
+    opacity 280ms var(--ease-out),
+    padding 300ms var(--ease-out);
+  padding-bottom: 0;
+}
+
+.faq-item[open] > p {
+  max-height: 24rem;
+  opacity: 1;
+  padding-bottom: 1.4rem;
+}
+
+.faq-item[open] {
+  border-color: rgba(232, 228, 220, 0.18);
+  box-shadow: 0 20px 36px -32px rgba(0, 0, 0, 0.72);
+}
+
