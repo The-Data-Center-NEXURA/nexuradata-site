@@ -1,108 +1,109 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ArrowRight } from "lucide-react";
+import { FormEvent, useState } from "react";
+import { Send } from "lucide-react";
+import { trackConversion } from "@/lib/analytics";
 
-const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL || "https://calendly.com/nexadura/automation-audit";
-
-type FormState = {
-  name: string;
-  email: string;
-  company: string;
-  message: string;
+type AuditFormProps = {
+  formType?: "contact" | "audit";
 };
 
-export default function AuditForm() {
-  const [formData, setFormData] = useState<FormState>({
-    name: "",
-    email: "",
-    company: "",
-    message: "",
-  });
+const inputClass = "focus-ring w-full rounded-xl rounded-bl-md border border-line bg-white px-4 py-3 text-sm";
+
+export default function AuditForm({ formType = "audit" }: AuditFormProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  function updateField(field: keyof FormState, value: string) {
-    setFormData((current) => ({ ...current, [field]: value }));
-  }
-
-  async function submitForm(event: FormEvent<HTMLFormElement>) {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("loading");
+    const form = event.currentTarget;
+    const payload = new FormData(form);
+    const formData = { ...Object.fromEntries(payload.entries()), formType, consent: payload.get("consent") === "on" };
 
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
 
-      if (!response.ok) throw new Error("Failed to submit");
-
+    if (response.ok) {
+      const result = await response.json();
+      trackConversion("lead_form_submit", { form_type: formType, lead_score: result.leadScore, lead_tier: result.leadTier });
+      form.reset();
       setStatus("success");
-      setFormData({ name: "", email: "", company: "", message: "" });
-    } catch {
+    } else {
       setStatus("error");
     }
-  }
+  };
 
   return (
-    <section id="audit" className="px-6 py-24">
-      <div className="mx-auto grid max-w-7xl gap-10 rounded-3xl border border-slate-800 bg-white p-8 text-slate-950 md:grid-cols-[0.9fr_1.1fr] md:p-12">
-        <div>
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">Automation Audit</p>
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">Find the workflows costing you speed and revenue.</h2>
-          <p className="mt-6 text-lg leading-8 text-slate-600">
-            Request a focused audit. Nexadura will identify where AI systems, automation, and better process architecture can create immediate leverage.
-          </p>
-        </div>
-
-        <form onSubmit={submitForm} className="grid gap-4">
-          <input
-            className="rounded-2xl border border-slate-300 px-5 py-4 outline-none focus:border-blue-500"
-            placeholder="Name"
-            value={formData.name}
-            onChange={(event) => updateField("name", event.target.value)}
-            required
-          />
-          <input
-            className="rounded-2xl border border-slate-300 px-5 py-4 outline-none focus:border-blue-500"
-            placeholder="Email"
-            type="email"
-            value={formData.email}
-            onChange={(event) => updateField("email", event.target.value)}
-            required
-          />
-          <input
-            className="rounded-2xl border border-slate-300 px-5 py-4 outline-none focus:border-blue-500"
-            placeholder="Company / Website"
-            value={formData.company}
-            onChange={(event) => updateField("company", event.target.value)}
-          />
-          <textarea
-            className="min-h-32 rounded-2xl border border-slate-300 px-5 py-4 outline-none focus:border-blue-500"
-            placeholder="What process or bottleneck do you want automated?"
-            value={formData.message}
-            onChange={(event) => updateField("message", event.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            disabled={status === "loading"}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-7 py-4 font-semibold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {status === "loading" ? "Sending..." : "Request Audit"} <ArrowRight size={18} />
-          </button>
-          {status === "success" && (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-700">
-              <p>Request sent. We will review the workflow opportunity.</p>
-              <a href={calendlyUrl} className="mt-3 inline-flex font-semibold text-blue-700 hover:text-blue-600">
-                Book the qualified call on Calendly
-              </a>
-            </div>
-          )}
-          {status === "error" && <p className="text-sm font-medium text-red-600">Something went wrong. Please try again.</p>}
-        </form>
+    <section className="section-shell grid gap-8 py-16 md:grid-cols-[0.85fr_1.15fr]">
+      <div>
+        <p className="eyebrow">Qualified call</p>
+        <h2 className="mt-4 text-3xl font-black md:text-4xl">Start with the audit. Book the first qualified automation conversation.</h2>
+        <p className="mt-5 text-lg leading-8 text-muted">Share the operating context, current tools, lead volume, and bottleneck. Nexadura will score the request and route it into follow-up.</p>
       </div>
+      <form onSubmit={submit} className="grid gap-4 rounded-2xl rounded-bl-md border border-line bg-white/55 p-5 shadow-panel">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <input className={inputClass} name="fullName" placeholder="Full name" required />
+          <input className={inputClass} name="email" placeholder="Work email" type="email" required />
+          <input className={inputClass} name="company" placeholder="Company" required />
+          <input className={inputClass} name="website" placeholder="Website" />
+          <input className={inputClass} name="role" placeholder="Role" />
+          <select className={inputClass} name="teamSize" required defaultValue="">
+            <option value="" disabled>
+              Team size
+            </option>
+            <option value="1-5">1-5</option>
+            <option value="6-20">6-20</option>
+            <option value="21-50">21-50</option>
+            <option value="51-200">51-200</option>
+            <option value="200+">200+</option>
+          </select>
+          <select className={inputClass} name="monthlyLeadVolume" required defaultValue="">
+            <option value="" disabled>
+              Monthly lead volume
+            </option>
+            <option value="0-25">0-25</option>
+            <option value="26-100">26-100</option>
+            <option value="101-500">101-500</option>
+            <option value="500+">500+</option>
+          </select>
+          <select className={inputClass} name="timeline" required defaultValue="">
+            <option value="" disabled>
+              Timeline
+            </option>
+            <option value="now">Now</option>
+            <option value="30-days">Next 30 days</option>
+            <option value="quarter">This quarter</option>
+            <option value="exploring">Exploring</option>
+          </select>
+          <select className={inputClass} name="budget" required defaultValue="">
+            <option value="" disabled>
+              Budget range
+            </option>
+            <option value="under-2k">Under 2k</option>
+            <option value="2k-5k">2k-5k</option>
+            <option value="5k-15k">5k-15k</option>
+            <option value="15k+">15k+</option>
+            <option value="unknown">Unknown</option>
+          </select>
+          <input className={inputClass} name="currentStack" placeholder="Current CRM / tools" required />
+        </div>
+        <textarea className={`${inputClass} min-h-32 resize-y`} name="biggestConstraint" placeholder="Where does the workflow break today?" required />
+        <label className="flex gap-3 text-sm leading-6 text-muted">
+          <input className="mt-1" type="checkbox" name="consent" required />
+          <span>I agree to be contacted about this request.</span>
+        </label>
+        <button className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl rounded-bl-md bg-ink px-5 py-3 font-semibold text-paper disabled:opacity-60" type="submit" disabled={status === "loading"}>
+          {status === "loading" ? "Sending..." : "Send request"}
+          <Send size={17} aria-hidden="true" />
+        </button>
+        {status === "success" ? <p className="text-sm font-semibold text-signal">Request received. We will review the workflow context and reply with the next step.</p> : null}
+        {status === "error" ? <p className="text-sm font-semibold text-red-700">The request could not be sent. Please try again.</p> : null}
+      </form>
     </section>
   );
 }

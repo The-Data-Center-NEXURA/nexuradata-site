@@ -1,30 +1,18 @@
-import { services } from "@/data/site";
+import { services } from "@/data/services";
 
 export default function Solutions() {
   return (
-    <section id="solutions" className="px-6 py-20">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">Solutions</p>
-            <h2 className="max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">Infrastructure for faster execution.</h2>
-          </div>
-          <p className="max-w-xl text-slate-300">
-            We build the automation layer between your people, tools, data, and customers.
-          </p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          {services.map((service) => {
-            const Icon = service.icon;
-            return (
-              <div key={service.title} className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 transition hover:border-blue-500/60">
-                <Icon className="mb-6 text-blue-400" size={34} />
-                <h3 className="text-2xl font-semibold">{service.title}</h3>
-                <p className="mt-4 leading-7 text-slate-300">{service.description}</p>
-              </div>
-            );
-          })}
-        </div>
+    <section className="section-shell py-16">
+      <p className="eyebrow">Operating system</p>
+      <h2 className="mt-4 max-w-3xl text-3xl font-black md:text-4xl">The first version is intentionally practical: capture, score, store, alert, follow up, measure.</h2>
+      <div className="mt-10 grid gap-4 md:grid-cols-3">
+        {services.map(({ icon: Icon, title, description }) => (
+          <article key={title} className="rounded-2xl rounded-bl-md border border-line bg-white/45 p-5">
+            <Icon size={22} className="text-signal" aria-hidden="true" />
+            <h3 className="mt-4 text-lg font-black">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
+          </article>
+        ))}
       </div>
     </section>
   );

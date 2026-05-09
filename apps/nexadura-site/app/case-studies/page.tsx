@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
+import AuditForm from "@/components/AuditForm";
 import Footer from "@/components/Footer";
-import { caseStudies } from "@/data/site";
+import Navbar from "@/components/Navbar";
+import { caseStudies } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Case Studies",
@@ -12,25 +13,31 @@ export const metadata: Metadata = {
 
 export default function CaseStudiesPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <>
       <Navbar />
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-7xl">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">Case Studies</p>
-          <h1 className="max-w-4xl text-5xl font-bold tracking-tight md:text-7xl">
-            Examples of automation systems Nexadura can deploy.
-          </h1>
-          <div className="mt-14 grid gap-6 md:grid-cols-3">
-            {caseStudies.map((item) => (
-              <Link key={item.slug} href={`/case-studies/${item.slug}`} className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 transition hover:border-blue-500/60">
-                <h2 className="text-2xl font-semibold">{item.title}</h2>
-                <p className="mt-4 leading-7 text-slate-300">{item.description}</p>
+      <section className="section-shell py-16">
+        <p className="eyebrow">Case studies</p>
+        <h1 className="mt-4 max-w-4xl text-5xl font-black leading-tight">Operational proof, measured in fewer misses and clearer ownership.</h1>
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">These examples show the type of before-and-after NEXADURA builds toward: faster response, fewer manual tasks, and more useful pipeline visibility.</p>
+      </section>
+      <section className="section-shell py-16">
+        <p className="eyebrow">Proof patterns</p>
+        <h2 className="mt-4 max-w-3xl text-3xl font-black md:text-4xl">Case studies are framed around operational before-and-after, not vanity automation.</h2>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {caseStudies.map((study) => (
+            <article key={study.title} className="rounded-2xl rounded-bl-md border border-line bg-white/45 p-5">
+              <p className="text-sm font-black text-signal">{study.metric}</p>
+              <h3 className="mt-4 text-lg font-black">{study.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-muted">{study.summary}</p>
+              <Link href={`/case-studies/${study.slug}`} className="focus-ring mt-5 inline-flex text-sm font-bold text-ink underline decoration-line underline-offset-4">
+                Read the case study
               </Link>
-            ))}
-          </div>
+            </article>
+          ))}
         </div>
       </section>
+      <AuditForm />
       <Footer />
-    </main>
+    </>
   );
 }

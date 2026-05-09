@@ -6,26 +6,11 @@ export const metadata: Metadata = {
   title: "Nexadura | AI Automation Infrastructure",
   description:
     "Nexadura builds AI-powered operational systems that help companies automate workflows, scale execution, and eliminate bottlenecks.",
-  keywords: [
-    "AI automation",
-    "business automation",
-    "workflow automation",
-    "AI systems",
-    "operational intelligence",
-    "Nexadura",
-  ],
-  openGraph: {
-    title: "Nexadura | AI Automation Infrastructure",
-    description:
-      "AI-powered systems that eliminate operational bottlenecks and help companies scale execution.",
-    url: "https://nexadura.ca",
-    siteName: "Nexadura",
-    type: "website",
-  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
   return (
     <html lang="en">
@@ -38,7 +23,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Script>
           </>
         ) : null}
-        {children}
+        {metaPixelId ? (
+          <Script id="meta-pixel" strategy="afterInteractive">
+            {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '${metaPixelId}'); fbq('track', 'PageView');`}
+          </Script>
+        ) : null}
+        <main>{children}</main>
       </body>
     </html>
   );

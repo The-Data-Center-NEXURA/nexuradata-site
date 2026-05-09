@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
 import AuditForm from "@/components/AuditForm";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -11,18 +11,15 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <>
       <Navbar />
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-7xl">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">Contact</p>
-          <h1 className="max-w-4xl text-5xl font-bold tracking-tight md:text-7xl">
-            Let&apos;s identify your highest-value automation opportunity.
-          </h1>
-        </div>
+      <section className="section-shell py-16">
+        <p className="eyebrow">Contact</p>
+        <h1 className="mt-4 max-w-4xl text-5xl font-black leading-tight">Tell us where the workflow breaks.</h1>
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">Share the current stack, lead volume, and operational constraint. The response will focus on the next practical move.</p>
       </section>
-      <AuditForm />
+      <AuditForm formType="contact" />
       <Footer />
-    </main>
+    </>
   );
 }
