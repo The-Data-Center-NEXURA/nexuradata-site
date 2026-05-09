@@ -8,7 +8,7 @@ type AuditFormProps = {
   formType?: "contact" | "audit";
 };
 
-const inputClass = "focus-ring w-full rounded-xl rounded-bl-md border border-line bg-white px-4 py-3 text-sm";
+const inputClass = "focus-ring w-full rounded-xl rounded-bl-md border border-line bg-[#11100e] px-4 py-3 text-sm text-paper placeholder:text-muted";
 
 export default function AuditForm({ formType = "audit" }: AuditFormProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -41,20 +41,20 @@ export default function AuditForm({ formType = "audit" }: AuditFormProps) {
   return (
     <section className="section-shell grid gap-8 py-16 md:grid-cols-[0.85fr_1.15fr]">
       <div>
-        <p className="eyebrow">Qualified call</p>
-        <h2 className="mt-4 text-3xl font-black md:text-4xl">Start with the audit. Book the first qualified automation conversation.</h2>
-        <p className="mt-5 text-lg leading-8 text-muted">Share the operating context, current tools, lead volume, and bottleneck. Nexadura will score the request and route it into follow-up.</p>
+        <p className="eyebrow">Conversation qualifiée</p>
+        <h2 className="mt-4 text-3xl font-black md:text-4xl">Commencez par l'audit. Planifiez la première conversation d'automatisation.</h2>
+        <p className="mt-5 text-lg leading-8 text-muted">Partagez le contexte opérationnel, les outils actuels, le volume de demandes et le blocage. NEXURA qualifiera la demande et la routera vers le suivi.</p>
       </div>
-      <form onSubmit={submit} className="grid gap-4 rounded-2xl rounded-bl-md border border-line bg-white/55 p-5 shadow-panel">
+      <form onSubmit={submit} className="grid gap-4 rounded-2xl rounded-bl-md border border-line bg-[#0b0b0a]/85 p-5 shadow-panel">
         <div className="grid gap-4 sm:grid-cols-2">
-          <input className={inputClass} name="fullName" placeholder="Full name" required />
-          <input className={inputClass} name="email" placeholder="Work email" type="email" required />
-          <input className={inputClass} name="company" placeholder="Company" required />
-          <input className={inputClass} name="website" placeholder="Website" />
-          <input className={inputClass} name="role" placeholder="Role" />
+          <input className={inputClass} name="fullName" placeholder="Nom complet" required />
+          <input className={inputClass} name="email" placeholder="Courriel professionnel" type="email" required />
+          <input className={inputClass} name="company" placeholder="Entreprise" required />
+          <input className={inputClass} name="website" placeholder="Site web" />
+          <input className={inputClass} name="role" placeholder="Rôle" />
           <select className={inputClass} name="teamSize" required defaultValue="">
             <option value="" disabled>
-              Team size
+              Taille de l'équipe
             </option>
             <option value="1-5">1-5</option>
             <option value="6-20">6-20</option>
@@ -64,7 +64,7 @@ export default function AuditForm({ formType = "audit" }: AuditFormProps) {
           </select>
           <select className={inputClass} name="monthlyLeadVolume" required defaultValue="">
             <option value="" disabled>
-              Monthly lead volume
+              Volume mensuel de demandes
             </option>
             <option value="0-25">0-25</option>
             <option value="26-100">26-100</option>
@@ -73,36 +73,36 @@ export default function AuditForm({ formType = "audit" }: AuditFormProps) {
           </select>
           <select className={inputClass} name="timeline" required defaultValue="">
             <option value="" disabled>
-              Timeline
+              Échéancier
             </option>
-            <option value="now">Now</option>
-            <option value="30-days">Next 30 days</option>
-            <option value="quarter">This quarter</option>
-            <option value="exploring">Exploring</option>
+            <option value="now">Maintenant</option>
+            <option value="30-days">Dans les 30 prochains jours</option>
+            <option value="quarter">Ce trimestre</option>
+            <option value="exploring">En exploration</option>
           </select>
           <select className={inputClass} name="budget" required defaultValue="">
             <option value="" disabled>
-              Budget range
+              Fourchette budgétaire
             </option>
-            <option value="under-2k">Under 2k</option>
-            <option value="2k-5k">2k-5k</option>
-            <option value="5k-15k">5k-15k</option>
-            <option value="15k+">15k+</option>
-            <option value="unknown">Unknown</option>
+            <option value="under-2k">Moins de 2 k$</option>
+            <option value="2k-5k">2 k$ à 5 k$</option>
+            <option value="5k-15k">5 k$ à 15 k$</option>
+            <option value="15k+">15 k$ et plus</option>
+            <option value="unknown">À confirmer</option>
           </select>
-          <input className={inputClass} name="currentStack" placeholder="Current CRM / tools" required />
+          <input className={inputClass} name="currentStack" placeholder="CRM / outils actuels" required />
         </div>
-        <textarea className={`${inputClass} min-h-32 resize-y`} name="biggestConstraint" placeholder="Where does the workflow break today?" required />
+        <textarea className={`${inputClass} min-h-32 resize-y`} name="biggestConstraint" placeholder="Où le flux de travail bloque-t-il aujourd'hui?" required />
         <label className="flex gap-3 text-sm leading-6 text-muted">
           <input className="mt-1" type="checkbox" name="consent" required />
-          <span>I agree to be contacted about this request.</span>
+          <span>J'accepte d'être contacté au sujet de cette demande.</span>
         </label>
-        <button className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl rounded-bl-md bg-ink px-5 py-3 font-semibold text-paper disabled:opacity-60" type="submit" disabled={status === "loading"}>
-          {status === "loading" ? "Sending..." : "Send request"}
+        <button className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl rounded-bl-md bg-signal px-5 py-3 font-semibold text-ink disabled:opacity-60" type="submit" disabled={status === "loading"}>
+          {status === "loading" ? "Envoi..." : "Envoyer la demande"}
           <Send size={17} aria-hidden="true" />
         </button>
-        {status === "success" ? <p className="text-sm font-semibold text-signal">Request received. We will review the workflow context and reply with the next step.</p> : null}
-        {status === "error" ? <p className="text-sm font-semibold text-red-700">The request could not be sent. Please try again.</p> : null}
+        {status === "success" ? <p className="text-sm font-semibold text-signal">Demande reçue. Nous allons revoir le contexte du flux et répondre avec la prochaine étape.</p> : null}
+        {status === "error" ? <p className="text-sm font-semibold text-red-700">La demande n'a pas pu être envoyée. Veuillez réessayer.</p> : null}
       </form>
     </section>
   );

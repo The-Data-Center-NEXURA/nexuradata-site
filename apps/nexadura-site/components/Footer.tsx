@@ -8,12 +8,12 @@ export default function Footer() {
         <div>
           <p className="text-sm font-black tracking-[0.18em]">{brand.name}</p>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            Practical automation strategy, implementation, and measurement for service businesses with real operational constraints.
+            Stratégie, implantation et mesure d'automatisation pour les entreprises de services qui ont de vraies contraintes opérationnelles.
           </p>
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="focus-ring hover:text-ink">
+            <Link key={item.href} href={item.href} className="focus-ring hover:text-paper">
               {item.label}
             </Link>
           ))}

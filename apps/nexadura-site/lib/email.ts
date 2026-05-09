@@ -7,17 +7,17 @@ const escapeHtml = (value: string) =>
 export const sendLeadAlert = async (lead: LeadPayload, score: LeadScore) => {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.LEAD_ALERT_TO;
-  if (!apiKey || !to) return { ok: true, skipped: true, reason: "Resend lead alert not configured" };
+  if (!apiKey || !to) return { ok: true, skipped: true, reason: "Alerte Resend non configurée" };
 
-  const from = process.env.LEAD_ALERT_FROM || "NEXADURA <leads@nexadura.ca>";
+  const from = process.env.LEAD_ALERT_FROM || "NEXURA <leads@nexura.ca>";
   const subject = `[${score.tier.toUpperCase()} ${score.score}] ${lead.company} - ${lead.formType}`;
   const html = `
-    <h1>New ${escapeHtml(lead.formType)} lead</h1>
+    <h1>Nouvelle demande ${escapeHtml(lead.formType)}</h1>
     <p><strong>${escapeHtml(lead.company)}</strong> - ${escapeHtml(lead.fullName)} (${escapeHtml(lead.email)})</p>
     <p><strong>Score:</strong> ${score.score} (${escapeHtml(score.tier)})</p>
-    <p><strong>Next step:</strong> ${escapeHtml(score.nextStep)}</p>
-    <p><strong>Current stack:</strong> ${escapeHtml(lead.currentStack)}</p>
-    <p><strong>Constraint:</strong> ${escapeHtml(lead.biggestConstraint)}</p>
+    <p><strong>Prochaine étape:</strong> ${escapeHtml(score.nextStep)}</p>
+    <p><strong>Pile actuelle:</strong> ${escapeHtml(lead.currentStack)}</p>
+    <p><strong>Contrainte:</strong> ${escapeHtml(lead.biggestConstraint)}</p>
   `;
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -25,7 +25,7 @@ export const sendLeadAlert = async (lead: LeadPayload, score: LeadScore) => {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": `nexadura-lead-${lead.email}-${Date.now()}`,
+      "Idempotency-Key": `nexura-lead-${lead.email}-${Date.now()}`,
     },
     body: JSON.stringify({ from, to, subject, html }),
   });

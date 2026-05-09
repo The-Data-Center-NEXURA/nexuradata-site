@@ -11,7 +11,7 @@ export const handleContactSubmission = async (payload: unknown) => {
     return {
       ok: false as const,
       status: 400,
-      body: { ok: false, message: "Invalid lead payload.", issues: parsed.error.flatten() },
+      body: { ok: false, message: "Demande invalide.", issues: parsed.error.flatten() },
     };
   }
 

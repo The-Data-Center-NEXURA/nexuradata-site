@@ -1,34 +1,26 @@
-import { BarChart3, ClipboardCheck, DatabaseZap, MailCheck, Route, Workflow } from "lucide-react";
-
 export const services = [
   {
-    icon: Workflow,
-    title: "Workflow mapping",
-    description: "Document every intake, qualification, handoff, approval, and follow-up step before automation starts.",
+    id: "01",
+    title: "Automatisation du flux revenu",
+    description:
+      "Automatisez l'accueil, la qualification, le routage, le suivi, les rappels, les mises à jour internes et les transferts pour que les occasions cessent de disparaître entre deux étapes.",
   },
   {
-    icon: ClipboardCheck,
-    title: "Lead scoring",
-    description: "Rank new inquiries by fit, urgency, budget, and operational risk so the team knows what deserves attention first.",
+    id: "02",
+    title: "Agents IA internes de commandement",
+    description:
+      "Déployez des agents IA par rôle pour la direction, les ventes, les opérations et le soutien afin de retrouver le contexte, préparer les sorties et déclencher les flux.",
   },
   {
-    icon: DatabaseZap,
-    title: "CRM storage",
-    description: "Send clean, normalized lead records into your CRM or webhook layer with enough context for sales and operations.",
+    id: "03",
+    title: "Tableaux de bord de visibilité",
+    description:
+      "Donnez à la direction une vue en direct des demandes, tâches, blocages, temps de réponse, mouvements d'occasions et risques opérationnels.",
   },
   {
-    icon: MailCheck,
-    title: "Email alerts",
-    description: "Notify the right inbox instantly with a concise summary, score, source, and recommended next action.",
-  },
-  {
-    icon: Route,
-    title: "Follow-up sequence",
-    description: "Trigger appropriate follow-up based on lead quality, timeline, and unanswered operational questions.",
-  },
-  {
-    icon: BarChart3,
-    title: "Conversion events",
-    description: "Track form submissions and audit requests with GA4-ready events and optional Meta Pixel support.",
+    id: "04",
+    title: "Architecture d'automatisation",
+    description:
+      "Architecturez la pile complète : outils, flux de données, permissions, déclencheurs, plans de relève, procédures et boucles de performance.",
   },
 ];

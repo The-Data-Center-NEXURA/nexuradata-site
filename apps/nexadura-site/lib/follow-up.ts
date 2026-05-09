@@ -3,7 +3,7 @@ import type { LeadPayload } from "@/lib/validation";
 
 export const enqueueFollowUp = async (lead: LeadPayload, score: LeadScore) => {
   const webhookUrl = process.env.FOLLOW_UP_WEBHOOK_URL;
-  if (!webhookUrl) return { ok: true, skipped: true, reason: "FOLLOW_UP_WEBHOOK_URL not configured" };
+  if (!webhookUrl) return { ok: true, skipped: true, reason: "FOLLOW_UP_WEBHOOK_URL non configuré" };
 
   const response = await fetch(webhookUrl, {
     method: "POST",

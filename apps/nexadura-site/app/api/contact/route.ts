@@ -10,6 +10,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result.body, { status: result.status });
   } catch {
-    return NextResponse.json({ ok: false, message: "Contact submission could not be processed." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "La demande de contact n'a pas pu être traitée." }, { status: 400 });
   }
 }

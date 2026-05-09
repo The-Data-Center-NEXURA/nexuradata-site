@@ -1,6 +1,8 @@
 export const problems = [
-  "Leads arrive from too many places and no one owns the first response.",
-  "CRM records exist, but statuses, tasks, and next steps are inconsistent.",
-  "Follow-up depends on memory, manual reminders, or disconnected spreadsheets.",
-  "Reporting shows activity, but not pipeline quality, handoff risk, or revenue leakage.",
+  "Les demandes refroidissent avant qu'une personne fasse le suivi",
+  "Les décisions reposent sur des onglets éparpillés et la mémoire",
+  "Les équipes ressaisissent les mêmes données dans des outils séparés",
+  "Le pipeline, la livraison et le reporting ne se parlent pas",
+  "Les transferts manuels créent des fuites de revenus silencieuses",
+  "La croissance ajoute de la complexité au lieu de donner du contrôle",
 ];

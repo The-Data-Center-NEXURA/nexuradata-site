@@ -6,8 +6,8 @@ import Process from "@/components/Process";
 import { auditOffer } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Automation Audit",
-  description: "Request a focused automation audit for intake, CRM, follow-up, analytics, and lead-to-revenue workflow improvements.",
+  title: "Audit d'automatisation",
+  description: "Demandez un audit d'automatisation ciblé pour améliorer l'accueil, le CRM, le suivi, l'analytique et le flux demande-vers-revenu.",
   alternates: { canonical: "/automation-audit" },
 };
 
@@ -16,8 +16,8 @@ export default function AutomationAuditPage() {
     <>
       <Navbar />
       <section className="section-shell py-16">
-        <p className="eyebrow">Automation audit</p>
-        <h1 className="mt-4 max-w-4xl text-5xl font-black leading-tight">A focused audit before you commit to another tool or workflow rebuild.</h1>
+        <p className="eyebrow">Audit d'automatisation</p>
+        <h1 className="mt-4 max-w-4xl text-5xl font-black leading-tight">Un audit ciblé avant d'ajouter un autre outil ou de reconstruire le flux.</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{auditOffer.description}</p>
       </section>
       <AuditForm />

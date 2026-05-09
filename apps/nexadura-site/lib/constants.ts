@@ -1,92 +1,108 @@
 import { CheckCircle2, DatabaseZap, ShieldCheck } from "lucide-react";
 
 export const brand = {
-  name: "NEXADURA",
-  domain: "nexadura.ca",
-  headline: "AI automation infrastructure for companies ready to remove operational bottlenecks.",
+  name: "NEXURA",
+  domain: "nexura.ca",
+  headline: "Infrastructure d'automatisation IA pour les entreprises qui veulent éliminer les blocages opérationnels.",
   subheadline:
-    "Nexadura builds AI-powered operational systems that help companies automate workflows, scale execution, and eliminate bottlenecks.",
-  offer: "Book a fixed-scope Automation Audit and leave with a prioritized workflow map, lead-scoring model, and implementation plan.",
-  primaryCta: "Request an automation audit",
-  secondaryCta: "View the process",
+    "NEXURA conçoit des systèmes opérationnels propulsés par l'IA pour automatiser les flux de travail, accélérer l'exécution et réduire les goulots d'étranglement.",
+  offer: "Réservez un audit d'automatisation à portée fixe et repartez avec une carte de flux priorisée, un modèle de qualification et un plan d'implantation.",
+  primaryCta: "Demander un audit d'automatisation",
+  secondaryCta: "Voir le processus",
 };
 
 export const navItems = [
   { href: "/services", label: "Services" },
-  { href: "/case-studies", label: "Case studies" },
-  { href: "/automation-audit", label: "Automation audit" },
-  { href: "/about", label: "About" },
+  { href: "/case-studies", label: "Études de cas" },
+  { href: "/automation-audit", label: "Audit d'automatisation" },
+  { href: "/about", label: "À propos" },
   { href: "/contact", label: "Contact" },
 ];
 
 export const auditOffer = {
-  title: "Automation Audit",
-  price: "Fixed-scope discovery",
+  title: "Audit d'automatisation",
+  price: "Découverte à portée fixe",
   description:
-    "A focused review of your lead-to-revenue workflow, with a prioritized roadmap for automations that can be shipped without rebuilding your whole company.",
+    "Un examen ciblé de votre flux de la demande jusqu'au revenu, avec une feuille de route priorisée pour des automatisations livrables sans reconstruire toute l'entreprise.",
   deliverables: [
-    "Workflow map for intake, qualification, CRM, and follow-up",
-    "Lead scoring model with priority tiers",
-    "Automation backlog ranked by impact and implementation effort",
-    "Analytics and conversion tracking checklist",
-    "Implementation estimate for the first production workflows",
+    "Carte du flux pour l'accueil, la qualification, le CRM et le suivi",
+    "Modèle de qualification avec niveaux de priorité",
+    "Carnet d'automatisation classé par impact et effort d'implantation",
+    "Liste de contrôle analytique et suivi des conversions",
+    "Estimation d'implantation pour les premiers flux en production",
   ],
 };
+
+export const systemStats = [
+  { label: "ROUTES", value: "18" },
+  { label: "SYNC", value: "ACTIF" },
+  { label: "LATENCE", value: "0,4s" },
+  { label: "ESCALADE", value: "ON" },
+];
+
+export const operatingNodes = [
+  "Capture des signaux entrants",
+  "Triage IA + qualification",
+  "Affectation des routes CRM",
+  "Moteur de séquences de suivi",
+  "Tableau de commandement",
+  "Mémoire des procédures",
+];
 
 export const caseStudies = [
   {
     slug: "b2b-service-firm-intake-cleanup",
-    title: "B2B service firm intake cleanup",
-    metric: "34% faster first response",
-    summary: "Consolidated web inquiries, referrals, and inbox leads into one scored CRM workflow with owner alerts.",
-    challenge: "The team had leads arriving through forms, referrals, and inbox threads, but no consistent owner or response priority.",
-    system: "Nexadura mapped the intake workflow, normalized the required CRM fields, added scoring rules, and routed priority alerts to the right owner.",
-    outcome: "First response time improved by 34% and weekly review moved from inbox archaeology to one clean pipeline view.",
+    title: "Nettoyage de l'accueil pour une firme de services B2B",
+    metric: "34 % plus rapide pour la première réponse",
+    summary: "Demandes web, références et courriels regroupés dans un flux CRM qualifié avec alertes au bon responsable.",
+    challenge: "L'équipe recevait des demandes par formulaires, références et fils courriel, sans propriétaire clair ni priorité de réponse uniforme.",
+    system: "NEXURA a cartographié le flux d'accueil, normalisé les champs CRM requis, ajouté les règles de qualification et routé les alertes prioritaires.",
+    outcome: "Le délai de première réponse a diminué de 34 % et la revue hebdomadaire est passée d'une fouille de courriels à une vue pipeline claire.",
   },
   {
     slug: "local-operator-follow-up-system",
-    title: "Local operator follow-up system",
-    metric: "22 manual tasks removed per week",
-    summary: "Replaced spreadsheet reminders with timeline-based email alerts and follow-up sequences by lead state.",
-    challenge: "Follow-up depended on manual reminders, which meant qualified opportunities were easy to miss during busy operating weeks.",
-    system: "The workflow was rebuilt around lead state, owner responsibility, and automated reminder sequences triggered by urgency and timeline.",
-    outcome: "The operator removed 22 manual tasks per week and gained a follow-up rhythm that did not depend on memory.",
+    title: "Système de suivi pour un opérateur local",
+    metric: "22 tâches manuelles retirées par semaine",
+    summary: "Rappels en chiffrier remplacés par des alertes courriel et des séquences de suivi selon l'état de la demande.",
+    challenge: "Le suivi dépendait de rappels manuels, ce qui rendait les occasions qualifiées faciles à manquer pendant les semaines chargées.",
+    system: "Le flux a été reconstruit autour de l'état de la demande, de la responsabilité du propriétaire et de rappels automatisés selon l'urgence.",
+    outcome: "L'opérateur a retiré 22 tâches manuelles par semaine et gagné un rythme de suivi qui ne dépend plus de la mémoire.",
   },
   {
     slug: "consulting-pipeline-reporting-layer",
-    title: "Consulting pipeline reporting layer",
-    metric: "1 source of truth for weekly review",
-    summary: "Standardized lead stages, attribution, and conversion events so leadership could see pipeline quality clearly.",
-    challenge: "Leadership had activity metrics but could not see pipeline quality, stalled handoffs, or conversion patterns across channels.",
-    system: "Nexadura standardized stages, attribution fields, conversion events, and reporting views around weekly operating decisions.",
-    outcome: "The team moved to one source of truth for pipeline review and clearer decisions about where to improve conversion.",
+    title: "Couche de reporting pour un pipeline-conseil",
+    metric: "1 source de vérité pour la revue hebdomadaire",
+    summary: "Étapes, attribution et événements de conversion standardisés pour rendre la qualité du pipeline visible.",
+    challenge: "La direction voyait l'activité, mais pas la qualité du pipeline, les transferts bloqués ni les tendances de conversion par canal.",
+    system: "NEXURA a standardisé les étapes, champs d'attribution, événements de conversion et vues de reporting autour des décisions hebdomadaires.",
+    outcome: "L'équipe a obtenu une source de vérité pour revoir le pipeline et décider plus clairement où améliorer la conversion.",
   },
 ];
 
 export const trustSignals = [
-  { icon: ShieldCheck, label: "No invasive rebuild required" },
-  { icon: CheckCircle2, label: "Built around your current stack" },
-  { icon: DatabaseZap, label: "CRM and reporting first" },
+  { icon: ShieldCheck, label: "Aucune reconstruction invasive requise" },
+  { icon: CheckCircle2, label: "Conçu autour de vos outils actuels" },
+  { icon: DatabaseZap, label: "CRM et reporting en priorité" },
 ];
 
 export const growthSystem = {
   seoPages: [
-    "automation audit for service business",
-    "crm automation consultant canada",
-    "lead follow-up automation",
-    "small business workflow automation",
-    "sales operations automation audit",
+    "audit automatisation entreprise de services",
+    "consultant automatisation crm québec",
+    "automatisation suivi prospects",
+    "automatisation flux travail PME",
+    "audit automatisation opérations ventes",
   ],
   linkedinThemes: [
-    "Missed-lead postmortems",
-    "Before-and-after workflow maps",
-    "CRM hygiene lessons",
-    "Lead scoring teardown",
-    "Automation mistakes that create operational debt",
+    "Autopsies de demandes manquées",
+    "Cartes de flux avant/après",
+    "Leçons d'hygiène CRM",
+    "Démontage de modèles de qualification",
+    "Erreurs d'automatisation qui créent de la dette opérationnelle",
   ],
   outboundLandingPages: [
-    "home-services-automation-audit",
-    "professional-services-crm-cleanup",
-    "b2b-intake-follow-up-system",
+    "audit-automatisation-services-locaux",
+    "nettoyage-crm-services-professionnels",
+    "systeme-accueil-suivi-b2b",
   ],
 };

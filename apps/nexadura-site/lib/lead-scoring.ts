@@ -13,32 +13,32 @@ export const scoreLead = (lead: LeadPayload): LeadScore => {
 
   if (["101-500", "500+"].includes(lead.monthlyLeadVolume)) {
     score += 20;
-    reasons.push("High monthly lead volume");
+    reasons.push("Volume mensuel élevé de demandes");
   }
 
   if (["now", "30-days"].includes(lead.timeline)) {
     score += 20;
-    reasons.push("Near-term implementation timeline");
+    reasons.push("Échéancier d'implantation rapproché");
   }
 
   if (["5k-15k", "15k+"].includes(lead.budget)) {
     score += 20;
-    reasons.push("Budget fits implementation work");
+    reasons.push("Budget compatible avec un mandat d'implantation");
   }
 
   if (/hubspot|salesforce|pipedrive|zoho|crm|airtable|notion/i.test(lead.currentStack)) {
     score += 10;
-    reasons.push("Existing system can receive CRM automation");
+    reasons.push("Système existant compatible avec une automatisation CRM");
   }
 
   if (lead.biggestConstraint.length > 160) {
     score += 10;
-    reasons.push("Detailed operational pain provided");
+    reasons.push("Contrainte opérationnelle détaillée fournie");
   }
 
   if (["21-50", "51-200", "200+"].includes(lead.teamSize)) {
     score += 10;
-    reasons.push("Team size suggests handoff complexity");
+    reasons.push("La taille de l'équipe suggère une complexité de transfert");
   }
 
   const cappedScore = Math.min(score, 100);
@@ -50,9 +50,9 @@ export const scoreLead = (lead: LeadPayload): LeadScore => {
     reasons,
     nextStep:
       tier === "priority"
-        ? "Book a workflow audit call within one business day."
+        ? "Planifier un appel d'audit de flux d'ici un jour ouvrable."
         : tier === "qualified"
-          ? "Send the audit intake follow-up and request current workflow screenshots."
-          : "Add to the education sequence and revisit when timeline or budget is clearer.",
+          ? "Envoyer le suivi d'accueil d'audit et demander des captures du flux actuel."
+          : "Ajouter à la séquence éducative et revoir quand l'échéancier ou le budget sera plus clair.",
   };
 };

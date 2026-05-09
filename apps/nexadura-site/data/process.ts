@@ -1,18 +1,18 @@
 export const processSteps = [
   {
-    title: "Audit the current system",
-    description: "Review forms, inboxes, CRM fields, automations, reports, and handoffs to find where work leaks.",
+    title: "Auditer le système actuel",
+    description: "Revoir les formulaires, boîtes courriel, champs CRM, automatisations, rapports et transferts pour trouver où le travail fuit.",
   },
   {
-    title: "Design the operating layer",
-    description: "Define lead states, scoring rules, alerts, owner responsibilities, and the minimum viable automation stack.",
+    title: "Concevoir la couche opérationnelle",
+    description: "Définir les états de demande, règles de qualification, alertes, responsabilités et pile d'automatisation minimale viable.",
   },
   {
-    title: "Deploy the first workflows",
-    description: "Implement lead capture, CRM routing, alerts, follow-up triggers, and conversion tracking in a measured first pass.",
+    title: "Déployer les premiers flux",
+    description: "Implanter la capture, le routage CRM, les alertes, les déclencheurs de suivi et le suivi de conversion dans une première version mesurée.",
   },
   {
-    title: "Improve from data",
-    description: "Tune scoring, reporting, and sequences using actual lead quality, response time, and conversion signals.",
+    title: "Améliorer avec les données",
+    description: "Ajuster la qualification, le reporting et les séquences à partir de la qualité réelle des demandes, des temps de réponse et des signaux de conversion.",
   },
 ];
