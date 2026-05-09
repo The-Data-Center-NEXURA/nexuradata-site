@@ -1,4 +1,4 @@
-import Link from "next/link";
+import TrackedLink from "@/components/TrackedLink";
 import { brand, navItems } from "@/lib/constants";
 
 export default function Footer() {
@@ -8,14 +8,14 @@ export default function Footer() {
         <div>
           <p className="text-sm font-black tracking-[0.18em]">{brand.name}</p>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            Stratégie, implantation et mesure d'automatisation pour les entreprises de services qui ont de vraies contraintes opérationnelles.
+            Automatisation IA, routage CRM, suivi et reporting pour les entreprises de services qui doivent piloter l'exécution sans chaos opérationnel.
           </p>
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="focus-ring hover:text-paper">
+            <TrackedLink key={item.href} href={item.href} className="focus-ring hover:text-paper" eventName="nav_click" eventLabel={item.label} eventLocation="footer">
               {item.label}
-            </Link>
+            </TrackedLink>
           ))}
         </div>
       </div>

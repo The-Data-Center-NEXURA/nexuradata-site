@@ -5,13 +5,14 @@
 :root {
   color-scheme: dark;
   --nx-bg: #050505;
-  --nx-panel: #0b0b0a;
-  --nx-panel-2: #11100e;
-  --nx-line: rgba(244, 239, 227, 0.12);
+  --nx-panel: #0a0908;
+  --nx-panel-2: #12100e;
+  --nx-line: rgba(244, 239, 227, 0.14);
   --nx-text: #f4efe3;
-  --nx-muted: #9b9386;
-  --nx-accent: #d7ff3f;
+  --nx-muted: #a79c8b;
+  --nx-accent: #b87333;
   --nx-copper: #b87333;
+  --nx-ember: #d24a2f;
 }
 
 * {
@@ -35,7 +36,7 @@ a {
 }
 
 ::selection {
-  background: var(--nx-accent);
+  background: var(--nx-ember);
   color: var(--nx-bg);
 }
 
@@ -63,8 +64,8 @@ a {
 
 .nx-grid {
   background-image:
-    linear-gradient(rgba(244, 239, 227, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(244, 239, 227, 0.055) 1px, transparent 1px);
+    linear-gradient(rgba(244, 239, 227, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184, 115, 51, 0.08) 1px, transparent 1px);
   background-size: 72px 72px;
 }
 

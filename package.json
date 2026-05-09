@@ -24,6 +24,8 @@
     "cf:whoami": "node ./scripts/pages-cli.mjs whoami",
     "secret:scan": "node ./scripts/secret-scan.mjs",
     "secret:scan:history": "node ./scripts/secret-scan.mjs --history",
+    "supabase:key:deposit": "node ./scripts/deposit-supabase-service-key.mjs",
+    "nexura-site:check": "npm --prefix apps/nexadura-site run lint && npm --prefix apps/nexadura-site run typecheck && npm --prefix apps/nexadura-site run build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",

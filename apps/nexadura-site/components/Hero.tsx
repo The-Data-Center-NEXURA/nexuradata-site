@@ -1,8 +1,5 @@
-"use client";
-
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import TrackedLink from "@/components/TrackedLink";
 import { brand, trustSignals } from "@/lib/constants";
 
 export default function Hero() {
@@ -13,21 +10,16 @@ export default function Hero() {
         <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[1.02] tracking-normal md:text-7xl">{brand.headline}</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{brand.subheadline}</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link href="/automation-audit" className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl rounded-bl-md bg-signal px-5 py-3 font-semibold text-ink">
+          <TrackedLink href="/automation-audit" className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl rounded-bl-md bg-signal px-5 py-3 font-semibold text-ink" eventName="cta_click" eventLabel={brand.primaryCta} eventLocation="hero">
             {brand.primaryCta}
             <ArrowRight size={18} aria-hidden="true" />
-          </Link>
-          <Link href="/services" className="focus-ring inline-flex items-center justify-center rounded-xl rounded-bl-md border border-line px-5 py-3 font-semibold">
+          </TrackedLink>
+          <TrackedLink href="/services" className="focus-ring inline-flex items-center justify-center rounded-xl rounded-bl-md border border-line px-5 py-3 font-semibold" eventName="cta_click" eventLabel={brand.secondaryCta} eventLocation="hero">
             {brand.secondaryCta}
-          </Link>
+          </TrackedLink>
         </div>
       </div>
-      <motion.aside
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        className="self-start rounded-2xl rounded-bl-md border border-line bg-[#0b0b0a]/85 p-6 shadow-panel"
-      >
+      <aside className="self-start rounded-2xl rounded-bl-md border border-line bg-[#0b0b0a]/85 p-6 shadow-panel">
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-signal">Résultat de l'audit</p>
         <div className="mt-5 space-y-4">
           {trustSignals.map(({ icon: Icon, label }) => (
@@ -37,7 +29,7 @@ export default function Hero() {
             </div>
           ))}
         </div>
-      </motion.aside>
+      </aside>
     </section>
   );
 }

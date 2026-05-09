@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import AuditForm from "@/components/AuditForm";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import TrackedLink from "@/components/TrackedLink";
 import { caseStudies } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Études de cas",
-  description: "Exemples d'automatisation opérationnelle axés sur une réponse plus rapide, moins de tâches manuelles et une meilleure propriété du pipeline.",
+  title: "Études de cas et exemples d'automatisation IA",
+  description: "Exemples NEXURA d'automatisation IA pour le routage entrant, le suivi, la visibilité opérationnelle et la réduction des tâches manuelles.",
   alternates: { canonical: "/case-studies" },
+  openGraph: {
+    title: "Études de cas et exemples d'automatisation IA | NEXURA",
+    description: "Des exemples structurés par défi, système et résultat pour des flux revenus et opérations.",
+    url: "/case-studies",
+  },
 };
 
 export default function CaseStudiesPage() {
@@ -29,11 +34,19 @@ export default function CaseStudiesPage() {
               <p className="text-sm font-black text-signal">{study.metric}</p>
               <h3 className="mt-4 text-lg font-black">{study.title}</h3>
               <p className="mt-3 text-sm leading-6 text-muted">{study.summary}</p>
-              <Link href={`/case-studies/${study.slug}`} className="focus-ring mt-5 inline-flex text-sm font-bold text-signal underline decoration-line underline-offset-4">
+              <TrackedLink href={`/case-studies/${study.slug}`} className="focus-ring mt-5 inline-flex text-sm font-bold text-signal underline decoration-line underline-offset-4" eventName="case_study_click" eventLabel={study.title} eventLocation="case_studies_grid">
                 Lire l'étude de cas
-              </Link>
+              </TrackedLink>
             </article>
           ))}
+        </div>
+        <div className="mt-8 flex flex-col gap-3 text-sm font-bold sm:flex-row">
+          <TrackedLink href="/services" className="focus-ring text-muted underline decoration-line underline-offset-4 hover:text-paper" eventName="cta_click" eventLabel="Relier ces exemples aux services" eventLocation="case_studies_footer">
+            Relier ces exemples aux services
+          </TrackedLink>
+          <TrackedLink href="/automation-audit" className="focus-ring text-signal underline decoration-line underline-offset-4" eventName="cta_click" eventLabel="Identifier votre premier cas d'usage" eventLocation="case_studies_footer">
+            Identifier votre premier cas d'usage
+          </TrackedLink>
         </div>
       </section>
       <AuditForm />

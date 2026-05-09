@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import AuditForm from "@/components/AuditForm";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import TrackedLink from "@/components/TrackedLink";
 import { caseStudies } from "@/lib/constants";
 
 type CaseStudyPageProps = {
@@ -24,6 +25,11 @@ export async function generateMetadata({ params }: CaseStudyPageProps): Promise<
     title: study.title,
     description: study.summary,
     alternates: { canonical: `/case-studies/${study.slug}` },
+    openGraph: {
+      title: `${study.title} | NEXURA`,
+      description: study.summary,
+      url: `/case-studies/${study.slug}`,
+    },
   };
 }
 
@@ -57,6 +63,14 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
             <p className="eyebrow">Résultat</p>
             <p className="mt-4 leading-7 text-muted">{study.outcome}</p>
           </section>
+        </div>
+        <div className="mt-10 flex flex-col gap-3 text-sm font-bold sm:flex-row">
+          <TrackedLink href="/services" className="focus-ring text-muted underline decoration-line underline-offset-4 hover:text-paper" eventName="cta_click" eventLabel="Voir les services liés" eventLocation="case_study_detail">
+            Voir les services liés
+          </TrackedLink>
+          <TrackedLink href="/automation-audit" className="focus-ring text-signal underline decoration-line underline-offset-4" eventName="cta_click" eventLabel="Cartographier un flux similaire" eventLocation="case_study_detail">
+            Cartographier un flux similaire
+          </TrackedLink>
         </div>
       </article>
       <AuditForm />

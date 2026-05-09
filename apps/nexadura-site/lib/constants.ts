@@ -3,12 +3,12 @@ import { CheckCircle2, DatabaseZap, ShieldCheck } from "lucide-react";
 export const brand = {
   name: "NEXURA",
   domain: "nexura.ca",
-  headline: "Infrastructure d'automatisation IA pour les entreprises qui veulent éliminer les blocages opérationnels.",
+  headline: "Automatisation IA pour revenus, opérations et équipes internes.",
   subheadline:
-    "NEXURA conçoit des systèmes opérationnels propulsés par l'IA pour automatiser les flux de travail, accélérer l'exécution et réduire les goulots d'étranglement.",
+    "NEXURA relie l'accueil des demandes, la qualification, le routage CRM, le suivi et le reporting dans un système opérationnel clair.",
   offer: "Réservez un audit d'automatisation à portée fixe et repartez avec une carte de flux priorisée, un modèle de qualification et un plan d'implantation.",
   primaryCta: "Demander un audit d'automatisation",
-  secondaryCta: "Voir le processus",
+  secondaryCta: "Explorer les services",
 };
 
 export const navItems = [
