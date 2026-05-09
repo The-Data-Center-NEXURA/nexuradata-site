@@ -167,4 +167,46 @@ describe("_middleware — observability", () => {
         expect(res.headers.get("x-request-id")).toBeNull();
         expect(spy).not.toHaveBeenCalled();
     });
+
+    it("normalizes SUPABASE_DATABASE_URL into DATABASE_URL", async () => {
+        const env = { SUPABASE_DATABASE_URL: "postgres://supabase-primary" };
+
+        await observeFunctionRequests({
+            request: new Request("https://nexuradata.ca/api/status"),
+            env,
+            data: {},
+            next: () => new Response("ok", { status: 200 })
+        });
+
+        expect(env.DATABASE_URL).toBe("postgres://supabase-primary");
+    });
+
+    it("normalizes SUPABASE_DB_URL into DATABASE_URL", async () => {
+        const env = { SUPABASE_DB_URL: "postgres://supabase-short" };
+
+        await observeFunctionRequests({
+            request: new Request("https://nexuradata.ca/api/status"),
+            env,
+            data: {},
+            next: () => new Response("ok", { status: 200 })
+        });
+
+        expect(env.DATABASE_URL).toBe("postgres://supabase-short");
+    });
+
+    it("does not override DATABASE_URL when already defined", async () => {
+        const env = {
+            DATABASE_URL: "postgres://existing-primary",
+            SUPABASE_DATABASE_URL: "postgres://supabase-primary"
+        };
+
+        await observeFunctionRequests({
+            request: new Request("https://nexuradata.ca/api/status"),
+            env,
+            data: {},
+            next: () => new Response("ok", { status: 200 })
+        });
+
+        expect(env.DATABASE_URL).toBe("postgres://existing-primary");
+    });
 });

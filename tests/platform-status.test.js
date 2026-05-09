@@ -109,4 +109,44 @@ describe("functions/api/platform-status — Supabase URL alias", () => {
         expect(map.intake.status).toBe("operational");
         expect(map.status.status).toBe("operational");
     });
+
+    it("reports operational when only SUPABASE_DB_URL is configured", async () => {
+        const ctx = {
+            request: makeReq(),
+            env: {
+                SUPABASE_DB_URL: "postgres://test",
+                ACCESS_CODE_SECRET: "x",
+                STRIPE_SECRET_KEY: "sk_test",
+                STRIPE_WEBHOOK_SECRET: "whsec_x",
+                RESEND_API_KEY: "re_x"
+            }
+        };
+        const res = await onRequestGet(ctx);
+        expect(res.status).toBe(200);
+        const data = await res.json();
+        const map = Object.fromEntries(data.components.map((c) => [c.id, c]));
+        expect(map.database.status).toBe("operational");
+        expect(map.intake.status).toBe("operational");
+        expect(map.status.status).toBe("operational");
+    });
+
+    it("marks intake/status down when ACCESS_CODE_SECRET is missing", async () => {
+        const ctx = {
+            request: makeReq(),
+            env: {
+                SUPABASE_DATABASE_URL: "postgres://test",
+                STRIPE_SECRET_KEY: "sk_test",
+                STRIPE_WEBHOOK_SECRET: "whsec_x",
+                RESEND_API_KEY: "re_x"
+            }
+        };
+        const res = await onRequestGet(ctx);
+        expect(res.status).toBe(200);
+        const data = await res.json();
+        const map = Object.fromEntries(data.components.map((c) => [c.id, c]));
+        expect(map.database.status).toBe("operational");
+        expect(map.intake.status).toBe("down");
+        expect(map.status.status).toBe("down");
+        expect(map.intake.detail).toMatch(/ACCESS_CODE_SECRET/);
+    });
 });

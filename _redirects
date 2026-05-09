@@ -1,5 +1,6 @@
 https://nexuradata.ca/* https://www.nexuradata.ca/:splat 301
 https://ww.nexuradata.ca/* https://www.nexuradata.ca/:splat 301
+/api/platform-status https://www.nexuradata.ca/api/platform-status 302
 
 /index.html / 301
 /en/index.html /en/ 301
