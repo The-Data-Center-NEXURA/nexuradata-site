@@ -19,7 +19,7 @@
  */
 
 const EMAIL_RE = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,24}\b/gi;
-const CARD_RE = /\b(?:\d[ -]?){13,19}\b/g;
+const CARD_RE = /\b\d(?:[ -]?\d){12,18}\b/g;
 const PHONE_RE = /(?:\+?1[\s.-]?)?\(?\b[2-9]\d{2}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g;
 const POSTAL_RE = /\b[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d\b/gi;
 const LONG_NUMBER_RE = /\b\d{9,}\b/g;

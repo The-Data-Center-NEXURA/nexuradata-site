@@ -8,6 +8,7 @@
     "pagesProjectName": "nexuradata"
   },
   "scripts": {
+    "dev": "npm run cf:dev",
     "build": "node ./scripts/update-sitemap-lastmod.mjs && node ./scripts/sync-release.mjs",
     "deploy": "node ./scripts/bump-asset-version.mjs && npm run cf:deploy",
     "sitemap:refresh": "node ./scripts/update-sitemap-lastmod.mjs",
@@ -42,6 +43,8 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "framer-motion": "12.38.0",
+    "lucide-react": "1.14.0",
     "zod": "4.4.3"
   }
 }
