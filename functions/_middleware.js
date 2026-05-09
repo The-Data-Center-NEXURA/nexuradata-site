@@ -44,6 +44,16 @@ const BLOCKED_UA_FRAGMENTS = [
 
 const FUNCTION_SECURITY_PATHS = ["/api", "/operations"];
 
+const normalizeDatabaseEnv = (env) => {
+    if (!env) return;
+    if (env.DATABASE_URL) return;
+
+    const supabaseUrl = env.SUPABASE_DATABASE_URL || env.SUPABASE_DB_URL;
+    if (supabaseUrl) {
+        env.DATABASE_URL = supabaseUrl;
+    }
+};
+
 const shouldHardenFunctionResponse = (request) => {
     if (!request?.url) return true;
 
@@ -90,6 +100,8 @@ export const secureFunctionResponses = async (context) => {
 };
 
 export const observeFunctionRequests = (context) => {
+    normalizeDatabaseEnv(context.env);
+
     if (!shouldHardenFunctionResponse(context.request)) {
         return context.next();
     }

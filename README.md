@@ -33,6 +33,7 @@ Le depot couvre:
 - `functions/_lib/` : logique partagee (DB, auth, emails, Stripe, rate-limit)
 - `migrations/neon/0001_full_schema.sql` : schema Postgres consolide
 - `migrations/d1-archive/` : ancienne base D1 (archive historique uniquement)
+- `apps/nexadura-site/` : application Next (automation) avec stockage leads Supabase optionnel
 - `scripts/build-css.mjs` : concatene `assets/css/src/*.css` vers `assets/css/site.css`
 - `wrangler.jsonc` : configuration Pages/Functions avec uniquement des valeurs de role non personnelles
 - `.dev.vars.example` : modele local sans secrets ni adresse personnelle, a copier vers `.dev.vars`
@@ -90,6 +91,10 @@ Cette carte evite d'empiler une nouvelle version du site quand un bon element ex
 - **Console interne**: `operations/` et `/api/ops/*`, a proteger par Cloudflare Access.
 
 Avant d'ajouter une page, verifier cette carte et renforcer la page canonique existante. Les fichiers `copy`, `old`, `backup`, `draft`, `test`, `tmp`, `v2` ou `index2.html` sont bloques par `npm run check`.
+
+## Supabase (NEXURA automation)
+
+L'application [apps/nexadura-site/](apps/nexadura-site/) peut stocker les leads dans Supabase quand elle est configuree. Voir [apps/nexadura-site/README.md](apps/nexadura-site/README.md) pour les cles et le schema requis. Aucune route Pages Functions n'utilise Supabase; seul le site Next s'en sert.
 
 ## Prerequis de lancement
 

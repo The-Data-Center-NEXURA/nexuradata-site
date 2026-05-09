@@ -28,6 +28,14 @@ LEAD_IP_HASH_SECRET=...
 
 The `public.leads` table has RLS enabled and forced, no public read/write policies, and explicit revokes for `anon` and `authenticated`. Inserts are performed server-side through the service-role client only.
 
+### Local setup
+
+1. Copy [apps/nexadura-site/.env.example](apps/nexadura-site/.env.example) to `.env.local`.
+2. Set `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL`) and `SUPABASE_SERVICE_ROLE_KEY`.
+3. Optional: run `npm run supabase:key:deposit` from the repo root to store the service-role key in ignored local files.
+
+The helper writes to `apps/nexadura-site/.env.local` and `scripts/hooks/service_role_key.yml` after checking that both paths are git-ignored.
+
 ## Checks
 
 Run from the repository root:

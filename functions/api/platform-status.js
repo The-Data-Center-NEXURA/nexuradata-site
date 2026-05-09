@@ -24,8 +24,8 @@ const withTimeout = (promise, ms) => {
 };
 
 const pingDatabase = async (env) => {
-  if (!env?.DATABASE_URL) {
-    return { status: STATUS_DOWN, detail: "Configuration manquante: DATABASE_URL" };
+  if (!env?.DATABASE_URL && !env?.SUPABASE_DATABASE_URL && !env?.SUPABASE_DB_URL) {
+    return { status: STATUS_DOWN, detail: "Configuration manquante: DATABASE_URL/SUPABASE_DATABASE_URL" };
   }
 
   try {
@@ -40,7 +40,7 @@ const pingDatabase = async (env) => {
     );
     const ms = Date.now() - start;
     if (!result.ok) {
-      return { status: STATUS_DOWN, detail: "Connexion Neon impossible", error: result.error };
+      return { status: STATUS_DOWN, detail: "Connexion base Postgres impossible", error: result.error };
     }
     const rows = result.rows;
     if (!rows?.length) return { status: STATUS_DEGRADED, detail: "Réponse vide", ms };
@@ -49,7 +49,7 @@ const pingDatabase = async (env) => {
     if (error?.message === "timeout") {
       return { status: STATUS_DEGRADED, detail: `Latence > ${DB_TIMEOUT_MS} ms` };
     }
-    return { status: STATUS_DOWN, detail: "Connexion Neon impossible", error };
+    return { status: STATUS_DOWN, detail: "Connexion base Postgres impossible", error };
   }
 };
 
@@ -86,9 +86,18 @@ export const onRequestGet = async (context) => {
   // site: this response itself is proof the edge is serving.
   byId.site.detail = "Distribution edge Cloudflare Pages.";
 
-  // intake / status both depend on Neon + access secret
+  // intake / status both depend on Postgres + access secret
   {
-    const r = checkEnvPresence(env, ["DATABASE_URL", "ACCESS_CODE_SECRET"]);
+    const r = (env?.DATABASE_URL || env?.SUPABASE_DATABASE_URL || env?.SUPABASE_DB_URL)
+      ? { status: STATUS_OK, detail: "" }
+      : { status: STATUS_DOWN, detail: "Configuration manquante: DATABASE_URL/SUPABASE_DATABASE_URL" };
+
+    if (!env?.ACCESS_CODE_SECRET) {
+      r.status = STATUS_DOWN;
+      r.detail = r.detail
+        ? `${r.detail}, ACCESS_CODE_SECRET`
+        : "Configuration manquante: ACCESS_CODE_SECRET";
+    }
     byId.intake.status = r.status;
     byId.intake.detail = r.status === STATUS_OK ? "Validation, persistance et email actifs." : r.detail;
     byId.status.status = r.status;
