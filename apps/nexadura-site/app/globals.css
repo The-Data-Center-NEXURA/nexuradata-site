@@ -69,32 +69,9 @@ a {
 }
 
 .nx-pulse {
-  animation: nxPulse 2.8s ease-in-out infinite;
-}
-
-@keyframes nxPulse {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
+  opacity: 1;
 }
 
 .nx-marquee {
-  animation: nxMarquee 28s linear infinite;
-}
-
-@keyframes nxMarquee {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
+  transform: translateX(0);
 }
