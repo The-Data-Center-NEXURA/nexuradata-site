@@ -65,23 +65,36 @@ const buildClientMessage = ({ caseId, name, draft }) => {
   const greeting = firstName ? `Bonjour ${firstName},` : "Bonjour,";
   const safety = categorySafety[draft.category] || categorySafety.guided;
   const questionLine = buildQuestionLine(draft.missingInfo);
+  const immediateAction = draft.clientActions?.[0] || safety;
 
   return [
     `${greeting} ici NEXURADATA. Votre dossier ${caseId} est ouvert.`,
+    draft.emotionalContext?.signal && draft.emotionalContext.signal !== "neutral" ? draft.emotionalContext.empathyLine : "",
     `Parcours probable: ${draft.recommendedPath}.`,
-    `Pour protéger les données: ${safety}.`,
+    draft.proposal?.primary ? `Proposition: ${draft.proposal.primary}` : "",
+    `Priorité: ${draft.serviceLevelLabel || "Suivi"}. ${draft.sla || "Nous confirmons la prochaine étape avant intervention."}`,
+    `Pour protéger les données: ${immediateAction}`,
     questionLine,
     "Répondez ici avec ces éléments et nous confirmerons la prochaine étape avant toute intervention."
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 };
 
 const buildOperatorSummary = ({ record, draft, channel, whatsappUrl }) => [
   `Canal recommandé: ${channel === "whatsapp" ? "WhatsApp" : "courriel / téléphone"}`,
   `Priorité concierge: ${priorityLabels[inferPriority(draft)]}`,
+  `Besoin client: ${draft.clientNeed?.label || "à confirmer"}`,
+  `Signal émotionnel: ${draft.emotionalContext?.label || "neutre"}`,
+  draft.expertSignals?.labels?.length ? `Signaux experts: ${draft.expertSignals.labels.join(" | ")}` : "Signaux experts: aucun conflit détecté",
+  `Proposition: ${draft.proposal?.primary || "à confirmer"}`,
+  `Niveau service: ${draft.serviceLevelLabel || draft.serviceLevel}`,
+  `SLA: ${draft.sla || "à confirmer"}`,
   `Parcours: ${draft.recommendedPath}`,
   `Risque: ${draft.riskLevel}`,
+  `Route: ${draft.servicePath || "à confirmer"}`,
   draft.flags.length ? `Marqueurs: ${draft.flags.join(", ")}` : "Marqueurs: aucun",
-  draft.missingInfo.length ? `Questions: ${draft.missingInfo.map((key) => missingInfoLabels[key] || key).join("; ")}` : "Questions: aucune critique",
+  draft.missingInfo.length ? `Questions: ${draft.missingInfoLabels?.join("; ") || draft.missingInfo.map((key) => missingInfoLabels[key] || key).join("; ")}` : "Questions: aucune critique",
+  `Tâches: ${(draft.operatorTasks || []).join(" | ")}`,
+  `Paiement: ${draft.quotePlan?.readiness || "à confirmer"} · ${draft.quotePlan?.label || "soumission à préparer"}`,
   whatsappUrl ? `Lien WhatsApp: ${whatsappUrl}` : "Lien WhatsApp: non disponible",
   `Client: ${record.name || record.nom || ""} · ${record.email || record.courriel || ""} · ${record.phone || record.telephone || ""}`
 ].filter(Boolean).join("\n");
@@ -127,9 +140,23 @@ export const buildConciergeDraft = (record = {}) => {
     category: draft.category,
     categoryLabel: draft.categoryLabel,
     riskLevel: draft.riskLevel,
+    expertSignals: draft.expertSignals,
+    clientNeed: draft.clientNeed,
+    emotionalContext: draft.emotionalContext,
+    proposal: draft.proposal,
+    serviceLevel: draft.serviceLevel,
+    serviceLevelLabel: draft.serviceLevelLabel,
+    sla: draft.sla,
+    servicePath: draft.servicePath,
     recommendedPath: draft.recommendedPath,
     missingInfo: draft.missingInfo,
-    questions: draft.missingInfo.map((key) => missingInfoLabels[key] || key),
+    missingInfoLabels: draft.missingInfoLabels,
+    questions: draft.missingInfoLabels || draft.missingInfo.map((key) => missingInfoLabels[key] || key),
+    clientActions: draft.clientActions,
+    operatorTasks: draft.operatorTasks,
+    quotePlan: draft.quotePlan,
+    statusPlan: draft.statusPlan,
+    automationActions: draft.automationActions,
     safetyInstruction: categorySafety[draft.category] || categorySafety.guided,
     clientMessage,
     operatorSummary: buildOperatorSummary({ record: normalizedRecord, draft, channel, whatsappUrl }),

@@ -1,5 +1,5 @@
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
-const STRIPE_API_VERSION = "2026-02-25.clover";
+const STRIPE_API_VERSION = "2026-04-22.dahlia";
 
 const normalizeString = (value, maxLength = 500) => {
   if (typeof value !== "string") {
@@ -19,6 +19,52 @@ const ensureSecret = (value, label) => {
   return normalized;
 };
 
+export const getStripeMode = (env) => {
+  const mode = normalizeString(env?.STRIPE_MODE, 20).toLowerCase();
+  return mode === "test" ? "test" : "live";
+};
+
+const isTestStripeKey = (value) => /^(sk|rk)_test_/.test(value);
+
+const isLiveStripeKey = (value) => /^(sk|rk)_live_/.test(value);
+
+const assertStripeKeyMode = (env, secretKey) => {
+  const mode = getStripeMode(env);
+
+  if (mode === "live" && isTestStripeKey(secretKey)) {
+    throw new Error("Stripe est encore en mode test: STRIPE_MODE=live exige une clé Stripe live (`sk_live_` ou `rk_live_`). Remplacez STRIPE_SECRET_KEY dans Cloudflare Pages.");
+  }
+
+  if (mode === "test" && isLiveStripeKey(secretKey)) {
+    throw new Error("Stripe est configuré en mode test mais une clé live est fournie. Utilisez une clé test en local ou passez STRIPE_MODE à live.");
+  }
+};
+
+export const getStripeObjectModeMismatch = (env, value, label = "Stripe") => {
+  const mode = getStripeMode(env);
+
+  if (!value || typeof value.livemode !== "boolean") {
+    return "";
+  }
+
+  if (mode === "live" && value.livemode === false) {
+    return `${label} est en mode test alors que STRIPE_MODE=live. Vérifiez les clés et recréez le webhook/lien en mode live.`;
+  }
+
+  if (mode === "test" && value.livemode === true) {
+    return `${label} est en mode live alors que STRIPE_MODE=test. Utilisez des credentials test en local.`;
+  }
+
+  return "";
+};
+
+export const isStripeObjectModeMismatch = (env, value) => Boolean(getStripeObjectModeMismatch(env, value));
+
+const assertStripeObjectMode = (env, value, label = "Stripe") => {
+  const mismatch = getStripeObjectModeMismatch(env, value, label);
+  if (mismatch) throw new Error(mismatch);
+};
+
 const buildBody = (entries) => {
   const body = new URLSearchParams();
 
@@ -35,6 +81,7 @@ const buildBody = (entries) => {
 
 const stripeFetch = async (env, path, options = {}) => {
   const secretKey = ensureSecret(env?.STRIPE_SECRET_KEY, "Stripe");
+  assertStripeKeyMode(env, secretKey);
   const response = await fetch(`${STRIPE_API_BASE}${path}`, {
     method: options.method || "GET",
     headers: {
@@ -60,6 +107,7 @@ const stripeFetch = async (env, path, options = {}) => {
     throw new Error(message);
   }
 
+  assertStripeObjectMode(env, data, "La session Stripe");
   return data;
 };
 
@@ -182,5 +230,6 @@ export const verifyStripeWebhook = async (env, request) => {
     throw new Error("Signature Stripe non valide.");
   }
 
-  return rawBody ? JSON.parse(rawBody) : null;
+  const event = rawBody ? JSON.parse(rawBody) : null;
+  return event;
 };

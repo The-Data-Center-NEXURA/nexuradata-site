@@ -1,0 +1,154 @@
+/* ── NEXURA AI Recovery Desk ─────────────────────────────────────── */
+.desk-shell { background: var(--noir); color: var(--os); }
+.desk-hero {
+  padding: 4rem 0 2rem;
+  border-bottom: var(--rule);
+}
+.desk-hero .container { max-width: var(--width-content); margin: 0 auto; }
+.desk-eyebrow {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-xwide);
+  font-size: 0.72rem;
+  color: var(--color-text-soft);
+}
+.desk-hero h1 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.1;
+  margin: 0.6rem 0 1rem;
+  letter-spacing: -0.02em;
+}
+.desk-hero p { color: var(--color-text-soft); max-width: 56ch; }
+
+.desk-form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--os-ghost);
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  background: rgba(13,13,11,0.96);
+  margin-top: 2rem;
+}
+.desk-form textarea {
+  width: 100%;
+  min-height: 7rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--os-ghost);
+  border-radius: 1rem;
+  background: rgba(13,13,11,0.98);
+  color: var(--os);
+  font-family: var(--font-sans-locked);
+  font-size: 1rem;
+  resize: vertical;
+}
+.desk-form textarea:focus { outline: none; border-color: var(--os-dim); box-shadow: 0 0 0 4px var(--os-ghost); }
+
+.desk-chip-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.desk-chip-label {
+  display: block;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 0.4rem;
+}
+.desk-chip {
+  border: 1px solid var(--os-ghost);
+  background: rgba(13,13,11,0.94);
+  color: var(--os);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: var(--font-sans-locked);
+}
+.desk-chip[aria-pressed="true"] {
+  background: var(--os);
+  color: var(--noir);
+  border-color: var(--os);
+}
+
+.desk-error { color: #ff7b6b; min-height: 1.2rem; }
+
+.desk-result { padding: 2rem 0 4rem; }
+.desk-result .container { max-width: var(--width-content); margin: 0 auto; display: grid; gap: 1.25rem; }
+
+.desk-warning {
+  border: 1px solid #ff7b6b;
+  background: rgba(255, 123, 107, 0.06);
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  padding: 1.25rem 1.4rem;
+}
+.desk-warning .desk-warning-head {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  text-transform: uppercase; letter-spacing: var(--tracking-wide); font-size: 0.72rem;
+  color: #ff7b6b;
+}
+.desk-warning h2 { margin: 0.4rem 0 0.6rem; font-size: 1.1rem; }
+.desk-warning ul { margin: 0; padding-left: 1.1rem; }
+.desk-warning li { margin: 0.2rem 0; color: var(--os); }
+
+.desk-meters {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  border: 1px solid var(--os-ghost);
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  padding: 1.25rem 1.4rem;
+  background: rgba(13,13,11,0.94);
+}
+.desk-meter { display: grid; gap: 0.4rem; }
+.desk-meter-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  text-transform: uppercase; letter-spacing: var(--tracking-wide);
+  font-size: 0.7rem; color: var(--color-text-soft);
+}
+.desk-meter-bar {
+  --desk-meter-fill: 0%;
+  position: relative; height: 6px;
+  border-radius: 999px; background: var(--os-ghost); overflow: hidden;
+}
+.desk-meter-bar::before {
+  content: "";
+  position: absolute; inset: 0 auto 0 0;
+  width: var(--desk-meter-fill);
+  background: var(--os);
+}
+
+.desk-grid {
+  display: grid; gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.desk-card {
+  border: 1px solid var(--os-ghost);
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  background: rgba(13,13,11,0.94);
+  padding: 1.4rem;
+}
+.desk-card h2, .desk-card h3 { margin: 0 0 0.6rem; font-size: 1rem; letter-spacing: -0.01em; }
+.desk-card h4 { margin: 0.6rem 0 0.2rem; font-size: 0.85rem; color: var(--color-text-soft); }
+.desk-card p, .desk-card li { color: var(--os); }
+.desk-card ul { margin: 0; padding-left: 1.1rem; }
+
+.desk-dna { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; margin: 0; }
+.desk-dna dt {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  text-transform: uppercase; letter-spacing: var(--tracking-wide);
+  font-size: 0.7rem; color: var(--color-text-soft);
+}
+.desk-dna dd { margin: 0; color: var(--os); }
+
+.desk-intake { display: grid; gap: 0.8rem; }
+.desk-intake .field { display: grid; gap: 0.3rem; }
+.desk-intake label { font-size: 0.85rem; color: var(--color-text-soft); }
+.desk-intake input {
+  min-height: 2.8rem; padding: 0.6rem 0.8rem;
+  border: 1px solid var(--os-ghost); border-radius: 0.75rem;
+  background: rgba(13,13,11,0.98); color: var(--os);
+}
+.desk-intake .consent { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.85rem; }
+.desk-intake-status { font-size: 0.9rem; color: var(--color-text-soft); }
+

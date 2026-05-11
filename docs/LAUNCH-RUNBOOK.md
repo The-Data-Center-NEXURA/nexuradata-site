@@ -3,12 +3,29 @@
 ## 1. Cloudflare Pages et Neon Postgres
 
 1. Connecter le repo a Cloudflare Pages si ce n'est pas deja fait.
-2. Provisionner une base Neon Postgres (https://neon.tech) pour le projet.
+2. Provisionner une base Neon Postgres ([neon.tech](https://neon.tech)) pour le projet.
 3. Recuperer le `DATABASE_URL` (chaine de connexion pooled).
 4. Declarer `DATABASE_URL` comme secret Cloudflare Pages (production + preview).
 5. Copier `.dev.vars.example` vers `.dev.vars` pour le dev local et y placer un `DATABASE_URL` de branche Neon.
 6. Appliquer le schema consolide via `psql` ou la console Neon:
    - `psql "$DATABASE_URL" -f migrations/neon/0001_full_schema.sql`
+
+### Cloudflare R2 Object Storage
+
+R2 est le bon stockage pour les pieces jointes futures: captures, journaux, documents, preuves ou petits lots transmis apres ouverture d'un dossier. Ne pas l'utiliser comme depot public non controle.
+
+Configuration recommandee:
+
+1. Creer deux buckets R2 prives:
+   - production: `nexuradata-case-uploads`
+   - preview/dev: `nexuradata-case-uploads-preview`
+2. Garder l'acces public des buckets desactive.
+3. Ajouter un binding Cloudflare Pages seulement quand le flux d'upload est implemente, par exemple `CASE_UPLOADS`.
+4. Stocker dans Neon uniquement les metadonnees: `caseId`, nom objet R2, type, taille, horodatage, statut de retention.
+5. Utiliser des URLs signees ou des endpoints authentifies a duree courte pour l'envoi et la consultation.
+6. Definir une politique de retention/suppression par dossier avant d'accepter des fichiers sensibles en production.
+
+Important: les supports complets, images disque et preuves lourdes ne doivent pas etre ouverts en upload public. Utiliser R2 pour les documents et fichiers demandes par l'equipe, apres cadrage du dossier.
 
 ## 2. Emails
 
@@ -36,14 +53,21 @@ Creer ces adresses et les faire suivre vers une seule inbox verifiee au lancemen
 
 Declarer dans Cloudflare Pages:
 
+- `STRIPE_MODE=live` comme variable non secrete
 - `STRIPE_SECRET_KEY` comme secret
 - `STRIPE_WEBHOOK_SECRET` comme secret
+
+La production refuse les cles Stripe test quand `STRIPE_MODE=live`. Le secret `STRIPE_SECRET_KEY` doit donc provenir du mode live (`sk_live_...`) ou d'une cle restreinte live (`rk_live_...`) avec les permissions Checkout requises. Pour le developpement local seulement, utiliser `STRIPE_MODE=test` avec une cle test.
+
+Important: les liens Checkout deja crees en mode test restent des liens test. Apres le passage live, recreer les demandes de paiement depuis `/operations/` afin de generer de nouvelles sessions live.
 
 ### Webhook Stripe
 
 Configurer un endpoint Stripe vers:
 
 - `https://nexuradata.ca/api/stripe-webhook`
+
+Creer ce webhook dans le tableau de bord Stripe en mode live, puis copier son secret de signature live dans `STRIPE_WEBHOOK_SECRET`. Un webhook test avec une cle live, ou l'inverse, ne confirmera pas les paiements de production.
 
 Evenements minimum:
 
@@ -129,3 +153,16 @@ Secrets:
 - `ACCESS_CODE_SECRET`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+
+## 7. Export des logs (audit IA)
+
+Objectif: conserver et rechercher les evenements d'audit OpenAI hors des logs temporaires.
+
+1. Activer un job d'export Cloudflare Logs/Logpush vers une destination retenue (R2, SIEM ou entrepot analytique).
+2. Conserver les champs JSON sans transformation destructive.
+3. Verifier que `event`, `requestId`, `route` et `timestamp` sont indexes/recherchables.
+4. Lancer un appel de verification:
+   - `POST https://www.nexuradata.ca/api/concierge`
+5. Confirmer la presence d'un evenement `api.concierge.openai.audit` dans la destination.
+
+Reference detaillee: `docs/LOG-EXPORT-CLOUDFLARE.md`.

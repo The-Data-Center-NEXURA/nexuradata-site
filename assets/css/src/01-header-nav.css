@@ -1,0 +1,119 @@
+/* ── Locked branding: header/nav ─────────────────────────────── */
+.brand-logo {
+  display: block;
+  width: clamp(15.5rem, 24vw, 20rem);
+  max-width: min(46vw, 20rem);
+  height: auto;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  background: linear-gradient(180deg, rgba(13, 13, 11, 0.96), rgba(13, 13, 11, 0.86));
+  border-bottom: var(--rule);
+  box-shadow: 0 16px 36px -34px rgba(0, 0, 0, 0.9);
+}
+
+/* Brand-locked nav — LOCKED */
+.site-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 28px 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.nav-links a,
+.footer-legal a,
+.footer-block a {
+  color: var(--os);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: var(--tracking-xwide);
+  font-family: var(--font-sans);
+  opacity: 0.38;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.nav-links a:hover,
+.footer-legal a:hover,
+.footer-block a:hover {
+  opacity: 1;
+}
+
+.nav-links .lang-switch {
+  opacity: 0.55;
+  border-left: var(--rule);
+  padding-left: 24px;
+}
+
+/* Legacy .navbar support for operations pages */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  min-height: 5.5rem;
+}
+
+.brand img {
+  display: block;
+  height: auto;
+}
+
+.site-nav .brand-logo {
+  width: clamp(15.5rem, 24vw, 20rem);
+  max-width: min(46vw, 20rem);
+  height: auto;
+}
+
+.brand-footer img {
+  height: 18px;
+}
+
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.72rem 1rem;
+  border: 1px solid rgba(232, 228, 220, 0.18);
+  border-radius: var(--radius-sm);
+  background: rgba(26, 26, 22, 0.94);
+  color: var(--color-accent);
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
+}
+
+.nav-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(232, 228, 220, 0.26);
+  background: rgba(30, 30, 27, 0.98);
+}
+

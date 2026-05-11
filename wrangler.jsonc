@@ -8,6 +8,7 @@
   ],
   "vars": {
     "PUBLIC_SITE_ORIGIN": "https://nexuradata.ca",
+    "STRIPE_MODE": "live",
     "LAB_INBOX_EMAIL": "dossiers@nexuradata.ca",
     "RESEND_FROM_EMAIL": "NEXURADATA <dossiers@nexuradata.ca>",
     "OPS_ACCESS_ALLOWED_DOMAIN": "nexuradata.ca"

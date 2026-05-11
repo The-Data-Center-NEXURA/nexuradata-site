@@ -1,5 +1,6 @@
 import { authorizeOpsRequest, listQuotes } from "../../_lib/cases.js";
 import { authorizeOrReject, json, methodNotAllowed, onOptions } from "../../_lib/http.js";
+import { logError } from "../../_lib/observability.js";
 
 export const onRequestOptions = (context) => onOptions(context.env, "GET, OPTIONS");
 
@@ -26,7 +27,7 @@ export const onRequestGet = async (context) => {
       items
     });
   } catch (error) {
-    console.error("ops/quotes GET error:", error);
+    logError(context, "api.ops.quotes.get_error", error);
     return json(
       {
         ok: false,

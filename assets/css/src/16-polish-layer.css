@@ -1,0 +1,268 @@
+/* ──────────────────────────────────────────────────────────────
+   POLISH LAYER — 2026-05-09
+   Single appended block. Stays inside locked branding tokens
+   (--noir, --os, IBM Plex). Restores the documented signature
+   asymmetric corner shape, refines button presence, and improves
+   typographic optical balance. Delete this block to revert.
+   See .github/instructions/design-system.instructions.md
+   ──────────────────────────────────────────────────────────── */
+:root {
+  /* Signature asymmetric corner shape (per design system) */
+  --radius-asym:    1rem 1rem 1rem 0.35rem;
+  --radius-asym-lg: 1.5rem 1.5rem 1.5rem 0.5rem;
+  --radius-asym-sm: 0.7rem 0.7rem 0.7rem 0.25rem;
+
+  /* Premium ink shadow used on primary surfaces */
+  --shadow-ink:   0 22px 44px -28px rgba(0, 0, 0, 0.78),
+                  0 2px 0 0 rgba(232, 228, 220, 0.06) inset;
+  --shadow-bone:  0 22px 44px -26px rgba(232, 228, 220, 0.32),
+                  0 1px 0 0 rgba(255, 255, 255, 0.18) inset;
+
+  /* Editorial spacing rhythm */
+  --rhythm-tight: clamp(0.5rem, 1.2vw, 0.85rem);
+  --rhythm-prose: clamp(1rem, 2.4vw, 1.5rem);
+}
+
+/* Optical typography polish — applies only where set */
+.hero-copy h1,
+.page-hero h1,
+.section-heading h2,
+.lab-commitment-card h2 {
+  text-wrap: balance;
+  font-feature-settings: "ss01", "ss02", "kern", "liga";
+  font-variant-ligatures: common-ligatures contextual;
+  letter-spacing: -0.022em;
+}
+
+.hero-lead,
+.section-intro,
+.page-intro {
+  text-wrap: pretty;
+  font-feature-settings: "kern", "liga";
+}
+
+/* Content-link affordance: keep links discoverable in long-form copy */
+.hero-lead a:not(.button),
+.section-intro a:not(.button),
+.page-intro a:not(.button),
+.page-content a:not(.button),
+.footer-copy a:not(.button) {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: rgba(232, 228, 220, 0.42);
+  transition: color 200ms var(--ease-out), text-decoration-color 200ms var(--ease-out);
+}
+
+.hero-lead a:not(.button):hover,
+.section-intro a:not(.button):hover,
+.page-intro a:not(.button):hover,
+.page-content a:not(.button):hover,
+.footer-copy a:not(.button):hover,
+.hero-lead a:not(.button):focus-visible,
+.section-intro a:not(.button):focus-visible,
+.page-intro a:not(.button):focus-visible,
+.page-content a:not(.button):focus-visible,
+.footer-copy a:not(.button):focus-visible {
+  color: var(--color-text);
+  text-decoration-color: rgba(232, 228, 220, 0.78);
+}
+
+/* ── Signature shape: buttons ─────────────────────────────── */
+.button,
+.button-primary,
+.button-secondary,
+.button-outline {
+  border-radius: var(--radius-asym);
+}
+
+/* Replace hover-lift with a calmer, premium presence shift.
+   Design system says no hover lifts; honor it without going dead. */
+.button {
+  transition:
+    background-color 220ms var(--ease-out),
+    border-color    220ms var(--ease-out),
+    color           220ms var(--ease-out),
+    box-shadow      260ms var(--ease-out);
+  will-change: background-color, border-color, box-shadow;
+}
+.button:hover { transform: none; }
+
+.button-primary {
+  box-shadow: var(--shadow-bone);
+}
+.button-primary:hover,
+.button-primary:focus-visible {
+  background: #f3efe7;            /* +1 step warmer than --os */
+  box-shadow:
+    0 26px 52px -28px rgba(232, 228, 220, 0.46),
+    0 1px 0 0 rgba(255, 255, 255, 0.28) inset;
+}
+
+.button-secondary,
+.button-outline {
+  box-shadow: var(--shadow-ink);
+}
+.button-secondary:hover,
+.button-outline:hover,
+.button-secondary:focus-visible,
+.button-outline:focus-visible {
+  border-color: rgba(232, 228, 220, 0.42);
+  background: linear-gradient(180deg, rgba(36, 36, 32, 0.98), rgba(24, 24, 21, 0.96));
+  box-shadow:
+    0 26px 52px -32px rgba(0, 0, 0, 0.84),
+    0 0 0 1px rgba(232, 228, 220, 0.05) inset;
+}
+
+/* Pressed state — subtle inset feel, no jump */
+.button:active {
+  transform: none;
+  box-shadow:
+    0 0 0 1px rgba(232, 228, 220, 0.18) inset,
+    0 8px 18px -16px rgba(0, 0, 0, 0.72);
+}
+
+/* Refine the gloss pseudo so it reads as a top-edge highlight,
+   not a stray stripe (was awkward with 0.18rem radius). */
+.button::before {
+  inset: 1px 1px auto 1px;
+  height: 38%;
+  border-radius: calc(var(--radius-asym)) calc(var(--radius-asym)) 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 100%);
+  opacity: 0.55;
+}
+.button-primary::before { opacity: 0.32; }
+
+/* ── Signature shape: cards & pills ──────────────────────── */
+.lab-commitment-card,
+.lab-snapshot {
+  border-radius: var(--radius-asym-lg);
+}
+
+.hero-highlights li,
+.pill-list li {
+  border-radius: var(--radius-asym-sm);
+  background: linear-gradient(180deg, rgba(28, 28, 25, 0.92), rgba(20, 20, 18, 0.88));
+  border-color: rgba(232, 228, 220, 0.14);
+  transition: border-color 220ms var(--ease-out), color 220ms var(--ease-out);
+}
+.hero-highlights li:hover,
+.pill-list li:hover {
+  border-color: rgba(232, 228, 220, 0.34);
+  color: var(--color-text);
+}
+
+/* Forms — restore signature shape on the public surfaces only */
+.field input,
+.field select,
+.field textarea {
+  border-radius: var(--radius-asym);
+  transition: border-color 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgba(232, 228, 220, 0.5);
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: rgba(232, 228, 220, 0.46);
+  box-shadow: 0 0 0 4px rgba(232, 228, 220, 0.10);
+}
+.consent-check {
+  border-radius: var(--radius-asym);
+}
+
+/* ── Section heading: refined editorial mark ─────────────── */
+.section-heading::before {
+  height: 2px;
+  background: linear-gradient(90deg, var(--os) 0%, rgba(232, 228, 220, 0.0) 100%);
+}
+.section-heading::after {
+  width: 0.5rem;
+  height: 0.5rem;
+  top: -0.27rem;
+  border-color: rgba(232, 228, 220, 0.62);
+  background: var(--noir);
+  box-shadow: 0 0 0 4px var(--noir), 0 0 0 5px rgba(232, 228, 220, 0.18);
+}
+
+/* ── Eyebrow: monospace caret prefix ─────────────────────── */
+.eyebrow {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  letter-spacing: 0.32em;
+}
+.eyebrow::before {
+  content: "▌";
+  display: inline-block;
+  color: var(--os);
+  font-size: 0.74rem;
+  line-height: 1;
+  opacity: 0.78;
+  transform: translateY(-0.04em);
+}
+
+/* ── Headline mark: tighter, warmer underline ────────────── */
+.headline-mark::after {
+  height: 0.18em;
+  bottom: 0.08em;
+  background: linear-gradient(90deg,
+    rgba(232, 228, 220, 0.28) 0%,
+    rgba(232, 228, 220, 0.10) 100%);
+  transform: skewX(-12deg);
+}
+
+/* ── Nav links: underline reveal instead of opacity-only ─── */
+.nav-links a:not(.lang-switch) {
+  position: relative;
+  padding-block: 0.25rem;
+}
+.nav-links a:not(.lang-switch)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.18rem;
+  height: 1px;
+  background: var(--os);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 240ms var(--ease-out);
+}
+.nav-links a:not(.lang-switch):hover::after,
+.nav-links a:not(.lang-switch):focus-visible::after,
+.nav-links a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+.nav-links a[aria-current="page"] { opacity: 1; }
+
+/* ── Focus ring: warmer, more present ───────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(232, 228, 220, 0.62);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Selection: brand-correct ───────────────────────────── */
+::selection {
+  background: rgba(232, 228, 220, 0.86);
+  color: var(--noir);
+}
+
+/* ── Reduced-motion safeguard for the new transitions ──── */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .field input,
+  .field select,
+  .field textarea,
+  .nav-links a:not(.lang-switch)::after,
+  .hero-highlights li,
+  .pill-list li {
+    transition: none !important;
+  }
+}
+/* ── /POLISH LAYER ─────────────────────────────────────── */
+

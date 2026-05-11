@@ -1,0 +1,11 @@
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "type": "command",
+                "command": "./scripts/hooks/wrangler-config-guard.sh",
+                "timeout": 5
+            }
+        ]
+    }
+}

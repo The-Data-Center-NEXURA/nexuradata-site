@@ -5,10 +5,11 @@ Site marketing et plateforme de lancement pour un laboratoire de recuperation de
 Le depot couvre:
 
 - le site public bilingue (FR + EN)
+- l'assistant diagnostic guide avec prequalification, garde-fous de manipulation et preparation de dossier
 - le formulaire d'ouverture de dossier
 - le portail client de suivi
 - la console interne `/operations/`
-- les Pages Functions Cloudflare pour l'intake, le suivi et les actions operateur
+- les Pages Functions Cloudflare pour l'intake, le suivi, l'automation de dossier et les actions operateur
 - la base Neon Postgres et la configuration `wrangler.jsonc`
 
 ## Structure utile
@@ -19,15 +20,32 @@ Le depot couvre:
 - `suivi-dossier-client-montreal.html` : portail client `noindex`
 - `operations/index.html` : console interne a proteger via Cloudflare Access
 - `assets/css/site.css` : styles partages
+- `assets/css/src/` : sources CSS decoupees; `assets/css/site.css` est genere par build
 - `assets/js/site.js` : interactions publiques et console operateur
+- `assets/js/status-board.js` : mise a jour live de la page statut services (CSP-safe)
+- `functions/api/diagnostic.js` : prequalification serveur sans creation de dossier, utilisee par le bot public avec fallback local
 - `functions/api/intake.js` : ouverture de dossier
 - `functions/api/status.js` : suivi client par numero + code
-- `functions/api/ops/cases.js` : recherche et actions operateur
+- `functions/api/platform-status.js` : healthcheck public pour la page statut services
+- `functions/api/ops/cases.js` : recherche, actions operateur, concierge et application du plan automatise
+- `functions/_lib/automation.js` : triage deterministe, besoin client, signal emotionnel, proposition, SLA, timeline et garde-fous
+- `functions/_lib/concierge.js` : messages client / operateur a partir du plan automatise
 - `functions/_lib/` : logique partagee (DB, auth, emails, Stripe, rate-limit)
 - `migrations/neon/0001_full_schema.sql` : schema Postgres consolide
 - `migrations/d1-archive/` : ancienne base D1 (archive historique uniquement)
+- `apps/nexadura-site/` : application Next (automation) avec stockage leads Supabase optionnel
+- `scripts/build-css.mjs` : concatene `assets/css/src/*.css` vers `assets/css/site.css`
 - `wrangler.jsonc` : configuration Pages/Functions avec uniquement des valeurs de role non personnelles
 - `.dev.vars.example` : modele local sans secrets ni adresse personnelle, a copier vers `.dev.vars`
+
+## Automation et limites
+
+- Le diagnostic public est un assistant guide deterministe. Il aide a choisir un parcours, bloque les gestes risques, prepare les informations manquantes, pre-remplit le formulaire et peut ouvrir un dossier via `/api/intake`.
+- `/api/diagnostic` fournit une prequalification serveur sans base de donnees ni creation de dossier; le bot l'utilise quand disponible et conserve un fallback local pour les previews statiques. La reponse inclut aussi un bref transfert labo: niveau de service, SLA, prochaine action, infos manquantes et focus operateur.
+- L'automation serveur calcule categorie, risque, besoin client, signal emotionnel, proposition, niveau de service, SLA, plan de statut, plan de soumission/paiement, actions client et taches operateur.
+- La console `/operations/` peut regenerer un message concierge et appliquer le plan automatise a un dossier existant; ces routes doivent rester protegees par Cloudflare Access.
+- Aucune recuperation, analyse probatoire, promesse de resultat, paiement ou intervention physique ne doit etre consideree comme automatique. Le laboratoire garde la decision humaine avant intervention et facturation.
+- Les sorties d'automation doivent rester auditables dans les champs de dossier et la timeline; eviter les messages opaques ou non justifiables.
 
 ## Hygiene du depot
 
@@ -37,6 +55,30 @@ Le depot couvre:
 - Les templates HTML internes vont dans `docs/`, pas dans `assets/`, parce que `assets/` est publie avec le site.
 - `release-cloudflare/` est regenere par `npm run build`; modifier uniquement les sources suivies.
 - Les pages FR racine et leurs versions `en/` doivent rester synchronisees pour le SEO bilingue.
+
+## Plateforme RemoteLab (Pages Functions)
+
+La specification source-de-verite ([apps/remotelab-api/src/server.ts](apps/remotelab-api/src/server.ts)) est portee sur Cloudflare Pages Functions + Neon HTTP. Toutes les routes sont protegees par Cloudflare Access (sauf `/api/monitoring/health` qui exige une cle d'agent), gardees par un retour 503 quand `DATABASE_URL` n'est pas configure, et utilisent la `cases.case_id` (texte) comme identifiant de dossier.
+
+| Domaine | Endpoint | Lib |
+|---|---|---|
+| Cas | POST/GET `/api/cases`, GET `/api/cases/:caseId` | [functions/_lib/remotefix.js](functions/_lib/remotefix.js) |
+| Sessions | POST `/api/sessions` | idem |
+| Consentement | POST `/api/consent` | idem |
+| Diagnostic agent | POST `/api/agent/diagnostics` | idem |
+| Commandes sures | POST `/api/commands` | idem |
+| Monitoring (comptes / agents / health / dashboard / convert) | `/api/monitoring/*` | [functions/_lib/monitor.js](functions/_lib/monitor.js) |
+| Opportunites (rebuild / list / patch) | `/api/cases/:caseId/opportunities/rebuild`, `/api/admin/opportunities[/:id]` | [functions/_lib/opportunities.js](functions/_lib/opportunities.js) |
+| Rapports | POST `/api/reports/cases/:caseId`, GET `/api/reports/:reportId` | [functions/_lib/reports.js](functions/_lib/reports.js) |
+| Devis | POST `/api/opportunities/:opportunityId/quote` | [functions/_lib/quotes.js](functions/_lib/quotes.js) |
+| Tableau de bord admin | GET `/api/admin/dashboard` | [functions/_lib/admin-dashboard.js](functions/_lib/admin-dashboard.js) |
+
+Le schema de plateforme correspondant est [migrations/neon/0004_remotelab_platform.sql](migrations/neon/0004_remotelab_platform.sql) (clients, monitoring_*, service_opportunities, generated_reports, quotes). A appliquer apres `0001_full_schema.sql` pour activer les routes ci-dessus.
+
+### References UI (non wired)
+
+- [apps/remotelab-portal/](apps/remotelab-portal/) — portail client React/Vite/Tailwind/shadcn (`NexuraClientPortal.jsx`, `NexuraAdminConsole.jsx`). Exclu de `npm run build`, CI et du site live ; sert de specification UI v2.
+- [apps/remotelab-api/](apps/remotelab-api/) — implementation Node/Express d'origine, conservee comme reference de comportement pour le portage. Exclue elle aussi de `npm run build` et de CI.
 
 ## Carte canonique du site
 
@@ -50,6 +92,10 @@ Cette carte evite d'empiler une nouvelle version du site quand un bon element ex
 
 Avant d'ajouter une page, verifier cette carte et renforcer la page canonique existante. Les fichiers `copy`, `old`, `backup`, `draft`, `test`, `tmp`, `v2` ou `index2.html` sont bloques par `npm run check`.
 
+## Supabase (NEXURA automation)
+
+L'application [apps/nexadura-site/](apps/nexadura-site/) peut stocker les leads dans Supabase quand elle est configuree. Voir [apps/nexadura-site/README.md](apps/nexadura-site/README.md) pour les cles et le schema requis. Aucune route Pages Functions n'utilise Supabase; seul le site Next s'en sert.
+
 ## Prerequis de lancement
 
 1. Provisionner une base Neon Postgres et recuperer son `DATABASE_URL`.
@@ -58,20 +104,41 @@ Avant d'ajouter une page, verifier cette carte et renforcer la page canonique ex
 4. Creer un secret fort `ACCESS_CODE_SECRET`.
 5. Configurer les alias `contact@`, `urgence@`, `dossiers@` dans Cloudflare Email Routing.
 6. Verifier le domaine d'envoi dans Resend et fournir `RESEND_API_KEY`.
-7. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
+7. Configurer Stripe en production avec `STRIPE_MODE=live`, une cle live (`sk_live_...` ou `rk_live_...`) dans `STRIPE_SECRET_KEY`, et un webhook live vers `/api/stripe-webhook`.
+8. Proteger `/operations/*` et `/api/ops/*` avec Cloudflare Access.
 
-Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md). Voir aussi [`docs/`](docs/) pour la checklist de lancement, le guide de deploiement rapide et les notes de recherche concurrentielle / tarifaire.
+Le runbook detaille est dans [`docs/LAUNCH-RUNBOOK.md`](docs/LAUNCH-RUNBOOK.md). Voir aussi [`docs/PLATFORM-HARDENING-TIMELINE.md`](docs/PLATFORM-HARDENING-TIMELINE.md) et [`docs/`](docs/) pour la checklist de lancement, le guide de deploiement rapide, les baselines qualite / observabilite et les notes de recherche concurrentielle / tarifaire.
 
 ## Commandes
 
 - `npm install`
 - `npm run build`
+- `npm run check`
+- `npm run ui:smoke`
+- `npm run secret:scan`
+- `npm run secret:scan:history`
+- `npm run audit`
+- `npm run audit:signatures`
+- `npm test`
+- `npm run test:coverage`
 - `npm run cf:whoami`
 - `npm run cf:dev`
 - `npm run cf:check`
 - `npm run cf:deploy`
 - `npm run cf:deploy:staging`
-- `npm test`
+
+Validation locale recommandee avant PR ou push:
+
+```bash
+npm run secret:scan
+npm run check
+npm run ui:smoke
+npm run test:coverage
+npm run build
+git diff --check
+```
+
+CI execute aussi `npm run audit`, `npm run audit:signatures`, CodeQL, dependency review, njsscan SARIF et un scan de secrets historique programme / manuel.
 
 `release-cloudflare/` est regenere a chaque build pour les assets statiques. Les `functions/` restent a la racine du projet pour Cloudflare Pages Functions.
 

@@ -1,0 +1,66 @@
+/* ── Print ── */
+@media print {
+
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    opacity: 0.6;
+  }
+
+  a[href^="#"]::after,
+  a[href^="javascript"]::after,
+  .lang-switch::after,
+  .service-link::after {
+    content: "";
+  }
+
+  .site-header,
+  .skip-link,
+  .nav-links,
+  .mobile-toggle,
+  .button,
+  .contact-section,
+  .lang-switch {
+    display: none !important;
+  }
+
+  .footer-note,
+  .footer-legal {
+    border: none;
+  }
+
+  img {
+    max-width: 100% !important;
+  }
+
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+
+  .page-card,
+  .service-card,
+  .trust-card {
+    break-inside: avoid;
+  }
+}

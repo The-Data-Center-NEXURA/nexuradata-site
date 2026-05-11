@@ -1,5 +1,8 @@
-import { approveCaseAuthorization } from "../_lib/cases.js";
+import { approveCaseAuthorization, createSmartCasePaymentRequest, getCaseDetail, recordCaseEvent } from "../_lib/cases.js";
+import { sendClientPaymentLinkEmail } from "../_lib/email.js";
 import { json, methodNotAllowed, onOptions, parsePayload } from "../_lib/http.js";
+import { sendLifecycleNotifications } from "../_lib/notifications.js";
+import { logError } from "../_lib/observability.js";
 import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 
 const genericErrorMessage = "L'autorisation n'a pas pu être confirmée. Vérifiez le dossier ou demandez une mise à jour.";
@@ -21,6 +24,18 @@ export const onRequestPost = async (context) => {
 
     const payload = await parsePayload(context.request);
     const detail = await approveCaseAuthorization(context.env, payload);
+    let payment = null;
+    let paymentDelivery = { sent: false, reason: "not-created" };
+
+    try {
+      const paymentResult = await createSmartCasePaymentRequest(context.env, { caseId: detail.caseId }, "client-portal", context.request.url);
+      payment = paymentResult.payment;
+      paymentDelivery = await sendClientPaymentLinkEmail(context.env, payment, context.request.url, "client-portal");
+      const paymentDetail = await getCaseDetail(context.env, detail.caseId);
+      await sendLifecycleNotifications(context.env, paymentDetail, context.request.url, paymentDetail.status, "client-portal");
+    } catch (paymentError) {
+      await recordCaseEvent(context.env, detail.caseId, "client-portal", "Paiement automatique bloqué", paymentError instanceof Error ? paymentError.message : "Erreur Stripe.");
+    }
 
     return json({
       ok: true,
@@ -32,10 +47,12 @@ export const onRequestPost = async (context) => {
       summary: detail.summary,
       steps: detail.steps,
       payments: detail.payments,
-      authorization: detail.authorization
+      authorization: detail.authorization,
+      payment,
+      paymentDelivery: paymentDelivery.sent ? "sent" : paymentDelivery.reason
     });
   } catch (error) {
-    console.error("authorization approval error:", error);
+    logError(context, "api.authorization.approval_error", error);
     return json(
       {
         ok: false,

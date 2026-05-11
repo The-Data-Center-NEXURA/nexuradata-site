@@ -7,8 +7,9 @@ applyTo: "**/*.{html,css,js}"
 ## Structure
 - Semantic HTML only — `<main>`, `<section>`, `<nav>`, `<footer>`. No unnecessary `<div>`.
 - Single CSS file (`assets/css/site.css`), no framework.
-- No JS except for form logic and scroll reveal (`assets/js/site.js`).
-- Typography: IBM Plex Sans (headings, UI), IBM Plex Mono (eyebrows, labels), Georgia serif (body) via `var(--serif)`. Fonts loaded from Google Fonts (`fonts.googleapis.com`).
+- No JS except for form logic and static UI state (`assets/js/site.js`).
+- Typography: IBM Plex Sans for body, headings, and UI; IBM Plex Mono for eyebrows, labels, and technical readouts. Fonts loaded from Google Fonts (`fonts.googleapis.com`).
+- Motion: no scroll reveal, no animated counters, no autoplay media that distracts, no hover lifts. Calm color/border/shadow transitions on interactive elements (buttons, links, fields) are allowed. The kinetic hero on the homepage and headline sections may use `transform`/`@keyframes`, but **every** such block MUST be wrapped in `@media (prefers-reduced-motion: no-preference)` (or be inside the existing reduced-motion override) so users with reduced-motion preferences see a static frame.
 
 ## CSS Tokens
 
@@ -22,7 +23,8 @@ Branding tokens are **locked** — see `.github/instructions/branding.instructio
   --os-dim: rgba(232, 228, 220, 0.22);
   --os-ghost: rgba(232, 228, 220, 0.08);
   --rule: 0.5px solid rgba(232, 228, 220, 0.1);
-  --serif: 'Georgia', 'Times New Roman', serif;
+  --font-sans-locked: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* --serif is a deprecated alias for --font-sans-locked. Do not use in new code. */
   --tracking-wide: 0.35em;
   --tracking-xwide: 0.55em;
 
@@ -47,7 +49,7 @@ Branding tokens are **locked** — see `.github/instructions/branding.instructio
 *, *::before, *::after { box-sizing: border-box; }
 body {
   margin: 0; min-width: 320px;
-  font-family: var(--serif);
+  font-family: var(--font-sans);
   color: var(--os); background: var(--noir);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
@@ -55,7 +57,7 @@ body {
 ```
 
 ## Typography
-- Body text uses `var(--serif)` (Georgia).
+- Body text uses `var(--font-sans)` (IBM Plex Sans).
 - Subdued text uses `opacity` values (0.65, 0.38) — aligned with branding tokens `--os-dim` and `--os-ghost`.
 - Nav links and labels use `letter-spacing: var(--tracking-xwide)` at `font-size: 0.75rem`.
 
@@ -69,9 +71,7 @@ Header and footer are **locked branding blocks** — see `.github/instructions/b
   min-height: 3.25rem; padding: 0.9rem 1.4rem;
   border: 1px solid transparent; border-radius: 1rem 1rem 1rem 0.35rem;
   font-weight: 800; letter-spacing: -0.02em; text-decoration: none;
-  transition: transform 180ms var(--ease-out), background-color 180ms var(--ease-out), border-color 180ms var(--ease-out), color 180ms var(--ease-out);
 }
-.button:hover { transform: translateY(-2px); }
 .button-primary   { background: var(--os); color: var(--noir); }
 .button-secondary { border-color: var(--os-dim); background: rgba(13,13,11,0.96); color: var(--os); }
 .button-outline   { border-color: var(--os-dim); color: var(--os); background: rgba(13,13,11,0.94); }
@@ -107,10 +107,10 @@ Legal pages (mentions-legales, politique-confidentialite, conditions-interventio
 ```
 - Always include `<link rel="canonical">`, `<link rel="alternate" hreflang>` pairs.
 
-## Animation
-All transitions use `var(--ease-out)`: `cubic-bezier(0.22, 1, 0.36, 1)`.
-Hover lifts use `transform: translateY(-2px)`.
-No scroll-reveal class in current CSS — entrance animations are handled by JS in `assets/js/site.js`.
+## Motion
+Keep interactions calm and predictable. Permitted: short color/border/shadow transitions on interactive elements (buttons, links, fields, nav-link underline reveals). Forbidden: scroll reveal, smooth-scrolling document, animated counters, autoplay video/audio, hover lifts (`transform: translateY(...)` on hover).
+
+The homepage kinetic hero (`@keyframes motion-*`) is the documented exception. Every animated block MUST be inside `@media (prefers-reduced-motion: no-preference)` and the global reduced-motion override at the end of `site.css` MUST disable it.
 
 ## Editorial Rules
 - Never more than 2 levels of visual hierarchy per section.

@@ -1,5 +1,6 @@
 import { getPublicCaseByCredentials, validateStatusLookup } from "../_lib/cases.js";
 import { json, methodNotAllowed, onOptions, parsePayload } from "../_lib/http.js";
+import { logError } from "../_lib/observability.js";
 import { checkRateLimit, tooManyRequests } from "../_lib/rate-limit.js";
 
 const genericErrorMessage = "Aucun dossier n'a été trouvé avec cet accès. Vérifiez les identifiants transmis par NEXURADATA ou demandez une mise à jour.";
@@ -36,15 +37,18 @@ export const onRequestPost = async (context) => {
       caseId: detail.caseId,
       status: detail.status,
       updatedAt: detail.updatedAt,
+      receivedAt: detail.receivedAt,
       support: detail.support,
+      symptom: detail.symptom,
       nextStep: detail.nextStep,
       summary: detail.summary,
       steps: detail.steps,
       payments: detail.payments,
+      quotes: detail.quotes,
       authorization: detail.authorization
     });
   } catch (error) {
-    console.error("status lookup error:", error);
+    logError(context, "api.status.lookup_error", error);
     return json(
       {
         ok: false,

@@ -16,12 +16,15 @@
  * Exit 0 = all clear. Exit 1 = violations found (with details).
  */
 
-import { execSync } from "node:child_process";
+import * as nodeChild_process from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const SITE_CSS_VERSION = "20260508c";
+const SITE_JS_VERSION = "20260508c";
 const errors = [];
 
 function fail(rule, detail) {
@@ -34,7 +37,7 @@ function walkFiles(dir, files = []) {
     }
 
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        if ([".git", "node_modules", ".wrangler", "release-cloudflare"].includes(entry.name)) {
+        if ([".git", ".next", ".wrangler", "coverage", "node_modules", "out", "release-cloudflare"].includes(entry.name)) {
             continue;
         }
 
@@ -49,11 +52,31 @@ function walkFiles(dir, files = []) {
     return files;
 }
 
+const jsonLdScriptPattern = /<script\b(?=[^>]*\btype=["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi;
+const inlineScriptPattern = /<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+
+function collectJsonLdCspHashes(dir) {
+    const hashes = new Set();
+
+    for (const file of walkFiles(dir)) {
+        if (extname(file).toLowerCase() !== ".html") continue;
+
+        const content = readFileSync(file, "utf8");
+
+        for (const match of content.matchAll(jsonLdScriptPattern)) {
+            hashes.add(`'sha256-${createHash("sha256").update(match[1], "utf8").digest("base64")}'`);
+        }
+    }
+
+    return [...hashes].sort();
+}
+
 // ─── 1. CSP — no unsafe directives ───────────────────────────────────────────
 const headersPath = join(ROOT, "_headers");
+let headersContent = "";
 if (existsSync(headersPath)) {
-    const headers = readFileSync(headersPath, "utf8");
-    if (/unsafe-inline|unsafe-eval/.test(headers)) {
+    headersContent = readFileSync(headersPath, "utf8");
+    if (/unsafe-inline|unsafe-eval/.test(headersContent)) {
         fail(
             "CSP_UNSAFE_DIRECTIVE",
             "_headers contains 'unsafe-inline' or 'unsafe-eval' in Content-Security-Policy. Remove them."
@@ -63,7 +86,182 @@ if (existsSync(headersPath)) {
     fail("CSP_MISSING", "_headers file not found.");
 }
 
+for (const file of walkFiles(ROOT)) {
+    if (extname(file).toLowerCase() !== ".html") continue;
+
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    const content = readFileSync(file, "utf8");
+
+    for (const match of content.matchAll(inlineScriptPattern)) {
+        if (!/type=["']application\/ld\+json["']/i.test(match[0])) {
+            fail("INLINE_SCRIPT_SOURCE", `${rel}: inline scripts must be externalized unless they are JSON-LD.`);
+        }
+    }
+}
+
+const homepageVideoMarkup = [join(ROOT, "index.html"), join(ROOT, "en", "index.html")]
+    .filter((file) => existsSync(file))
+    .map((file) => readFileSync(file, "utf8"))
+    .join("\n");
+
+if (/<video\b/i.test(homepageVideoMarkup) && !/data-motion-video/i.test(homepageVideoMarkup)) {
+    fail("HOMEPAGE_VIDEO_GUARD", "Homepage video must be marked as a controlled background motion layer with data-motion-video.");
+}
+
+const publicVideoDir = join(ROOT, "assets", "video");
+if (existsSync(publicVideoDir)) {
+    for (const entry of readdirSync(publicVideoDir, { withFileTypes: true })) {
+        if (!entry.isFile() || !/\.(?:mp4|webm)$/i.test(entry.name)) continue;
+
+        const size = readFileSync(join(publicVideoDir, entry.name)).byteLength;
+        if (size > 900_000) {
+            fail("PUBLIC_VIDEO_ASSET_SIZE", `assets/video/${entry.name}: background videos must stay below 900 KB.`);
+        }
+    }
+}
+
+const siteCssPath = join(ROOT, "assets", "css", "site.css");
+if (existsSync(siteCssPath)) {
+    const siteCss = readFileSync(siteCssPath, "utf8");
+    if (!siteCss.includes('--font-display: "IBM Plex Sans"') || !siteCss.includes('--font-sans: "IBM Plex Sans"') || !siteCss.includes('--font-mono: "IBM Plex Mono"')) {
+        fail("IBM_FONT_TOKENS", "assets/css/site.css must define IBM Plex Sans and IBM Plex Mono font tokens.");
+    }
+
+    if (/Georgia|Times New Roman/i.test(siteCss)) {
+        fail("NON_IBM_SITE_CSS_FONT", "assets/css/site.css must not reference Georgia or Times New Roman.");
+    }
+
+    if (!/body\s*\{[\s\S]*font-family:\s*var\(--font-sans\)/.test(siteCss)) {
+        fail("IBM_BODY_FONT", "assets/css/site.css body must use var(--font-sans).");
+    }
+
+    if (!siteCss.includes(".chatbot-dock") || !siteCss.includes(".chatbot-brand-tile") || !siteCss.includes(".chatbot-brand-logo") || !siteCss.includes(".chatbot-message") || /\.whatsapp-fab\b/.test(siteCss)) {
+        fail("CHATBOT_CSS", "assets/css/site.css must expose the branded NEXURADATA conversational case assistant, not the old WhatsApp FAB.");
+    }
+
+    if (!siteCss.includes(".cookie-consent") || !siteCss.includes(".footer-cookie-button")) {
+        fail("COOKIE_CONSENT_CSS", "assets/css/site.css must style the cookie consent bar and footer preference button.");
+    }
+
+    if (!siteCss.includes(".kinetic-canvas") || !siteCss.includes("@keyframes motion-grid-drift") || !siteCss.includes("@keyframes motion-critical-scan") || !siteCss.includes("prefers-reduced-motion: reduce")) {
+        fail("CONTROLLED_MOTION_CSS", "assets/css/site.css must provide controlled modern background motion with reduced-motion handling.");
+    }
+
+    const baseResetCss = siteCss.slice(0, siteCss.indexOf("html {") > 0 ? siteCss.indexOf("html {") : 0);
+    if (/animation:\s*none\s*!important/i.test(baseResetCss)) {
+        fail("GLOBAL_ANIMATION_KILL", "assets/css/site.css must not globally disable every animation; use reduced-motion and controlled background layers.");
+    }
+} else {
+    fail("SITE_CSS_MISSING", "assets/css/site.css file not found.");
+}
+
+const siteJsPath = join(ROOT, "assets", "js", "site.js");
+if (existsSync(siteJsPath)) {
+    const siteJs = readFileSync(siteJsPath, "utf8");
+    const requiredChatbotMarkers = [
+        "chatbot-dock",
+        "/assets/nexuradata-master.svg",
+        "/assets/nexuradata-icon.png",
+        "data-chatbot-diagnostic",
+        "chatbot-message",
+        "inferScenarioFromContext",
+        'data-chatbot-action="email_summary"',
+        'data-chatbot-action="urgent_whatsapp"',
+        "data-chatbot-case-form",
+        "submitAutonomousCase"
+    ];
+    const missingChatbotMarkers = requiredChatbotMarkers.filter((marker) => !siteJs.includes(marker));
+    if (missingChatbotMarkers.length > 0) {
+        fail("CHATBOT_JS", `assets/js/site.js must render the simple NEXURADATA case conversation with case creation, mail fallback, email fallback and urgent WhatsApp. Missing: ${missingChatbotMarkers.join(", ")}.`);
+    }
+
+    if (siteJs.includes('data-chatbot-action="stripe_payment"') || siteJs.includes('data-chatbot-action="copy_summary"') || /<select\s+name=["']support["']/i.test(siteJs) || /<ul\s+class=["']chatbot-protocol["']/i.test(siteJs)) {
+        fail("CHATBOT_OVERCOMPLICATED_UI", "assets/js/site.js must not expose the old selector grid, protocol panel, copy action or payment handoff inside the public case assistant.");
+    }
+
+    if (/super.?bot/i.test(siteJs)) {
+        fail("CHATBOT_OVERENGINEERED_COPY", "assets/js/site.js must not expose or track the public assistant as an overengineered bot.");
+    }
+
+    if (!siteJs.includes("data-stripe-checkout-link") || !siteJs.includes("nexuradata:payments-rendered")) {
+        fail("CHATBOT_STRIPE_HANDOFF", "assets/js/site.js must let the chatbot open existing Stripe Checkout links from the client portal.");
+    }
+
+    if (!siteJs.includes("CONSENT_STORAGE_KEY") || !siteJs.includes("renderCookieConsent") || !siteJs.includes("loadGa4") || !siteJs.includes("loadMetaPixel")) {
+        fail("COOKIE_CONSENT_JS", "assets/js/site.js must gate GA4 and Meta Pixel behind the cookie consent bar.");
+    }
+
+    if (!siteJs.includes("initKineticCanvas") || !siteJs.includes("data-kinetic-canvas") || !siteJs.includes("requestAnimationFrame")) {
+        fail("KINETIC_CANVAS_JS", "assets/js/site.js must render the homepage kinetic canvas background.");
+    }
+
+    if (/chatbot-meter[\s\S]{0,180}style=/.test(siteJs)) {
+        fail("CHATBOT_CSP_INLINE_STYLE", "assets/js/site.js must not render inline style attributes for the chatbot meter.");
+    }
+} else {
+    fail("SITE_JS_MISSING", "assets/js/site.js file not found.");
+}
+
+if (existsSync(join(ROOT, "assets", "js", "ga4-init.js"))) {
+    fail("LEGACY_GA4_INIT", "assets/js/ga4-init.js must not exist. GA4 is loaded only by the consent manager.");
+}
+
+if (!existsSync(join(ROOT, "assets", "nexuradata-icon.png"))) {
+    fail("IBM_CHATBOT_IMAGE", "assets/nexuradata-icon.png must exist for the branded square diagnostic chatbot.");
+}
+
+const googleFacingFiles = walkFiles(ROOT).filter((file) => {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (rel.startsWith("operations/")) return false;
+    return rel === "sitemap.xml" || rel === "merchant-feed.xml" || extname(file).toLowerCase() === ".html";
+});
+
+for (const file of googleFacingFiles) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    const content = readFileSync(file, "utf8");
+
+    if (/https:\/\/nexuradata\.ca\/(?:en\/)?[A-Za-z0-9-]+\.html(?:[#?][^"'<>\s]*)?/.test(content)) {
+        fail("GOOGLE_ADS_CLEAN_URLS", `${rel}: absolute Google-facing URLs must use final clean URLs, not .html redirect URLs.`);
+    }
+
+    if (/\b(?:href|action)=(['"])(?:(?:\.\.\/)?|\/(?:en\/)?)[A-Za-z0-9-]+\.html(?:[#?][^'"]*)?\1/i.test(content)) {
+        fail("GOOGLE_ADS_CLEAN_URLS", `${rel}: public links must use final clean URLs, not .html redirect URLs.`);
+    }
+}
+
+const redirectsPath = join(ROOT, "_redirects");
+if (existsSync(redirectsPath)) {
+    const redirectLines = readFileSync(redirectsPath, "utf8").split(/\r?\n/);
+    redirectLines.forEach((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) return;
+
+        const [source, destination, status] = trimmed.split(/\s+/);
+        if (!source || !destination) return;
+
+        if (/\.html(?:$|[?#])/.test(destination)) {
+            fail("REDIRECT_HTML_DESTINATION", `_redirects:${index + 1}: redirect destinations must be final clean URLs, not .html pages.`);
+        }
+
+        if ((source.includes(".html") || source.startsWith("https://www.nexuradata.ca/")) && status !== "301") {
+            fail("REDIRECT_PERMANENT_CANONICAL", `_redirects:${index + 1}: public canonical redirects from .html or www must use status 301.`);
+        }
+    });
+} else {
+    fail("REDIRECTS_MISSING", "_redirects file not found.");
+}
+
 // ─── 2. No hardcoded secrets in functions/ ───────────────────────────────────
+const wranglerPath = join(ROOT, "wrangler.jsonc");
+if (existsSync(wranglerPath)) {
+    const wranglerConfig = readFileSync(wranglerPath, "utf8");
+    if (!/"STRIPE_MODE"\s*:\s*"live"/.test(wranglerConfig)) {
+        fail("STRIPE_LIVE_MODE_MISSING", "wrangler.jsonc must set STRIPE_MODE to live for production Stripe Checkout.");
+    }
+} else {
+    fail("WRANGLER_CONFIG_MISSING", "wrangler.jsonc is missing; Cloudflare Pages runtime vars cannot be verified.");
+}
+
 const SECRET_PATTERNS = [
     // Generic high-entropy patterns for known key formats
     { pattern: /sk_live_[A-Za-z0-9]{20,}/, label: "Stripe live secret key" },
@@ -152,6 +350,53 @@ const enHtmlPages = existsSync(enDir)
     : [];
 const enHtmlSet = new Set(enHtmlPages);
 const rootHtmlSet = new Set(rootHtmlPages);
+const sitemapPath = join(ROOT, "sitemap.xml");
+const sitemapContent = existsSync(sitemapPath) ? readFileSync(sitemapPath, "utf8") : "";
+
+for (const file of [...rootHtmlPages.map((page) => join(ROOT, page)), ...enHtmlPages.map((page) => join(enDir, page))]) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    const content = readFileSync(file, "utf8");
+
+    if (content.includes("site.css?v=") && !content.includes(`site.css?v=${SITE_CSS_VERSION}`)) {
+        fail("STALE_SITE_CSS_VERSION", `${rel}: update the site.css cache key to ${SITE_CSS_VERSION}.`);
+    }
+
+    if (content.includes("site.js") && !content.includes(`site.js?v=${SITE_JS_VERSION}`)) {
+        fail("STALE_SITE_JS_VERSION", `${rel}: update the site.js cache key to ${SITE_JS_VERSION}.`);
+    }
+
+    if (content.includes("site.css") && !/IBM\+Plex\+Mono[\s\S]*IBM\+Plex\+Sans/.test(content)) {
+        fail("IBM_FONT_LINK_MISSING", `${rel}: missing IBM Plex Sans/Mono Google Fonts link before site.css.`);
+    }
+
+    const isIndexable = /<meta\s+name=["']robots["']\s+content=["']index,\s*follow["']/i.test(content);
+    const canonicalMatch = content.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i);
+    if (isIndexable) {
+        if (!canonicalMatch) {
+            fail("GOOGLE_CANONICAL_MISSING", `${rel}: indexable pages must declare a canonical URL.`);
+        } else if (!sitemapContent.includes(`<loc>${canonicalMatch[1]}</loc>`)) {
+            fail("GOOGLE_SITEMAP_MISSING", `${rel}: indexable canonical URL ${canonicalMatch[1]} must be listed in sitemap.xml.`);
+        }
+    }
+}
+
+for (const file of walkFiles(ROOT)) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (extname(file).toLowerCase() !== ".html") continue;
+
+    const content = readFileSync(file, "utf8");
+    if (/googletagmanager\.com\/gtag|gtag\(['"]config['"],\s*['"]G-TC31YSS01P/i.test(content)) {
+        fail("TRACKING_BEFORE_CONSENT", `${rel}: GA4 must be loaded by the consent manager, not inline in HTML.`);
+    }
+
+    if (/mailto:privacy@nexuradata\.ca/.test(content) && !content.includes("data-cookie-preferences")) {
+        fail("COOKIE_PREFERENCES_FOOTER", `${rel}: privacy footer must include a cookie preference button.`);
+    }
+
+    if (/mailto:privacy\.ca|>privacy\.ca</i.test(content)) {
+        fail("PRIVACY_EMAIL_BROKEN", `${rel}: privacy email must be privacy@nexuradata.ca.`);
+    }
+}
 
 for (const page of rootHtmlPages) {
     if (DRAFT_HTML_PATTERN.test(page)) {
@@ -180,8 +425,28 @@ for (const file of walkFiles(join(ROOT, "assets"))) {
 
 // ─── 5. release-cloudflare/ in sync with source ──────────────────────────────
 try {
-    execSync("npm run build --silent", { cwd: ROOT, stdio: "pipe" });
-    const dirty = execSync("git status --porcelain release-cloudflare/", { cwd: ROOT, encoding: "utf8" }).trim();
+    nodeChild_process.execSync("npm run build --silent", { cwd: ROOT, stdio: "pipe" });
+    const releaseHeadersPath = join(ROOT, "release-cloudflare", "_headers");
+    const releaseHeadersContent = existsSync(releaseHeadersPath) ? readFileSync(releaseHeadersPath, "utf8") : "";
+    const jsonLdHashes = collectJsonLdCspHashes(ROOT);
+
+    if (releaseHeadersContent.split(/\r?\n/).some((line) => line.length > 2000)) {
+        fail("HEADERS_LINE_LENGTH", "release-cloudflare/_headers has a line longer than Cloudflare's 2000-character limit.");
+    }
+
+    const globalHeadersBlock = releaseHeadersContent.match(/^\/\*\n(?:\s{2}.+\n)*/m)?.[0] || "";
+
+    if (/^\s{2}Content-Security-Policy:/m.test(globalHeadersBlock)) {
+        fail("GLOBAL_STATIC_CSP", "release-cloudflare/_headers must generate page-specific CSP rules so JSON-LD hashes stay under Cloudflare line limits.");
+    }
+
+    for (const hash of jsonLdHashes) {
+        if (!releaseHeadersContent.includes(hash)) {
+            fail("JSON_LD_CSP_HASH", `release-cloudflare/_headers is missing CSP hash ${hash} for inline JSON-LD.`);
+        }
+    }
+
+    const dirty = nodeChild_process.execSync("git status --porcelain release-cloudflare/", { cwd: ROOT, encoding: "utf8" }).trim();
     if (dirty) {
         fail(
             "BUILD_OUT_OF_SYNC",
@@ -222,6 +487,11 @@ for (const file of walkFiles(ROOT)) {
 
 // ─── Report ───────────────────────────────────────────────────────────────────
 if (errors.length === 0) {
+    try {
+        nodeChild_process.execSync("node ./scripts/check-imports.mjs", { cwd: ROOT, stdio: "inherit" });
+    } catch {
+        process.exit(1);
+    }
     console.log("✓ All checks passed.");
     process.exit(0);
 } else {

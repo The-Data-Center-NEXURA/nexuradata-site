@@ -19,25 +19,26 @@
   <meta property="og:title" content="Data Recovery and Digital Forensics in Montreal | NEXURADATA">
   <meta property="og:description"
     content="Data recovery for drives, RAID, servers, phones and sensitive cases across Montreal and the Greater Montreal area.">
-  <meta property="og:url" content="https://nexuradata.ca/en/">
+  <meta property="og:url" content="https://www.nexuradata.ca/en/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Data Recovery and Digital Forensics in Montreal | NEXURADATA">
   <meta name="twitter:description"
     content="Data recovery for drives, RAID, servers, phones and sensitive cases across Montreal and the Greater Montreal area.">
   <meta name="twitter:image" content="https://nexuradata.ca/assets/icons/og-en.png">
-  <link rel="canonical" href="https://nexuradata.ca/en/">
+  <link rel="canonical" href="https://www.nexuradata.ca/en/">
   <link rel="alternate" hreflang="fr-CA" href="https://nexuradata.ca/">
   <link rel="alternate" hreflang="en-CA" href="https://nexuradata.ca/en/">
   <link rel="alternate" hreflang="x-default" href="https://nexuradata.ca/en/">
   <link rel="manifest" href="../site.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="preload" as="image" href="/assets/icons/hero-lab-media.avif" type="image/avif">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/site.css?v=20260504a">
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260508c">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -50,7 +51,6 @@
       "image": "https://nexuradata.ca/assets/icons/og-default.png",
       "logo": "https://nexuradata.ca/assets/nexuradata-master.svg",
       "sameAs": [
-        "https://www.facebook.com/nexuradata",
         "https://wa.me/14388130592"
       ],
       "priceRange": "$$",
@@ -165,10 +165,7 @@
       "url": "https://nexuradata.ca/en/"
     }
   </script>
-  <script src="../assets/js/site.js" defer></script>
-  <!-- Google Analytics 4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TC31YSS01P"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TC31YSS01P');</script>
+  <script src="../assets/js/site.js?v=20260508c" defer></script>
 </head>
 
 <body>
@@ -182,10 +179,10 @@
             translate="no">
         </a>
         <div class="nav-links">
-          <a href="/en/services-recuperation-forensique-montreal.html">Services</a>
-          <a href="/en/tarifs-recuperation-donnees-montreal.html">Pricing</a>
-          <a href="/en/politique-confidentialite.html">Privacy</a>
-          <a href="/en/conditions-intervention-paiement.html">Terms</a>
+          <a href="/en/services-recuperation-forensique-montreal">Services</a>
+          <a href="/en/tarifs-recuperation-donnees-montreal">Pricing</a>
+          <a href="/en/politique-confidentialite">Privacy</a>
+          <a href="/en/conditions-intervention-paiement">Terms</a>
           <a href="/en/#contact">Contact</a>
           <a href="/" class="lang-switch" lang="fr">FR</a>
         </div>
@@ -195,11 +192,24 @@
 
   <main id="content">
     <section class="hero section" aria-labelledby="hero-title">
-      <div class="hero-backdrop" aria-hidden="true"></div>
+      <div class="hero-backdrop" aria-hidden="true">
+        <video class="hero-video" data-motion-video autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+          <source src="/assets/video/hero-loop.mp4" type="video/mp4">
+        </video>
+        <canvas class="kinetic-canvas" data-kinetic-canvas></canvas>
+      </div>
       <div class="container hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">Data recovery · Montreal</p>
-          <h1 id="hero-title">Your data is not lost. Not yet.</h1>
+          <p class="hero-status" data-hero-status>
+            <span class="hero-status-dot" aria-hidden="true"></span>
+            <span class="hero-status-label">LAB ACTIVE</span>
+            <span class="hero-status-sep" aria-hidden="true">·</span>
+            <span class="hero-status-clock" data-hero-clock aria-label="Montreal time">--:--</span>
+            <span class="hero-status-sep" aria-hidden="true">·</span>
+            <span class="hero-status-place">MTL</span>
+          </p>
+          <h1 id="hero-title">Your data is not <span class="hero-h1-strike">lost</span>. <span class="hero-h1-coda">Recoverable.</span></h1>
           <p class="hero-lead">
             Drive, SSD, phone, NAS, RAID or server inaccessible: describe what happened. NEXURADATA assesses the
             risk, price and next secure step at no charge before any intervention begins.
@@ -207,8 +217,7 @@
 
           <div class="hero-actions">
             <a href="#contact" class="button button-primary">Open a case</a>
-            <a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-              class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_hero">Direct WhatsApp</a>
+            <a href="#diagnostic-assistant" class="button button-secondary" data-contact-intent="diagnostic_hero">Guided diagnosis</a>
             <a href="tel:+14388130592" class="button button-outline" data-contact-intent="phone_hero">Call now</a>
           </div>
 
@@ -218,37 +227,36 @@
             <li>Confidential follow-up, secure intake and clear next steps.</li>
           </ul>
           <div class="trust-tags">
-            <span>Direct WhatsApp</span>
+            <span>Guided diagnosis</span>
             <span>Fast prequalification</span>
+            <span>Post-quantum</span>
             <span>Free assessment</span>
             <span>Emergencies 24/7</span>
           </div>
         </div>
 
         <aside class="hero-panel hero-lab-panel" aria-label="Laboratory commitment">
-          <div class="cinematic-loop" aria-hidden="true">
-            <div class="cinematic-loop-stage">
-              <span class="cinematic-scan-line"></span>
-              <span class="cinematic-data-node node-one"></span>
-              <span class="cinematic-data-node node-two"></span>
-              <span class="cinematic-data-node node-three"></span>
-              <span class="cinematic-data-node node-four"></span>
+          <figure class="lab-snapshot lab-snapshot-video" data-facebook-video-stage>
+            <picture>
+              <source srcset="../assets/icons/hero-lab-media.avif" type="image/avif">
+              <source srcset="../assets/icons/hero-lab-media.webp" type="image/webp">
+              <img class="lab-snapshot-media" src="../assets/icons/hero-lab-media.jpg" alt="Electronic circuit board inspected for data recovery" width="1200" height="800" decoding="async" fetchpriority="high">
+            </picture>
+            <figcaption class="lab-video-story">
+              <span>The path</span>
+              <strong>Lose the data. Recover it.</strong>
+            </figcaption>
+            <div class="lab-video-actions" aria-label="NEXURADATA videos">
+              <button type="button" class="lab-video-trigger" data-facebook-video-trigger data-facebook-video-src="https://www.facebook.com/plugins/video.php?height=314&amp;href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1353554126829936%2F&amp;show_text=false&amp;width=560&amp;t=0" data-facebook-video-title="Data loss - NEXURADATA" data-facebook-video-width="560" data-facebook-video-height="314" data-facebook-video-format="wide" aria-label="Play the Data loss video">
+                <span class="lab-video-play" aria-hidden="true"></span>
+                <span><strong>Data lost</strong><small>When everything disappears</small></span>
+              </button>
+              <button type="button" class="lab-video-trigger" data-facebook-video-trigger data-facebook-video-src="https://www.facebook.com/plugins/video.php?height=314&amp;href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2793337254360216%2F&amp;show_text=false&amp;width=560&amp;t=0" data-facebook-video-title="Data recovered - NEXURADATA" data-facebook-video-width="560" data-facebook-video-height="314" data-facebook-video-format="wide" aria-label="Play the Data recovered video">
+                <span class="lab-video-play" aria-hidden="true"></span>
+                <span><strong>Data recovered</strong><small>The case comes back</small></span>
+              </button>
             </div>
-            <dl class="cinematic-readout">
-              <div>
-                <dt>Analyze</dt>
-                <dd>84%</dd>
-              </div>
-              <div>
-                <dt>Alignment</dt>
-                <dd>97%</dd>
-              </div>
-              <div>
-                <dt>Control</dt>
-                <dd>OK</dd>
-              </div>
-            </dl>
-          </div>
+          </figure>
           <div class="lab-commitment-card">
             <p class="panel-label">Laboratory commitment</p>
             <h2>Clear assessment, no commitment.</h2>
@@ -289,21 +297,21 @@
       </div>
     </section>
 
-    <section class="motion-story" aria-labelledby="motion-story-title">
-      <div class="container motion-story-grid">
-        <div class="motion-story-copy">
+    <section class="critical-story" aria-labelledby="critical-story-title">
+      <div class="container critical-story-grid">
+        <div class="critical-story-copy">
           <p class="eyebrow">Critical moment</p>
-          <h2 id="motion-story-title">Failure does not warn you.</h2>
+          <h2 id="critical-story-title">Failure does not warn you.</h2>
           <p>When files disappear, every move matters. The right protocol keeps the case recoverable.</p>
         </div>
-        <div class="motion-failure-visual" aria-hidden="true">
-          <span class="failure-frame frame-one"></span>
-          <span class="failure-frame frame-two"></span>
-          <span class="failure-frame frame-three"></span>
-          <span class="failure-fragment fragment-one"></span>
-          <span class="failure-fragment fragment-two"></span>
-          <span class="failure-fragment fragment-three"></span>
-          <span class="failure-fragment fragment-four"></span>
+        <div class="critical-story-panel" aria-hidden="true">
+          <span class="critical-frame frame-one"></span>
+          <span class="critical-frame frame-two"></span>
+          <span class="critical-frame frame-three"></span>
+          <span class="critical-fragment fragment-one"></span>
+          <span class="critical-fragment fragment-two"></span>
+          <span class="critical-fragment fragment-three"></span>
+          <span class="critical-fragment fragment-four"></span>
         </div>
       </div>
     </section>
@@ -387,25 +395,25 @@
               <li>Response &lt; 24 h</li>
               <li>Low-friction intake</li>
             </ul>
-            <a class="service-link" href="/en/recuperation-donnees-montreal.html">View offer</a>
+            <a class="service-link" href="/en/recuperation-donnees-montreal">View offer</a>
           </article>
 
           <article class="page-card service-card">
             <p class="service-index">02 / business continuity</p>
             <h3>RAID, NAS, server or critical storage outage</h3>
-            <p>For environments where downtime costs time, revenue or operational continuity and the wrong internal move can make
-              recovery worse.</p>
+            <p>For environments where downtime costs time, revenue or operational continuity, and the wrong internal move can make
+              recovery worse before a plan exists.</p>
             <ul class="offer-points" role="list">
-              <li>RAID failure, risky rebuild, encrypted NAS or inaccessible server volumes</li>
-              <li>Risk qualified before additional internal intervention</li>
-              <li>Built for operations, IT teams, MSPs and business leadership</li>
+              <li>RAID failure, inaccessible NAS, offline server volume or critical VM</li>
+              <li>Context capture: model, disk order, controller, logs and last action attempted</li>
+              <li>Decision-ready path for IT, leadership, MSPs, firms or insurers before handling</li>
             </ul>
             <ul class="pill-list offer-meta" role="list">
+              <li>Server triage from $399</li>
               <li>7-day urgency</li>
-              <li>Lab priority</li>
-              <li>Enterprise path</li>
+              <li>IT decision path</li>
             </ul>
-            <a class="service-link" href="/en/recuperation-raid-ssd-montreal.html">View offer</a>
+            <a class="service-link" href="/en/recuperation-raid-ssd-montreal">View offer</a>
           </article>
 
           <article class="page-card service-card">
@@ -423,7 +431,7 @@
               <li>Sensitive data</li>
               <li>Clear quote</li>
             </ul>
-            <a class="service-link" href="/en/recuperation-telephone-montreal.html">View offer</a>
+            <a class="service-link" href="/en/recuperation-telephone-montreal">View offer</a>
           </article>
 
           <article class="page-card service-card">
@@ -441,7 +449,7 @@
               <li>Chain of custody</li>
               <li>Legal context</li>
             </ul>
-            <a class="service-link" href="/en/forensique-numerique-montreal.html">View offer</a>
+            <a class="service-link" href="/en/forensique-numerique-montreal">View offer</a>
           </article>
 
           <article class="page-card service-card">
@@ -459,13 +467,13 @@
               <li>Single contact</li>
               <li>Structured quote</li>
             </ul>
-            <a class="service-link" href="/en/mandats-entreprise.html">View offer</a>
+            <a class="service-link" href="/en/mandats-entreprise">View offer</a>
           </article>
         </div>
 
         <div class="page-links" data-reveal>
-          <a class="button button-secondary" href="/en/tarifs-recuperation-donnees-montreal.html">Indicative pricing</a>
-          <a class="button button-secondary" href="/en/suivi-dossier-client-montreal.html">Case status</a>
+          <a class="button button-secondary" href="/en/tarifs-recuperation-donnees-montreal">Indicative pricing</a>
+          <a class="button button-secondary" href="/en/suivi-dossier-client-montreal">Case status</a>
         </div>
       </div>
     </section>
@@ -523,9 +531,8 @@
 
           <article class="page-card trust-card">
             <h3>Certified Forensic Examiner (CFE)</h3>
-            <p>Internationally recognized qualification in digital forensic analysis. Testimony before federal and
-              provincial courts.</p>
-            <a class="service-link" href="/en/le-laboratoire.html">The lab</a>
+            <p>Sensitive cases are reviewed by the founder, a certified digital forensic examiner, before risky guidance is given.</p>
+            <a class="service-link" href="/en/le-laboratoire">The lab</a>
           </article>
 
           <article class="page-card trust-card">
@@ -542,20 +549,19 @@
           <article class="page-card trust-card">
             <h3>Real confidentiality</h3>
             <p>Secure intake, controlled access, full traceability. Compliant with Quebec's Law 25.</p>
-            <a class="service-link" href="/en/reception-securisee-donnees-montreal.html">Secure intake process</a>
+            <a class="service-link" href="/en/reception-securisee-donnees-montreal">Secure intake process</a>
           </article>
 
           <article class="page-card trust-card">
             <h3>Published pricing</h3>
             <p>Starting prices are published for the priority case types. No hidden fees, no opaque quoting.</p>
-            <a class="service-link" href="/en/tarifs-recuperation-donnees-montreal.html">View pricing</a>
+            <a class="service-link" href="/en/tarifs-recuperation-donnees-montreal">View pricing</a>
           </article>
 
           <article class="page-card trust-card">
             <h3>One point of contact</h3>
-            <p>From the first email to the final report, a certified examiner handles your case from start to finish —
-              no hand-offs, no intermediaries.</p>
-            <a class="service-link" href="/en/mot-du-fondateur.html">Founder's note</a>
+            <p>From the first email to the final report, the founder remains accountable for the method, the frame and sensitive decisions.</p>
+            <a class="service-link" href="/en/mot-du-fondateur">Founder's note</a>
           </article>
 
           <article class="page-card trust-card trust-card-wide">
@@ -581,14 +587,20 @@
             <h3>CFE — Certified Forensic Examiner</h3>
             <p>International qualification in digital forensic analysis. Expert testimony recognized before federal and
               provincial courts in Canada.</p>
-            <a class="service-link" href="/en/le-laboratoire.html">The lab</a>
+            <a class="service-link" href="/en/le-laboratoire">The lab</a>
           </div>
           <div class="page-card cert-card">
             <p class="cert-kicker">Privacy</p>
             <h3>Quebec Law&nbsp;25 compliant</h3>
             <p>Minimal data collection, documented consent, encryption in transit and controlled destruction after data
               delivery.</p>
-            <a class="service-link" href="/en/politique-confidentialite.html">Privacy policy</a>
+            <a class="service-link" href="/en/politique-confidentialite">Privacy policy</a>
+          </div>
+          <div class="page-card cert-card">
+            <p class="cert-kicker">Post-quantum</p>
+            <h3>Cryptographic readiness</h3>
+            <p>The topic is now everywhere in the news. NEXURADATA keeps a long-term posture for secrets, archives and trust mechanisms.</p>
+            <a class="service-link" href="/en/resilience-donnees-entreprise-montreal">Data resilience</a>
           </div>
           <div class="page-card cert-card">
             <p class="cert-kicker">Insurance</p>
@@ -606,14 +618,14 @@
             <h3>Secure intake protocol</h3>
             <p>Restricted access, minimal handling, full traceability from first contact. No media is opened without
               prior logging.</p>
-            <a class="service-link" href="/en/reception-securisee-donnees-montreal.html">The protocol</a>
+            <a class="service-link" href="/en/reception-securisee-donnees-montreal">The protocol</a>
           </div>
           <div class="page-card cert-card">
             <p class="cert-kicker">Commitments</p>
             <h3>Published operational commitments</h3>
             <p>Privacy, cybersecurity, language compliance, information clarity — all operational commitments are
               published and kept up to date.</p>
-            <a class="service-link" href="/en/engagements-conformite-quebec.html">View commitments</a>
+            <a class="service-link" href="/en/engagements-conformite-quebec">View commitments</a>
           </div>
         </div>
       </div>
@@ -761,7 +773,7 @@
                   <input type="checkbox" name="consentement" required>
                   <span>I agree that NEXURA DATA may use the information submitted in this form to open and manage my
                     request, communicate with me about this case and ensure operational follow-up of the service, in
-                    accordance with the <a href="/en/politique-confidentialite.html">Privacy Policy</a>.</span>
+                    accordance with the <a href="/en/politique-confidentialite">Privacy Policy</a>.</span>
                 </label>
 
                 <label class="field field-honeypot" aria-hidden="true">
@@ -772,7 +784,7 @@
               <div class="form-actions">
                 <button type="submit" class="button button-primary">Open a case</button>
                 <a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-                  class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_contact">Direct WhatsApp</a>
+                  class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_emergency_contact">Emergency WhatsApp</a>
                 <a href="tel:+14388130592" class="button button-outline" data-contact-intent="phone_contact">Call +1 438 813-0592</a>
                 <a href="mailto:contact@nexuradata.ca?subject=Urgent%20NEXURADATA%20request"
                   class="button button-outline" data-contact-intent="email_contact">Urgent email</a>
@@ -787,53 +799,45 @@
 
             <div class="contact-rail">
               <article class="contact-card contact-card-channels">
-                <h3>Fast channels</h3>
-                <div class="channel-list" aria-label="Fast contact channels">
+                <h3>Fastest path</h3>
+                <div class="channel-list" aria-label="Emergency channels">
                   <a class="channel-link channel-link-whatsapp" href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-                    target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_channel">
-                    <span>Direct WhatsApp</span>
-                    <strong>Describe the case</strong>
+                    target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_emergency_channel">
+                    <span>WhatsApp</span>
+                    <strong>Emergency or unstable media</strong>
                   </a>
-                  <a class="channel-link" href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer" data-contact-intent="facebook_channel">
-                    <span>Facebook</span>
-                    <strong>Official page</strong>
-                  </a>
-                  <a class="channel-link" href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer" data-contact-intent="google_channel">
-                    <span>Google</span>
-                    <strong>Profile and reviews</strong>
+                  <a class="channel-link" href="/en/suivi-dossier-client-montreal" data-contact-intent="status_channel">
+                    <span>Secure status</span>
+                    <strong>Client portal</strong>
                   </a>
                 </div>
               </article>
 
-              <article class="contact-card qr-card">
+              <article class="contact-card qr-card contact-card-compact">
                 <h3>Mobile QR</h3>
                 <img src="/assets/icons/contact-qr.png" alt="NEXURADATA contact QR code" class="contact-qr" loading="lazy" width="220" height="220">
-                <p>Scan to open the NEXURADATA contact on mobile and keep the link available.</p>
+                <p>Scan to keep the contact available.</p>
               </article>
 
-              <article class="contact-card">
-                <h3>Before touching the device</h3>
+              <article class="contact-card contact-card-founder">
+                <h3>Founder response</h3>
                 <ul class="contact-list">
-                  <li>Do not reformat it</li>
-                  <li>Do not keep rebooting it</li>
-                  <li>Do not improvise on a RAID</li>
+                  <li>Do not reformat it.</li>
+                  <li>Do not keep rebooting it.</li>
+                  <li>Do not rebuild a RAID without a plan.</li>
                 </ul>
+                <a href="/en/mot-du-fondateur" data-contact-intent="founder_rail">Read the founder's note</a>
               </article>
 
               <article class="contact-card">
-                <h3>Contact</h3>
+                <h3>Direct contact</h3>
                 <a href="tel:+14388130592" data-contact-intent="phone_rail">+1 438 813-0592</a>
                 <a href="mailto:contact@nexuradata.ca" data-contact-intent="email_rail">contact@nexuradata.ca</a>
-                <a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20."
-                  rel="noopener noreferrer" target="_blank" class="whatsapp-inline-link" data-contact-intent="whatsapp_rail">WhatsApp +1 438 813-0592</a>
-                <a href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer" data-contact-intent="facebook_rail">NEXURADATA Facebook</a>
-                <a href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer" data-contact-intent="google_rail">Google / reviews</a>
                 <p class="service-area">
                   Service area: Montreal and Greater Montreal<br>
                   Secure intake by confirmed appointment only
                 </p>
-                <p><strong>Open 7/7</strong> — 9 AM to 6 PM</p>
-                <p>Emergency requests accepted 24/7 by email.</p>
+                <p><strong>Open 7/7</strong> — 9 AM to 6 PM. Emergency requests accepted 24/7 by email.</p>
               </article>
             </div>
           </div>
@@ -866,22 +870,23 @@
 
         <div class="footer-block">
           <small>CHANNELS</small>
-          <p><a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20." target="_blank" rel="noopener noreferrer">WhatsApp</a></p>
-          <p><a href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer">Facebook</a></p>
+          <p><a href="https://wa.me/14388130592?text=Hello%20NEXURADATA%2C%20I%20want%20to%20open%20a%20case.%20Device%3A%20drive%2FSSD%2FRAID%2Fphone.%20Symptoms%3A%20.%20Urgency%3A%20." target="_blank" rel="noopener noreferrer">Emergency WhatsApp</a></p>
+          <p><a href="/en/suivi-dossier-client-montreal">Case status</a></p>
           <p><a href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer">Google</a></p>
         </div>
 
         <div class="footer-block">
           <small>PRIVACY</small>
           <p><a href="mailto:privacy@nexuradata.ca">privacy@nexuradata.ca</a></p>
+          <p><button type="button" class="footer-cookie-button" data-cookie-preferences>Cookie preferences</button></p>
         </div>
       </section>
 
       <section class="footer-legal" aria-label="Legal links">
-        <a href="/en/mentions-legales.html">Legal notice</a>
-        <a href="/en/politique-confidentialite.html">Privacy policy</a>
-        <a href="/en/engagements-conformite-quebec.html">Quebec commitments</a>
-        <a href="/en/conditions-intervention-paiement.html">Terms of service</a>
+        <a href="/en/mentions-legales">Legal notice</a>
+        <a href="/en/politique-confidentialite">Privacy policy</a>
+        <a href="/en/engagements-conformite-quebec">Quebec commitments</a>
+        <a href="/en/conditions-intervention-paiement">Terms of service</a>
       </section>
 
       <section class="footer-note" aria-label="Operating note">

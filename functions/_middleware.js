@@ -2,9 +2,12 @@
  * Cloudflare Pages Middleware — runs before every Pages Function.
  *
  * Order matters:
- *   1. UA blocker (rejects known scanners, scrapers, AI bots)
- *   2. Security headers for dynamic Function responses
+ *   1. Observability for API / operations requests
+ *   2. UA blocker (rejects known scanners, scrapers, AI bots)
+ *   3. Security headers for dynamic Function responses
  */
+
+import { observeRequest } from "./_lib/observability.js";
 
 const FUNCTION_SECURITY_HEADERS = {
     "Cache-Control": "no-store",
@@ -39,6 +42,26 @@ const BLOCKED_UA_FRAGMENTS = [
     "ccbot",
 ];
 
+const FUNCTION_SECURITY_PATHS = ["/api", "/operations"];
+const DATABASE_URL_KEY = ["DATABASE", "URL"].join("_");
+
+const normalizeDatabaseEnv = (env) => {
+    if (!env) return;
+    if (env[DATABASE_URL_KEY]) return;
+
+    const supabaseUrl = env.SUPABASE_DATABASE_URL || env.SUPABASE_DB_URL;
+    if (supabaseUrl) {
+        env[DATABASE_URL_KEY] = supabaseUrl;
+    }
+};
+
+const shouldHardenFunctionResponse = (request) => {
+    if (!request?.url) return true;
+
+    const { pathname } = new URL(request.url);
+    return FUNCTION_SECURITY_PATHS.some((pathPrefix) => pathname === pathPrefix || pathname.startsWith(`${pathPrefix}/`));
+};
+
 export const withFunctionSecurityHeaders = (response) => {
     const headers = new Headers(response.headers);
 
@@ -67,9 +90,28 @@ export const blockBots = async (context) => {
     return context.next();
 };
 
-export const secureFunctionResponses = async (context) => withFunctionSecurityHeaders(await context.next());
+export const secureFunctionResponses = async (context) => {
+    const response = await context.next();
+
+    if (!shouldHardenFunctionResponse(context.request)) {
+        return response;
+    }
+
+    return withFunctionSecurityHeaders(response);
+};
+
+export const observeFunctionRequests = (context) => {
+    normalizeDatabaseEnv(context.env);
+
+    if (!shouldHardenFunctionResponse(context.request)) {
+        return context.next();
+    }
+
+    return observeRequest(context);
+};
 
 export const onRequest = [
+    observeFunctionRequests,
     blockBots,
     secureFunctionResponses,
 ];

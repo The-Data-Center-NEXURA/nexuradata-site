@@ -1,33 +1,54 @@
 {
   "name": "nexuradata-site",
   "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
   "config": {
     "pagesProjectName": "nexuradata"
   },
   "scripts": {
-    "build": "node ./scripts/sync-release.mjs",
+    "dev": "npm run cf:dev",
+    "build": "node ./scripts/build-css.mjs && node ./scripts/update-sitemap-lastmod.mjs && node ./scripts/sync-release.mjs",
+    "deploy": "node ./scripts/bump-asset-version.mjs && npm run cf:deploy",
+    "sitemap:refresh": "node ./scripts/update-sitemap-lastmod.mjs",
     "cf:sync": "npm run build",
     "cf:check": "npm run build && node ./scripts/pages-cli.mjs check",
     "cf:deploy": "npm run cf:pages:deploy:prod",
     "cf:deploy:staging": "npm run cf:pages:deploy:staging",
-    "cf:dev": "npm run build && wrangler pages dev ./release-cloudflare --compatibility-date 2026-04-04 --live-reload",
-    "cf:pages:list": "wrangler pages project list",
+    "cf:dev": "npm run build && node ./scripts/pages-cli.mjs dev",
+    "cf:pages:list": "node ./scripts/pages-cli.mjs list",
     "cf:pages:project:create": "node ./scripts/pages-cli.mjs create",
     "cf:pages:deploy:prod": "npm run build && node ./scripts/pages-cli.mjs deploy-prod",
     "cf:pages:deploy:staging": "npm run build && node ./scripts/pages-cli.mjs deploy-staging",
-    "cf:whoami": "wrangler whoami",
+    "cf:whoami": "node ./scripts/pages-cli.mjs whoami",
+    "secret:scan": "node ./scripts/secret-scan.mjs",
+    "secret:scan:history": "node ./scripts/secret-scan.mjs --history",
+    "supabase:key:deposit": "node ./scripts/deposit-supabase-service-key.mjs",
+    "nexura-site:check": "npm --prefix apps/nexadura-site run lint && npm --prefix apps/nexadura-site run typecheck && npm --prefix apps/nexadura-site run build",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "quality:gate": "node ./scripts/quality-gate.mjs",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:signatures": "npm audit signatures",
     "check": "node ./scripts/check.mjs",
+    "ui:smoke": "node ./scripts/ui-smoke.mjs",
     "prepare": "node ./scripts/setup-hooks.mjs"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.4",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",
     "vitest": "^4.1.4",
     "wrangler": "^4.84.0"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0"
+    "@neondatabase/serverless": "^1.1.0",
+    "framer-motion": "12.38.0",
+    "lucide-react": "1.14.0",
+    "react-email": "6.1.1",
+    "resend": "6.12.3",
+    "zod": "4.4.3"
   }
 }

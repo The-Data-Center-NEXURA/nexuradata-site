@@ -164,6 +164,8 @@ AI can draft, classify, summarize and prepare. NEXURADATA authorizes.
 
 ## Implementation Phases
 
+AI automation should follow the repo-wide hardening sequence in [`PLATFORM-HARDENING-TIMELINE.md`](PLATFORM-HARDENING-TIMELINE.md). The AI layer becomes safer after the Node runtime, dependency governance, secret controls, delivery gates, tests and observability baseline are in place.
+
 ### Phase 1: No External AI Required
 
 - add a rule-based `automation.js` helper under `functions/_lib/`

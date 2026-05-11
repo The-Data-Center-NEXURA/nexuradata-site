@@ -28,7 +28,17 @@ describe("buildConciergeDraft()", () => {
     expect(draft.channel).toBe("whatsapp");
     expect(draft.priority).toBe("assisted");
     expect(draft.clientMessage).toContain("Votre dossier NX-20260503-ABC123 est ouvert");
-    expect(draft.clientMessage).toContain("ne lancez aucune reconstruction");
+    expect(draft.clientMessage).toContain("Ne lancez aucune reconstruction");
+    expect(draft.clientMessage).toContain("Proposition:");
+    expect(draft.expertSignals.signals).toContain("repair-tool-attempted");
+    expect(draft.clientNeed.key).toBe("business_continuity");
+    expect(draft.emotionalContext.signal).toBe("business_pressure");
+    expect(draft.serviceLevel).toBe("emergency");
+    expect(draft.operatorSummary).toContain("Signaux experts:");
+    expect(draft.operatorTasks).toEqual(expect.arrayContaining([
+      expect.stringContaining("Valider modèle NAS")
+    ]));
+    expect(draft.quotePlan.paymentKind).toBe("deposit");
     expect(draft.whatsappUrl).toContain("https://wa.me/14388130592");
   });
 
@@ -45,6 +55,11 @@ describe("buildConciergeDraft()", () => {
     expect(draft.channel).toBe("email");
     expect(draft.priority).toBe("human_review");
     expect(draft.shouldHumanReview).toBe(true);
-    expect(draft.questions).toContain("une courte chronologie des événements et le contexte légal ou assurance");
+    expect(draft.clientNeed.key).toBe("legal_or_insurance");
+    expect(draft.emotionalContext.signal).toBe("legal_anxiety");
+    expect(draft.proposal.primary).toContain("revue humaine");
+    expect(draft.serviceLevel).toBe("sensitive");
+    expect(draft.questions).toContain("chronologie courte et contexte légal, RH ou assurance");
+    expect(draft.automationActions).toContain("human-review-boundary-applied");
   });
 });

@@ -12,20 +12,184 @@
 const yearTarget = document.querySelector("[data-year]");
 const documentLanguage = document.documentElement.lang?.toLowerCase() || "fr-ca";
 const isEnglishDocument = documentLanguage.startsWith("en");
+const GA_MEASUREMENT_ID = "G-TC31YSS01P";
+const META_PIXEL_ID = "751859640106935";
+const CONSENT_STORAGE_KEY = "nexuradata_cookie_consent_v1";
+const CONSENT_VERSION = 1;
 
-// ── Meta Pixel ────────────────────────────────────────────────
-(function (f, b, e, v, n, t, s) {
-  if (f.fbq) return;
-  n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
-  if (!f._fbq) f._fbq = n;
-  n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
-  t = b.createElement(e); t.async = !0;
-  t.src = v;
-  s = b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t, s);
-}(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js"));
-fbq("init", "751859640106935");
-fbq("track", "PageView");
+const readCookieConsent = () => {
+  try {
+    const stored = localStorage.getItem(CONSENT_STORAGE_KEY);
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored);
+    if (parsed?.version !== CONSENT_VERSION) return null;
+
+    return {
+      version: CONSENT_VERSION,
+      analytics: parsed.analytics === true,
+      marketing: parsed.marketing === true,
+      updatedAt: parsed.updatedAt || ""
+    };
+  } catch {
+    return null;
+  }
+};
+
+let cookieConsent = readCookieConsent();
+let ga4Loaded = false;
+let metaPixelLoaded = false;
+
+const buildConsentModeState = (consent = cookieConsent) => ({
+  analytics_storage: consent?.analytics ? "granted" : "denied",
+  ad_storage: consent?.marketing ? "granted" : "denied",
+  ad_user_data: consent?.marketing ? "granted" : "denied",
+  ad_personalization: consent?.marketing ? "granted" : "denied"
+});
+
+const setGtagConsent = () => {
+  if (typeof gtag !== "function") return;
+  gtag("consent", "update", buildConsentModeState());
+};
+
+const loadGa4 = () => {
+  if (ga4Loaded || cookieConsent?.analytics !== true) return;
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  gtag("consent", "default", buildConsentModeState());
+
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  document.head.appendChild(script);
+
+  gtag("js", new Date());
+  gtag("config", GA_MEASUREMENT_ID, {
+    anonymize_ip: true,
+    allow_ad_personalization_signals: false
+  });
+  ga4Loaded = true;
+};
+
+const loadMetaPixel = () => {
+  if (metaPixelLoaded || cookieConsent?.marketing !== true) return;
+
+  (function (f, b, e, v, n, t, s) {
+    if (f.fbq) return;
+    n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+    if (!f._fbq) f._fbq = n;
+    n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
+    t = b.createElement(e); t.async = !0;
+    t.src = v;
+    s = b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t, s);
+  }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js"));
+
+  fbq("consent", "grant");
+  fbq("init", META_PIXEL_ID);
+  fbq("track", "PageView");
+  metaPixelLoaded = true;
+};
+
+const applyCookieConsent = () => {
+  setGtagConsent();
+  loadGa4();
+
+  if (typeof fbq === "function") {
+    fbq("consent", cookieConsent?.marketing ? "grant" : "revoke");
+  }
+  loadMetaPixel();
+};
+
+const saveCookieConsent = (choices) => {
+  cookieConsent = {
+    version: CONSENT_VERSION,
+    analytics: choices.analytics === true,
+    marketing: choices.marketing === true,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(cookieConsent));
+  } catch {
+    // Consent still applies for the current page even if localStorage is unavailable.
+  }
+
+  applyCookieConsent();
+};
+
+const cookieI18n = isEnglishDocument
+  ? {
+    title: "Privacy preferences",
+    copy: "Essential storage keeps the site working. Audience measurement and Meta marketing tools stay off unless you allow them.",
+    analytics: "Audience measurement (GA4)",
+    marketing: "Marketing measurement (Meta Pixel)",
+    privacy: "Privacy policy",
+    reject: "Reject all",
+    save: "Save choices",
+    accept: "Accept all"
+  }
+  : {
+    title: "Préférences de confidentialité",
+    copy: "Le stockage essentiel garde le site fonctionnel. La mesure d'audience et les outils marketing Meta restent désactivés sans votre accord.",
+    analytics: "Mesure d'audience (GA4)",
+    marketing: "Mesure marketing (Meta Pixel)",
+    privacy: "Politique de confidentialité",
+    reject: "Tout refuser",
+    save: "Enregistrer",
+    accept: "Tout accepter"
+  };
+
+const renderCookieConsent = (force = false) => {
+  if (window.location.pathname.startsWith("/operations")) return;
+
+  const existing = document.querySelector("[data-cookie-consent]");
+  if (existing) existing.remove();
+  if (cookieConsent && !force) return;
+
+  const privacyHref = isEnglishDocument ? "/en/politique-confidentialite.html" : "/politique-confidentialite.html";
+  const banner = document.createElement("section");
+  banner.className = "cookie-consent";
+  banner.setAttribute("data-cookie-consent", "");
+  banner.setAttribute("role", "dialog");
+  banner.setAttribute("aria-label", cookieI18n.title);
+  banner.innerHTML = `
+    <div class="cookie-consent-panel">
+      <div class="cookie-consent-copy">
+        <p class="cookie-kicker">NEXURADATA</p>
+        <h2>${cookieI18n.title}</h2>
+        <p>${cookieI18n.copy} <a href="${privacyHref}">${cookieI18n.privacy}</a>.</p>
+      </div>
+      <div class="cookie-consent-options">
+        <label><input type="checkbox" name="analytics" ${cookieConsent?.analytics ? "checked" : ""}> <span>${cookieI18n.analytics}</span></label>
+        <label><input type="checkbox" name="marketing" ${cookieConsent?.marketing ? "checked" : ""}> <span>${cookieI18n.marketing}</span></label>
+      </div>
+      <div class="cookie-consent-actions">
+        <button type="button" class="button button-outline" data-cookie-choice="reject">${cookieI18n.reject}</button>
+        <button type="button" class="button button-secondary" data-cookie-choice="save">${cookieI18n.save}</button>
+        <button type="button" class="button button-primary" data-cookie-choice="accept">${cookieI18n.accept}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  banner.querySelectorAll("[data-cookie-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const choice = button.dataset.cookieChoice;
+      const analyticsInput = banner.querySelector('input[name="analytics"]');
+      const marketingInput = banner.querySelector('input[name="marketing"]');
+      const choices = choice === "accept"
+        ? { analytics: true, marketing: true }
+        : choice === "reject"
+          ? { analytics: false, marketing: false }
+          : { analytics: analyticsInput.checked, marketing: marketingInput.checked };
+
+      saveCookieConsent(choices);
+      banner.remove();
+    });
+  });
+};
 
 const normalizeAnalyticsValue = (value, fallback = "unknown") => {
   const normalized = `${value || fallback}`
@@ -97,29 +261,2172 @@ const trackSelfAssessmentIntent = (method, context = {}) => {
   });
 };
 
-// ── WhatsApp floating button ──────────────────────────────────
+const bindCookiePreferenceTriggers = () => {
+  document.querySelectorAll("[data-cookie-preferences]").forEach((button) => {
+    button.addEventListener("click", () => renderCookieConsent(true));
+  });
+};
+
+const initFacebookVideoEmbeds = () => {
+  document.querySelectorAll("[data-facebook-video-stage]").forEach((container) => {
+    const triggers = [...container.querySelectorAll("[data-facebook-video-trigger]")];
+
+    triggers.forEach((trigger) => {
+      trigger.setAttribute("aria-pressed", "false");
+
+      trigger.addEventListener("click", () => {
+        const videoUrl = trigger.getAttribute("data-facebook-video-src") || "";
+        if (!videoUrl) return;
+
+        container.querySelector(".lab-video-frame")?.remove();
+
+        const iframe = document.createElement("iframe");
+        iframe.className = "lab-video-frame";
+        iframe.src = videoUrl;
+        iframe.title = trigger.getAttribute("data-facebook-video-title") || "NEXURADATA video";
+        iframe.width = trigger.getAttribute("data-facebook-video-width") || "560";
+        iframe.height = trigger.getAttribute("data-facebook-video-height") || "314";
+        iframe.loading = "lazy";
+        iframe.allow = "clipboard-write; encrypted-media; picture-in-picture; web-share";
+        iframe.allowFullscreen = true;
+        iframe.setAttribute("scrolling", "no");
+
+        triggers.forEach((button) => {
+          button.setAttribute("aria-pressed", button === trigger ? "true" : "false");
+        });
+
+        container.dataset.videoLoaded = "true";
+        container.dataset.videoFormat = trigger.getAttribute("data-facebook-video-format") || "wide";
+        container.appendChild(iframe);
+        trackGaEvent("facebook_video_loaded", { event_category: "media", method: "hero_reel" });
+      });
+    });
+  });
+};
+
+const initKineticCanvas = () => {
+  const canvases = Array.from(document.querySelectorAll("[data-kinetic-canvas]"));
+  if (!canvases.length) return;
+
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (reducedMotionQuery.matches) return;
+
+  canvases.forEach((canvas) => {
+    const context = canvas.getContext("2d", { alpha: true });
+    if (!context) return;
+
+    let animationFrame = 0;
+    let isVisible = true;
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+    let pixelRatio = 1;
+    const nodes = Array.from({ length: 34 }, (_, index) => ({
+      column: (index * 37) % 100,
+      row: (index * 61) % 100,
+      size: 10 + ((index * 7) % 34),
+      phase: index * 0.37,
+      lane: index % 5
+    }));
+
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
+      canvasWidth = Math.max(1, Math.floor(rect.width));
+      canvasHeight = Math.max(1, Math.floor(rect.height));
+      canvas.width = Math.floor(canvasWidth * pixelRatio);
+      canvas.height = Math.floor(canvasHeight * pixelRatio);
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    };
+
+    const drawGrid = (time) => {
+      const gridSize = canvasWidth < 720 ? 48 : 72;
+      const horizontalOffset = (time * 10) % gridSize;
+      const verticalOffset = (time * 6) % gridSize;
+
+      context.lineWidth = 1;
+      context.strokeStyle = "rgba(232,228,220,0.07)";
+
+      for (let columnPosition = -gridSize; columnPosition < canvasWidth + gridSize; columnPosition += gridSize) {
+        context.beginPath();
+        context.moveTo(columnPosition + horizontalOffset, 0);
+        context.lineTo(columnPosition + horizontalOffset - canvasHeight * 0.12, canvasHeight);
+        context.stroke();
+      }
+
+      context.strokeStyle = "rgba(132,184,204,0.055)";
+      for (let rowPosition = -gridSize; rowPosition < canvasHeight + gridSize; rowPosition += gridSize) {
+        context.beginPath();
+        context.moveTo(0, rowPosition + verticalOffset);
+        context.lineTo(canvasWidth, rowPosition + verticalOffset + canvasWidth * 0.04);
+        context.stroke();
+      }
+    };
+
+    const drawNodes = (time) => {
+      nodes.forEach((node, index) => {
+        const pulse = (Math.sin(time * 1.55 + node.phase) + 1) / 2;
+        const laneOffset = Math.sin(time * 0.42 + node.lane) * 26;
+        const nodeLeft = (node.column / 100) * canvasWidth + laneOffset;
+        const nodeTop = (node.row / 100) * canvasHeight + Math.cos(time * 0.36 + node.phase) * 18;
+        const nodeWidth = node.size * (1.1 + pulse * 0.35);
+        const nodeHeight = Math.max(7, node.size * 0.42);
+
+        context.strokeStyle = index % 3 === 0 ? "rgba(132,184,204,0.28)" : "rgba(232,228,220,0.18)";
+        context.fillStyle = index % 4 === 0 ? "rgba(132,184,204,0.055)" : "rgba(232,228,220,0.04)";
+        context.lineWidth = 1;
+        context.beginPath();
+        context.rect(nodeLeft, nodeTop, nodeWidth, nodeHeight);
+        context.fill();
+        context.stroke();
+
+        if (index % 5 === 0) {
+          context.beginPath();
+          context.moveTo(nodeLeft + nodeWidth, nodeTop + nodeHeight / 2);
+          context.lineTo(nodeLeft + nodeWidth + 58 + pulse * 42, nodeTop + nodeHeight / 2);
+          context.strokeStyle = "rgba(232,228,220,0.13)";
+          context.stroke();
+        }
+      });
+    };
+
+    const drawScan = (time) => {
+      const scanProgress = (time * 0.11) % 1;
+      const scanLeft = scanProgress * (canvasWidth + canvasWidth * 0.45) - canvasWidth * 0.28;
+      const gradient = context.createLinearGradient(scanLeft, 0, scanLeft + canvasWidth * 0.24, 0);
+      gradient.addColorStop(0, "rgba(132,184,204,0)");
+      gradient.addColorStop(0.5, "rgba(132,184,204,0.18)");
+      gradient.addColorStop(1, "rgba(232,228,220,0)");
+
+      context.save();
+      context.transform(1, 0, -0.22, 1, 0, 0);
+      context.fillStyle = gradient;
+      context.fillRect(scanLeft, -40, canvasWidth * 0.24, canvasHeight + 80);
+      context.restore();
+    };
+
+    const drawFrame = (time) => {
+      const pulse = (Math.sin(time * 0.9) + 1) / 2;
+      context.lineWidth = 1;
+      context.strokeStyle = `rgba(232,228,220,${0.12 + pulse * 0.12})`;
+      context.strokeRect(canvasWidth * 0.54, canvasHeight * 0.18, canvasWidth * 0.28, canvasHeight * 0.28);
+      context.strokeRect(canvasWidth * 0.62, canvasHeight * 0.53, canvasWidth * 0.22, canvasHeight * 0.16);
+      context.fillStyle = "rgba(13,13,11,0.28)";
+      context.fillRect(canvasWidth * 0.57, canvasHeight * 0.22, canvasWidth * 0.08, canvasHeight * 0.06);
+      context.fillRect(canvasWidth * 0.68, canvasHeight * 0.58, canvasWidth * 0.06, canvasHeight * 0.045);
+    };
+
+    const render = (timestamp) => {
+      if (!isVisible || reducedMotionQuery.matches) return;
+
+      const time = timestamp / 1000;
+      context.clearRect(0, 0, canvasWidth, canvasHeight);
+      context.globalCompositeOperation = "source-over";
+      drawGrid(time);
+      context.globalCompositeOperation = "screen";
+      drawNodes(time);
+      drawScan(time);
+      drawFrame(time);
+      context.globalCompositeOperation = "source-over";
+
+      animationFrame = window.requestAnimationFrame(render);
+    };
+
+    const start = () => {
+      if (animationFrame || reducedMotionQuery.matches) return;
+      animationFrame = window.requestAnimationFrame(render);
+    };
+
+    const stop = () => {
+      if (!animationFrame) return;
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+    };
+
+    const observer = "IntersectionObserver" in window
+      ? new IntersectionObserver((entries) => {
+        isVisible = entries.some((entry) => entry.isIntersecting);
+        if (isVisible) start(); else stop();
+      }, { threshold: 0.05 })
+      : null;
+
+    resizeCanvas();
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(() => resizeCanvas()).observe(canvas);
+    } else {
+      window.addEventListener("resize", resizeCanvas, { passive: true });
+    }
+    observer?.observe(canvas);
+    start();
+
+    reducedMotionQuery.addEventListener?.("change", () => {
+      if (reducedMotionQuery.matches) {
+        stop();
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+      } else {
+        resizeCanvas();
+        start();
+      }
+    });
+  });
+};
+
+applyCookieConsent();
+renderCookieConsent();
+bindCookiePreferenceTriggers();
+initFacebookVideoEmbeds();
+initKineticCanvas();
+initHeroClock();
+
+function initHeroClock() {
+  const el = document.querySelector("[data-hero-clock]");
+  if (!el) return;
+  const fmt = new Intl.DateTimeFormat("fr-CA", {
+    timeZone: "America/Toronto",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  const tick = () => { try { el.textContent = fmt.format(new Date()); } catch (e) {} };
+  tick();
+  setInterval(tick, 30 * 1000);
+}
+
+// ── IBM square chatbot dock ───────────────────────────────────
 (function () {
   // Skip on operator console
   if (window.location.pathname.startsWith("/operations")) return;
 
   const waNumber = "14388130592"; // digits only, no +
-  const waLabel = isEnglishDocument ? "Chat on WhatsApp" : "Écrire sur WhatsApp";
-  const waAriaLabel = isEnglishDocument ? "Contact us on WhatsApp" : "Nous contacter sur WhatsApp";
-  const waMsg = isEnglishDocument
-    ? "Hello NEXURADATA, I want to open a case. Device: drive/SSD/RAID/phone. Symptoms: . Urgency: ."
-    : "Bonjour NEXURADATA, je veux ouvrir un dossier. Support: disque/SSD/RAID/telephone. Symptomes: . Urgence: .";
+  const labels = isEnglishDocument
+    ? {
+      aria: "NEXURADATA case help",
+      openLabel: "Open a case",
+      closeLabel: "Close case help",
+      kicker: "NEXURADATA",
+      status: "OPEN CASE",
+      title: "Open a recovery case.",
+      copy: "Tell us what happened in your own words. We will prepare the safest next step and keep your request ready if the online form fails.",
+      placeholder: "Describe the device, what changed, and the files you need.",
+      supportLabel: "Media",
+      symptomLabel: "Symptom",
+      urgencyLabel: "Urgency",
+      historyLabel: "Attempt",
+      valueLabel: "Value",
+      stateLabel: "State",
+      contextLabel: "Your message",
+      contextPlaceholder: "Example: my external drive is no longer detected and I need family photos from last year.",
+      moodLabel: "How are you holding up?",
+      moodOptions: [["Okay", "okay"], ["Stressed", "stressed"], ["Business blocked", "business_blocked"], ["Legal pressure", "legal_pressure"]],
+      supportOptions: [["drive", "Hard drive"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Phone"], ["server", "Server"], ["removable", "USB / card"]],
+      symptomOptions: [["deleted", "Deleted files"], ["slow", "Slow / unstable"], ["not_detected", "Not detected"], ["physical", "Shock / noise"], ["water", "Liquid damage"], ["encrypted", "Encrypted / forensic"]],
+      urgencyOptions: [["standard", "Standard"], ["business", "Business impact"], ["critical", "Critical now"]],
+      historyOptions: [["no_attempt", "No attempt"], ["software", "Recovery app"], ["opened", "Opened device"], ["rebuild", "RAID rebuild"], ["powered_on", "Repeated power-on"]],
+      valueOptions: [["personal", "Personal"], ["business", "Business"], ["legal", "Legal"], ["medical", "Sensitive"]],
+      stateOptions: [["powered_off", "Powered off"], ["unplugged", "Unplugged"], ["running", "Still running"], ["unknown", "Unknown"]],
+      resultAction: "Prepare my case",
+      risk: "Risk",
+      confidence: "Confidence",
+      route: "Next step",
+      avoid: "Do not",
+      protocol: "Protocol",
+      fixed: "Fixed automatically",
+      expert: "Expert alerts",
+      brief: "Lab handoff",
+      why: "Why this route",
+      missing: "Prepare these details",
+      need: "Client need",
+      signal: "Signal",
+      proposal: "Proposal",
+      serverVerified: "Server verified",
+      serviceLevel: "Service",
+      nextAction: "Next action",
+      quoteReadiness: "Quote",
+      operatorFocus: "Operator focus",
+      guardrail: "Human review remains required before recovery, forensic conclusions, payment or physical intervention.",
+      autoFillStatus: "The case form was prepared from your message.",
+      needLabels: {
+        personal_memory: "Personal memories to preserve",
+        business_continuity: "Business continuity",
+        legal_or_insurance: "Legal, evidence or insurance",
+        privacy_sensitive: "High confidentiality",
+        urgent_stabilization: "Urgent technical stabilization",
+        technical_recovery: "Targeted technical recovery"
+      },
+      signalLabels: {
+        distressed: "Client distress",
+        frustrated: "Frustration",
+        business_pressure: "Operational pressure",
+        legal_anxiety: "Legal or insurance concern",
+        neutral: "Neutral"
+      },
+      empathyLines: {
+        distressed: "I understand this may be more than a technical loss. The priority is to preserve what still exists without adding risk.",
+        frustrated: "This has already taken enough energy. The safest move is to put the case back into a clear, controlled path.",
+        business_pressure: "When operations are affected, the priority is stabilization first, then a short decision path.",
+        legal_anxiety: "When evidence or insurance is involved, every manipulation should stay limited and documented.",
+        neutral: "The case can be qualified methodically before any intervention."
+      },
+      proposals: {
+        personal_memory: ["Preserve the memories and avoid new recovery attempts.", "Open a personal-memory priority case focused on essential files."],
+        business_continuity: ["Treat this as a continuity case and stop uncontrolled manipulation.", "Prepare an urgent review with a short recovery plan and quote after scope validation."],
+        legal_or_insurance: ["Move to human review before detailed technical instructions.", "Frame the legal or insurance scope, then confirm secure transmission."],
+        privacy_sensitive: ["Use a confidential path with only the minimum necessary details.", "Open a secure case and keep the summary technically useful but restrained."],
+        urgent_stabilization: ["Stabilize the device before any new attempt.", "Prepare lab review, secure intake and quote path after risk validation."],
+        technical_recovery: ["Open a targeted recovery case with the useful minimum details.", "Prepare a standard evaluation and confirm target files before work starts."]
+      },
+      fixes: {
+        safe: "Unsafe next actions converted into stop-handling instructions.",
+        route: "Service route, urgency, profile, impact and sensitivity selected.",
+        intake: "Main case form prefilled with the diagnostic summary.",
+        missing: "Missing details checklist prepared for lab review.",
+        emergency: "Emergency WhatsApp escalation armed for this critical case.",
+        expert: "Hidden risks and contradictions converted into operator tasks.",
+        handoff: "Email, copy, tracking and payment handoff links prepared."
+      },
+      expertSignals: {
+        supportMismatch: "Context overrides the selected media: infrastructure or RAID review required.",
+        urgencyUnderstated: "Urgency appears understated compared with the operational impact.",
+        physicalHidden: "Hardware risk is detected from context even if the selected symptom is softer.",
+        forensicHidden: "Legal, insurance or evidence language detected; evidence-safe human review required.",
+        repairAttempted: "Repair, rebuild or system command already attempted; further writes must stop.",
+        credentialDependent: "Feasibility may depend on a passcode, account, password or encryption key.",
+        contamination: "Liquid, opening, rice, heat or freezing history may change the lab path."
+      },
+      reasons: {
+        infrastructure: "RAID, NAS or server cases depend on disk order, controller state and previous rebuild attempts.",
+        ssd: "SSD failures can degrade quickly when powered repeatedly.",
+        phone: "Phones need model, lock state and damage history before any risky handling.",
+        physical: "Shock, noise or liquid damage raises hardware risk with every restart.",
+        encrypted: "Encrypted or legal data needs evidence-safe handling and access details.",
+        notDetected: "A non-detected device should not be initialized, formatted or repaired by the OS.",
+        urgent: "Business or critical impact changes the route from advice to controlled intake.",
+        attempted: "Prior software, opening or rebuild attempts increase overwrite and evidence risks.",
+        sensitive: "Business, legal or medical data needs a stricter confidentiality path.",
+        running: "A device still running may contain the last readable state; do not restart it without a plan.",
+        default: "The safest next step is to preserve the original media and document the timeline."
+      },
+      questions: {
+        default: "Device brand/model, capacity, last successful access and target files.",
+        raid: "RAID/NAS model, number of disks, disk labels/order and last rebuild action.",
+        phone: "Phone model, passcode availability, backup status and damage history.",
+        physical: "Noise, shock, liquid, smell, heat and whether the device was powered again.",
+        deleted: "File types, folders, deletion date and what has been written since.",
+        encrypted: "Encryption type, passwords/keys available and legal preservation needs.",
+        attempted: "Exact recovery tools, repairs, rebuilds or commands already attempted.",
+        credentials: "Available passwords, recovery keys, cloud accounts and who is authorized to use them.",
+        contamination: "Exposure history: liquid, opening, rice, heat, freezing and power-on attempts.",
+        contradiction: "Which description is correct if the selected options and written context disagree.",
+        impact: "Systems affected, business deadline, responsible contact and acceptable intervention window."
+      },
+      cases: {
+        logical: ["Ready to open a case", "Tell us which files matter and when the device last worked normally.", "Do not save anything new on the same device."],
+        priority: ["Handle this carefully", "Keep the device aside and open the case with your description.", "Avoid recovery apps or automatic repair tools for now."],
+        high: ["Keep it powered off", "The safest next step is lab review before another attempt.", "Do not open, rebuild, initialize or format it."],
+        critical: ["Urgent human review", "Use the urgent channel if work is blocked right now.", "Do not restart anything or attempt a rebuild."]
+      },
+      protocols: {
+        logical: ["Preserve the original media.", "Open a case with the diagnostic summary.", "Prepare a destination drive if recovery is approved."],
+        priority: ["Stop recovery apps and writes.", "Document the timeline and last successful access.", "Use secure intake before any new attempt."],
+        high: ["Keep the device isolated and stable.", "Do not initialize, format or repair volumes.", "Send the case to lab review before powering on."],
+        critical: ["Freeze all manipulations now.", "Escalate only through the emergency channel.", "Wait for lab instructions before any rebuild or restart."]
+      },
+      case: "Full form",
+      service: "Service page",
+      reception: "Secure intake",
+      rates: "Pricing",
+      statusLink: "Track case",
+      payment: "Payment",
+      paymentPrepared: "Payment prepared after approval",
+      emailSummary: "Email instead",
+      copySummary: "Copy message",
+      copied: "Copied",
+      copyFailed: "Copy failed",
+      quickCase: "Where should we reach you?",
+      fieldName: "Name",
+      fieldEmail: "Email",
+      fieldPhone: "Phone",
+      consent: "I agree to open a case with this message.",
+      submitCase: "Open my case",
+      openingCase: "Opening your case...",
+      caseOpened: (caseId, plan) => plan?.recommendedPath
+        ? `Case ${caseId} is open. We will review it before giving recovery instructions.`
+        : `Case ${caseId} is open. Check your email for the access code.`,
+      caseFallback: "Online opening did not complete. Your prepared email is opening so the request is not lost.",
+      caseError: "I could not open the case online. Use the prepared email or the full form.",
+      emergency: "Urgent WhatsApp",
+      emailSubject: "NEXURADATA recovery request",
+      waIntro: "Hello NEXURADATA, I need urgent help with this recovery case."
+    }
+    : {
+      aria: "Aide dossier NEXURADATA",
+      openLabel: "Ouvrir un dossier",
+      closeLabel: "Fermer l'aide dossier",
+      kicker: "NEXURADATA",
+      status: "OUVRIR DOSSIER",
+      title: "Ouvrir un dossier de récupération.",
+      copy: "Expliquez ce qui s'est passé avec vos mots. On prépare la prochaine étape et on garde la demande prête si le formulaire en ligne tombe.",
+      placeholder: "Décrivez l'appareil, ce qui a changé et les fichiers dont vous avez besoin.",
+      supportLabel: "Support",
+      symptomLabel: "Symptôme",
+      urgencyLabel: "Urgence",
+      historyLabel: "Tentative",
+      valueLabel: "Valeur",
+      stateLabel: "État",
+      contextLabel: "Votre message",
+      contextPlaceholder: "Exemple: mon disque externe n'est plus détecté et j'ai besoin des photos de famille de l'an dernier.",
+      moodLabel: "Comment ça va avec ça?",
+      moodOptions: [["Ça va", "okay"], ["Stressé", "stressed"], ["Entreprise bloquée", "business_blocked"], ["Pression légale", "legal_pressure"]],
+      supportOptions: [["drive", "Disque dur"], ["ssd", "SSD"], ["raid", "RAID / NAS"], ["phone", "Téléphone"], ["server", "Serveur"], ["removable", "USB / carte"]],
+      symptomOptions: [["deleted", "Fichiers supprimés"], ["slow", "Lent / instable"], ["not_detected", "Non détecté"], ["physical", "Choc / bruit"], ["water", "Liquide"], ["encrypted", "Chiffré / forensique"]],
+      urgencyOptions: [["standard", "Standard"], ["business", "Impact entreprise"], ["critical", "Critique maintenant"]],
+      historyOptions: [["no_attempt", "Aucune"], ["software", "Logiciel tenté"], ["opened", "Support ouvert"], ["rebuild", "RAID reconstruit"], ["powered_on", "Redémarrages"]],
+      valueOptions: [["personal", "Personnel"], ["business", "Entreprise"], ["legal", "Juridique"], ["medical", "Sensible"]],
+      stateOptions: [["powered_off", "Éteint"], ["unplugged", "Débranché"], ["running", "Encore allumé"], ["unknown", "Inconnu"]],
+      resultAction: "Préparer mon dossier",
+      risk: "Risque",
+      confidence: "Confiance",
+      route: "Prochaine étape",
+      avoid: "À ne pas faire",
+      protocol: "Protocole",
+      fixed: "Corrigé automatiquement",
+      expert: "Alertes expertes",
+      brief: "Transfert labo",
+      why: "Pourquoi ce parcours",
+      missing: "À préparer",
+      need: "Besoin client",
+      signal: "Signal",
+      proposal: "Proposition",
+      serverVerified: "Vérifié serveur",
+      serviceLevel: "Service",
+      nextAction: "Prochaine action",
+      quoteReadiness: "Soumission",
+      operatorFocus: "Focus opérateur",
+      guardrail: "La revue humaine reste obligatoire avant récupération, conclusion probatoire, paiement ou intervention physique.",
+      autoFillStatus: "Le formulaire a été préparé avec votre message.",
+      needLabels: {
+        personal_memory: "Souvenirs personnels à préserver",
+        business_continuity: "Continuité d'activité",
+        legal_or_insurance: "Preuve, litige ou assurance",
+        privacy_sensitive: "Confidentialité élevée",
+        urgent_stabilization: "Stabilisation technique urgente",
+        technical_recovery: "Récupération technique ciblée"
+      },
+      signalLabels: {
+        distressed: "Détresse client",
+        frustrated: "Frustration",
+        business_pressure: "Pression opérationnelle",
+        legal_anxiety: "Crainte légale ou assurance",
+        neutral: "Neutre"
+      },
+      empathyLines: {
+        distressed: "Je comprends que ce peut être plus qu'une perte technique. La priorité est de préserver ce qui existe encore sans ajouter de risque.",
+        frustrated: "La situation a déjà pris trop d'énergie. Le plus sûr est de remettre le dossier dans un parcours clair et contrôlé.",
+        business_pressure: "Quand les opérations sont touchées, la priorité est la stabilisation, puis une décision courte et structurée.",
+        legal_anxiety: "Quand une preuve ou une assurance est en jeu, chaque manipulation doit rester limitée et documentée.",
+        neutral: "Le dossier peut être qualifié méthodiquement avant toute intervention."
+      },
+      proposals: {
+        personal_memory: ["Préserver les souvenirs et éviter tout nouvel essai de récupération.", "Ouvrir un dossier souvenir prioritaire centré sur les fichiers essentiels."],
+        business_continuity: ["Traiter comme un dossier de continuité et arrêter les manipulations non contrôlées.", "Préparer une revue urgente avec plan court et soumission après cadrage."],
+        legal_or_insurance: ["Basculer en revue humaine avant toute consigne technique détaillée.", "Cadrer le contexte légal ou assurance, puis confirmer la transmission sécurisée."],
+        privacy_sensitive: ["Utiliser un parcours confidentiel avec seulement les détails nécessaires.", "Ouvrir un dossier sécurisé et garder le résumé utile mais limité."],
+        urgent_stabilization: ["Stabiliser le support avant toute nouvelle tentative.", "Préparer la revue labo, la réception sécurisée et la soumission après validation du risque."],
+        technical_recovery: ["Ouvrir un dossier ciblé avec les informations minimales utiles.", "Préparer une évaluation standard et confirmer les fichiers visés avant intervention."]
+      },
+      fixes: {
+        safe: "Gestes dangereux convertis en consignes d'arrêt.",
+        route: "Parcours, urgence, profil, impact et sensibilité sélectionnés.",
+        intake: "Formulaire principal prérempli avec le résumé diagnostic.",
+        missing: "Liste d'informations manquantes préparée pour le laboratoire.",
+        emergency: "Escalade WhatsApp urgence armée pour ce cas critique.",
+        expert: "Risques cachés et contradictions convertis en tâches opérateur.",
+        handoff: "Liens courriel, copie, suivi et paiement préparés."
+      },
+      expertSignals: {
+        supportMismatch: "Le contexte corrige le support choisi: revue infrastructure ou RAID requise.",
+        urgencyUnderstated: "L'urgence semble sous-estimée par rapport à l'impact opérationnel.",
+        physicalHidden: "Risque matériel détecté dans le contexte même si le symptôme choisi est plus doux.",
+        forensicHidden: "Langage preuve, assurance ou juridique détecté; revue humaine compatible preuve requise.",
+        repairAttempted: "Réparation, reconstruction ou commande système déjà tentée; arrêter toute écriture.",
+        credentialDependent: "La faisabilité peut dépendre d'un code, compte, mot de passe ou clé de chiffrement.",
+        contamination: "Liquide, ouverture, riz, chaleur ou congélation peuvent changer le parcours labo."
+      },
+      reasons: {
+        infrastructure: "Les cas RAID, NAS ou serveur dépendent de l'ordre des disques, du contrôleur et des reconstructions déjà tentées.",
+        ssd: "Un SSD peut se dégrader rapidement après des remises sous tension répétées.",
+        phone: "Un téléphone exige le modèle, l'état du verrouillage et l'historique des dommages avant toute manipulation risquée.",
+        physical: "Choc, bruit ou liquide augmentent le risque matériel à chaque redémarrage.",
+        encrypted: "Les données chiffrées ou juridiques exigent un parcours compatible avec la preuve et les accès disponibles.",
+        notDetected: "Un support non détecté ne doit pas être initialisé, formaté ou réparé par le système.",
+        urgent: "Un impact entreprise ou critique déplace le dossier vers une réception contrôlée plutôt qu'un simple conseil.",
+        attempted: "Les logiciels, ouvertures ou reconstructions déjà tentés augmentent les risques d'écrasement et de preuve.",
+        sensitive: "Les données entreprise, juridiques ou médicales exigent un parcours de confidentialité plus strict.",
+        running: "Un appareil encore allumé peut contenir le dernier état lisible; ne le redémarrez pas sans plan.",
+        default: "La prochaine étape la plus sûre consiste à préserver l'original et documenter la chronologie."
+      },
+      questions: {
+        default: "Marque/modèle, capacité, dernier accès réussi et fichiers visés.",
+        raid: "Modèle RAID/NAS, nombre de disques, étiquettes/ordre et dernière reconstruction.",
+        phone: "Modèle du téléphone, code disponible, sauvegardes et historique des dommages.",
+        physical: "Bruit, choc, liquide, odeur, chaleur et remise sous tension déjà faite.",
+        deleted: "Types de fichiers, dossiers, date de suppression et écritures depuis l'incident.",
+        encrypted: "Type de chiffrement, mots de passe/clés disponibles et besoin de préservation juridique.",
+        attempted: "Outils, réparations, reconstructions ou commandes déjà tentés.",
+        credentials: "Mots de passe, clés de récupération, comptes cloud disponibles et personne autorisée.",
+        contamination: "Historique d'exposition: liquide, ouverture, riz, chaleur, congélation et remise sous tension.",
+        contradiction: "Quelle description est correcte si les options choisies et le contexte écrit se contredisent.",
+        impact: "Systèmes touchés, échéance d'affaires, contact responsable et fenêtre d'intervention acceptable."
+      },
+      cases: {
+        logical: ["Dossier prêt à ouvrir", "Dites-nous quels fichiers comptent et quand l'appareil fonctionnait encore normalement.", "N'enregistrez rien de nouveau sur le même support."],
+        priority: ["À traiter avec prudence", "Gardez le support de côté et ouvrez le dossier avec votre description.", "Évitez les logiciels de récupération ou les réparations automatiques pour l'instant."],
+        high: ["Gardez l'appareil éteint", "Le plus sûr est une revue laboratoire avant un autre essai.", "N'ouvrez pas, ne reconstruisez pas, n'initialisez pas et ne formatez pas."],
+        critical: ["Revue humaine urgente", "Utilisez le canal urgence si les opérations sont bloquées maintenant.", "Ne redémarrez rien et ne tentez pas de reconstruction."]
+      },
+      protocols: {
+        logical: ["Préservez le support original.", "Ouvrez un dossier avec le résumé diagnostic.", "Préparez un disque de destination si la récupération est approuvée."],
+        priority: ["Arrêtez les logiciels de récupération et toute écriture.", "Notez la chronologie et le dernier accès réussi.", "Passez par la réception sécurisée avant toute nouvelle tentative."],
+        high: ["Gardez l'appareil isolé et stable.", "N'initialisez pas, ne formatez pas et ne réparez pas les volumes.", "Envoyez le dossier au laboratoire avant toute remise sous tension."],
+        critical: ["Gelez toute manipulation maintenant.", "Escaladez seulement par le canal urgence.", "Attendez les consignes du laboratoire avant toute reconstruction ou redémarrage."]
+      },
+      case: "Formulaire complet",
+      service: "Page service",
+      reception: "Réception sécurisée",
+      rates: "Tarifs",
+      statusLink: "Suivi dossier",
+      payment: "Paiement",
+      paymentPrepared: "Paiement préparé après accord",
+      emailSummary: "Écrire plutôt",
+      copySummary: "Copier message",
+      copied: "Copié",
+      copyFailed: "Échec copie",
+      quickCase: "Où doit-on vous joindre?",
+      fieldName: "Nom",
+      fieldEmail: "Courriel",
+      fieldPhone: "Téléphone",
+      consent: "J'accepte d'ouvrir un dossier avec ce message.",
+      submitCase: "Ouvrir mon dossier",
+      openingCase: "Ouverture du dossier...",
+      caseOpened: (caseId, plan) => plan?.recommendedPath
+        ? `Dossier ${caseId} ouvert. Nous le relisons avant de donner des consignes de récupération.`
+        : `Dossier ${caseId} ouvert. Vérifiez votre courriel pour le code d'accès.`,
+      caseFallback: "L'ouverture en ligne n'a pas complété. Le courriel préparé s'ouvre pour ne pas perdre la demande.",
+      caseError: "Impossible d'ouvrir le dossier en ligne. Utilisez le courriel préparé ou le formulaire complet.",
+      emergency: "WhatsApp urgence",
+      emailSubject: "Demande de récupération NEXURADATA",
+      waIntro: "Bonjour NEXURADATA, j'ai besoin d'aide urgente pour ce dossier de récupération."
+    };
+  const homePrefix = isEnglishDocument ? "/en" : "";
+  const caseHref = `${homePrefix}/#contact`;
+  const statusHref = `${homePrefix}/suivi-dossier-client-montreal.html`;
+  const receptionHref = `${homePrefix}/reception-securisee-donnees-montreal.html`;
+  const ratesHref = `${homePrefix}/tarifs-recuperation-donnees-montreal.html`;
+  const diagnosticEndpoint = "/api/diagnostic";
+  const serviceHref = (path) => `${homePrefix}/${path}`;
+  const whatsappHref = `https://wa.me/${waNumber}?text=${encodeURIComponent(labels.waIntro)}`;
+  const optionMarkup = (options) => options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  const optionLabel = (options, value) => options.find(([optionValue]) => optionValue === value)?.[1] || value;
+  const moodLabelFor = (value) => labels.moodOptions.find(([, optionValue]) => optionValue === value)?.[0] || value;
+  const getServiceHref = (support, symptom, value) => {
+    if (symptom === "encrypted" || value === "legal") {
+      return serviceHref("forensique-numerique-montreal.html");
+    }
 
-  const btn = document.createElement("a");
-  btn.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMsg)}`;
-  btn.className = "whatsapp-fab";
-  btn.setAttribute("target", "_blank");
-  btn.setAttribute("rel", "noopener noreferrer");
-  btn.setAttribute("aria-label", waAriaLabel);
-  btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="28" height="28" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.558 4.12 1.533 5.849L.057 23.5a.5.5 0 0 0 .611.61l5.701-1.464A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.878 9.878 0 0 1-5.031-1.374l-.36-.214-3.733.959.987-3.64-.235-.374A9.868 9.868 0 0 1 2.1 12c0-5.468 4.432-9.9 9.9-9.9 5.467 0 9.9 4.432 9.9 9.9 0 5.467-4.433 9.9-9.9 9.9z"/></svg><span>${waLabel}</span>`;
-  document.body.appendChild(btn);
+    if (support === "raid" || support === "server" || support === "ssd") {
+      return serviceHref("recuperation-raid-ssd-montreal.html");
+    }
 
-  btn.addEventListener("click", function () {
-    trackContactIntent("whatsapp_floating_button");
+    if (support === "phone") {
+      return serviceHref("recuperation-telephone-montreal.html");
+    }
+
+    return serviceHref("recuperation-donnees-montreal.html");
+  };
+  const mapCaseSupport = (support, symptom, value) => {
+    if (symptom === "encrypted" || value === "legal") return "Dossier légal / forensique";
+    if (support === "raid" || support === "server") return "RAID / NAS / serveur";
+    if (support === "phone") return "Téléphone";
+    if (support === "ssd") return "SSD / NVMe";
+    if (support === "removable") return "USB / carte SD";
+    return "HDD";
+  };
+  const mapCaseUrgency = (urgency, symptom, value) => {
+    if (symptom === "encrypted" || value === "legal" || value === "medical") return "Très sensible";
+    if (urgency === "critical") return "Urgence 24–48 h";
+    if (urgency === "business") return "Priorité";
+    return "Standard";
+  };
+  const mapCaseProfile = (value) => {
+    if (value === "legal") return "Cabinet juridique";
+    if (value === "business" || value === "medical") return "Entreprise / TI";
+    return "Particulier";
+  };
+  const mapCaseImpact = (urgency, value) => {
+    if (value === "legal") return "Client, juridique ou assurance impliqué";
+    if (urgency === "critical" || urgency === "business") return "Opérations bloquées";
+    if (value === "business" || value === "medical") return "Données importantes";
+    return "Planifié / non urgent";
+  };
+  const mapCaseSensitivity = (symptom, value) => {
+    if (symptom === "encrypted" || value === "legal") return "Preuve / chaîne de possession";
+    if (value === "medical") return "Données sensibles";
+    if (value === "business") return "Confidentiel";
+    return "Standard";
+  };
+  const mapCaseSymptom = (scenario) => {
+    if (scenario.caseSymptom) return scenario.caseSymptom;
+    if (scenario.symptom === "deleted") return "fichiers supprimés";
+    if (scenario.symptom === "not_detected") return "non détecté";
+    if (scenario.symptom === "physical") return "bruit / clic";
+    if (scenario.symptom === "water") return "eau / feu / choc";
+    if (scenario.symptom === "encrypted") return "ransomware / chiffré";
+    return "non détecté";
+  };
+  const mapCaseClientType = (scenario) => scenario.clientType || mapCaseProfile(scenario.value);
+  const findActiveStripeCheckoutHref = () => {
+    const checkoutLink = document.querySelector('[data-stripe-checkout-link][href*="checkout.stripe.com"], .status-payment-actions a[href*="checkout.stripe.com"]');
+    return checkoutLink?.href || "";
+  };
+
+  const dock = document.createElement("aside");
+  dock.className = "chatbot-dock";
+  dock.dataset.chatbotPhase = "asking";
+  dock.id = "diagnostic-assistant";
+  dock.tabIndex = -1;
+  dock.dataset.chatbotOpen = "false";
+  dock.setAttribute("aria-label", labels.aria);
+  dock.innerHTML = `
+    <button type="button" class="chatbot-toggle" data-chatbot-toggle aria-expanded="false" aria-controls="chatbot-panel" aria-label="${labels.openLabel}" title="${labels.openLabel}">
+      <span class="chatbot-brand-tile" aria-hidden="true">
+        <img class="chatbot-brand-logo" src="/assets/nexuradata-master.svg" alt="" width="164" height="20" aria-hidden="true" decoding="async">
+      </span>
+      <span class="chatbot-toggle-copy" aria-hidden="true">
+        <span class="chatbot-kicker">${labels.kicker}</span>
+        <span class="chatbot-status">${labels.status}</span>
+      </span>
+    </button>
+    <section class="chatbot-panel" id="chatbot-panel" data-chatbot-panel hidden>
+      <div class="chatbot-dock-header">
+        <img class="chatbot-mark" src="/assets/nexuradata-icon.png" alt="" width="24" height="24" aria-hidden="true" decoding="async">
+        <span class="chatbot-kicker">${labels.kicker}</span>
+        <span class="chatbot-live" data-chatbot-live aria-hidden="true"><span class="chatbot-live-dot"></span><span data-chatbot-clock>MTL</span></span>
+        <span class="chatbot-step" data-chatbot-step aria-hidden="true"></span>
+        <button type="button" class="chatbot-close" data-chatbot-close aria-label="${labels.closeLabel}">X</button>
+      </div>
+      <p class="chatbot-title">${labels.title}</p>
+      <p class="chatbot-copy">${labels.copy}</p>
+      <form class="chatbot-diagnostic" data-chatbot-diagnostic>
+        <div class="chatbot-thread" data-chatbot-thread aria-live="polite"></div>
+        <div class="chatbot-quick-actions" data-chatbot-quick-actions></div>
+        <input type="hidden" name="support" value="drive">
+        <input type="hidden" name="symptom" value="not_detected">
+        <input type="hidden" name="urgency" value="standard">
+        <input type="hidden" name="history" value="no_attempt">
+        <input type="hidden" name="value" value="personal">
+        <input type="hidden" name="state" value="unknown">
+        <input type="hidden" name="mood" value="okay">
+        <input type="hidden" name="caseSymptom" value="non détecté">
+        <input type="hidden" name="clientType" value="Particulier">
+        <label class="chatbot-context-field"><span>${labels.contextLabel}</span><textarea name="context" rows="4" maxlength="620" required placeholder="${labels.contextPlaceholder}"></textarea></label>
+        <p class="chatbot-estimate" data-chatbot-estimate hidden></p>
+        <button type="submit" class="chatbot-diagnostic-submit" data-chatbot-diagnostic-submit>${labels.resultAction}</button>
+      </form>
+      <div class="chatbot-result" data-chatbot-result aria-live="polite" tabindex="-1" hidden>
+        <p class="chatbot-placeholder">${labels.placeholder}</p>
+      </div>
+      <section class="chatbot-brief" data-chatbot-brief hidden>
+        <h3>${labels.brief}</h3>
+        <dl data-chatbot-brief-fields></dl>
+        <ul data-chatbot-brief-focus></ul>
+      </section>
+      <section class="chatbot-fixed" data-chatbot-fixed hidden>
+        <h3>${labels.fixed}</h3>
+        <ul data-chatbot-fixes></ul>
+      </section>
+      <section class="chatbot-expert" data-chatbot-expert hidden>
+        <h3>${labels.expert}</h3>
+        <ul data-chatbot-expert-signals></ul>
+        <p>${labels.guardrail}</p>
+      </section>
+      <section class="chatbot-insight" data-chatbot-insight hidden>
+        <div class="chatbot-insight-block">
+          <h3>${labels.why}</h3>
+          <ul data-chatbot-reasons></ul>
+        </div>
+        <div class="chatbot-insight-block">
+          <h3>${labels.missing}</h3>
+          <ul data-chatbot-questions></ul>
+        </div>
+      </section>
+      <form class="chatbot-case-form" data-chatbot-case-form data-intake-endpoint="/api/intake" hidden>
+        <p>${labels.quickCase}</p>
+        <label><span>${labels.fieldName}</span><input type="text" name="nom" autocomplete="name" required></label>
+        <label><span>${labels.fieldEmail}</span><input type="email" name="courriel" autocomplete="email" required></label>
+        <label><span>${labels.fieldPhone}</span><input type="tel" name="telephone" autocomplete="tel"></label>
+        <label><span>${isEnglishDocument ? "City" : "Ville"}</span><input type="text" name="ville" autocomplete="address-level2"></label>
+        <label><span>${isEnglishDocument ? "Preferred contact" : "Préférence de contact"}</span><select name="preferenceContact"><option value="email">Email</option><option value="téléphone">${isEnglishDocument ? "Phone" : "Téléphone"}</option><option value="whatsapp">WhatsApp</option></select></label>
+        <label class="chatbot-case-consent"><input type="checkbox" name="consentement" required><span>${labels.consent}</span></label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>
+        <button type="submit" class="chatbot-execute" data-chatbot-case-submit>${labels.submitCase}</button>
+        <span class="chatbot-case-status" data-chatbot-case-status aria-live="polite"></span>
+      </form>
+      <div class="chatbot-actions" data-chatbot-actions hidden>
+        <a class="chatbot-link chatbot-link-primary" href="${caseHref}" data-chatbot-action="case">${labels.case}</a>
+        <a class="chatbot-link" href="${serviceHref("recuperation-donnees-montreal.html")}" data-chatbot-service>${labels.service}</a>
+        <a class="chatbot-link" href="${statusHref}" data-chatbot-action="status">${labels.statusLink}</a>
+        <a class="chatbot-link" href="mailto:contact@nexuradata.ca" data-chatbot-action="email_summary" data-chatbot-email>${labels.emailSummary}</a>
+        <a class="chatbot-link" href="${whatsappHref}" target="_blank" rel="noopener noreferrer" data-chatbot-action="urgent_whatsapp" data-chatbot-emergency hidden>${labels.emergency}</a>
+      </div>
+    </section>
+  `;
+  document.body.appendChild(dock);
+
+  const toggleButton = dock.querySelector("[data-chatbot-toggle]");
+  const panel = dock.querySelector("[data-chatbot-panel]");
+  const closeButton = dock.querySelector("[data-chatbot-close]");
+  const diagnosticForm = dock.querySelector("[data-chatbot-diagnostic]");
+  const thread = dock.querySelector("[data-chatbot-thread]");
+  const quickActions = dock.querySelector("[data-chatbot-quick-actions]");
+  const estimateTarget = dock.querySelector("[data-chatbot-estimate]");
+  const result = dock.querySelector("[data-chatbot-result]");
+  const brief = dock.querySelector("[data-chatbot-brief]");
+  const briefFields = dock.querySelector("[data-chatbot-brief-fields]");
+  const briefFocus = dock.querySelector("[data-chatbot-brief-focus]");
+  const fixed = dock.querySelector("[data-chatbot-fixed]");
+  const fixesTarget = dock.querySelector("[data-chatbot-fixes]");
+  const expert = dock.querySelector("[data-chatbot-expert]");
+  const expertSignalsTarget = dock.querySelector("[data-chatbot-expert-signals]");
+  const insight = dock.querySelector("[data-chatbot-insight]");
+  const reasonsTarget = dock.querySelector("[data-chatbot-reasons]");
+  const questionsTarget = dock.querySelector("[data-chatbot-questions]");
+  const protocolTarget = dock.querySelector("[data-chatbot-protocol]");
+  const caseForm = dock.querySelector("[data-chatbot-case-form]");
+  const actions = dock.querySelector("[data-chatbot-actions]");
+  const caseStatus = dock.querySelector("[data-chatbot-case-status]");
+  const caseSubmitButton = dock.querySelector("[data-chatbot-case-submit]");
+  const emergencyLink = dock.querySelector("[data-chatbot-emergency]");
+  const paymentLink = dock.querySelector("[data-chatbot-payment]");
+  const serviceLink = dock.querySelector("[data-chatbot-service]");
+  const statusLink = dock.querySelector('[data-chatbot-action="status"]');
+  const emailLink = dock.querySelector("[data-chatbot-email]");
+  const copyButton = dock.querySelector("[data-chatbot-copy]");
+  let latestDiagnosticSummary = "";
+  let latestServiceHref = serviceHref("recuperation-donnees-montreal.html");
+  let latestCasePayload = {
+    support: "Disque dur",
+    urgence: "Standard",
+    profil: "Particulier",
+    impact: "Planifié / non urgent",
+    sensibilite: "Standard"
+  };
+  let latestServerDiagnostic = null;
+  let diagnosticRequestId = 0;
+  let serverDiagnosticTimer = null;
+  let diagnosisShown = false;
+  const setDockOpen = (open, restoreFocus = false) => {
+    const isOpen = Boolean(open);
+    dock.dataset.chatbotOpen = isOpen ? "true" : "false";
+    toggleButton?.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    if (panel) panel.hidden = !isOpen;
+    if (isOpen) {
+      try { ensureConciergeGreeting(); } catch (_) { /* greeting helper not ready yet */ }
+    }
+
+    if (!restoreFocus) return;
+
+    window.setTimeout(() => {
+      if (isOpen) {
+        diagnosticForm?.querySelector("textarea")?.focus({ preventScroll: true });
+      } else {
+        toggleButton?.focus({ preventScroll: true });
+      }
+    }, 0);
+  };
+  const watchHeroMediaOverlap = () => {
+    const heroMedia = document.querySelector("[data-facebook-video-stage]");
+    if (!heroMedia || !("IntersectionObserver" in window)) return;
+
+    const mobileQuery = window.matchMedia("(max-width: 720px)");
+    let mediaInView = false;
+    const syncState = () => {
+      dock.dataset.heroMediaInView = mobileQuery.matches && mediaInView ? "true" : "false";
+    };
+    const observer = new IntersectionObserver((entries) => {
+      mediaInView = entries.some((entry) => entry.isIntersecting);
+      syncState();
+    }, { threshold: 0.12 });
+
+    observer.observe(heroMedia);
+    mobileQuery.addEventListener?.("change", syncState);
+    syncState();
+  };
+  const setCaseStatus = (state, message) => {
+    if (!caseStatus) return;
+    caseStatus.dataset.state = state || "";
+    caseStatus.textContent = message || "";
+  };
+  const parseBotJsonResponse = async (response) => {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  };
+  const localizeExpertSignalKeys = (keys = []) => {
+    const map = {
+      "support-context-mismatch": "supportMismatch",
+      "urgency-understated": "urgencyUnderstated",
+      "physical-risk-hidden": "physicalHidden",
+      "forensic-context-hidden": "forensicHidden",
+      "repair-tool-attempted": "repairAttempted",
+      "credential-dependent": "credentialDependent",
+      "contamination-risk": "contamination"
+    };
+    return keys.map((key) => labels.expertSignals?.[map[key]]).filter(Boolean);
+  };
+  const setDiagnosisVisibility = (visible) => {
+    [result, caseForm, actions].forEach((element) => {
+      if (element) element.hidden = !visible;
+    });
+
+    [brief, fixed, expert, insight, protocolTarget].forEach((element) => {
+      if (element) element.hidden = true;
+    });
+  };
+  const renderList = (target, items) => {
+    if (!target) return;
+    target.replaceChildren(...items.map((item) => {
+      const listItem = document.createElement("li");
+      listItem.textContent = item;
+      return listItem;
+    }));
+  };
+  const uniqueItems = (items) => [...new Set(items.filter(Boolean))];
+  const conversationCopy = isEnglishDocument
+    ? {
+      assistant: "NEXURADATA",
+      you: "You",
+      estimatePrefix: "Estimate",
+      stripePrefix: "Stripe",
+      paymentHint: "The assistant does not charge you blindly. It opens an existing Stripe Checkout link if one is already attached to the case; otherwise payment is sent after written approval.",
+      finalPrompt: "One sentence in your own words. I'll open the case.",
+      steps: [
+        {
+          key: "mood",
+          question: "How are you holding up?",
+          options: labels.moodOptions.map(([label, mood]) => [label, { mood }])
+        },
+        {
+          key: "support",
+          question: "Media type",
+          options: [
+            ["HDD", { support: "drive" }],
+            ["SSD/NVMe", { support: "ssd" }],
+            ["USB/SD card", { support: "removable" }],
+            ["Phone", { support: "phone" }],
+            ["RAID/NAS/server", { support: "raid", urgency: "business" }],
+            ["Legal/forensic file", { support: "drive", symptom: "encrypted", value: "legal", clientType: "Avocat", caseSymptom: "ransomware / chiffré" }]
+          ]
+        },
+        {
+          key: "symptom",
+          question: "Symptom",
+          options: [
+            ["Deleted files", { symptom: "deleted", caseSymptom: "fichiers supprimés" }],
+            ["Formatted", { symptom: "deleted", history: "rebuild", caseSymptom: "formaté" }],
+            ["Not detected", { symptom: "not_detected", caseSymptom: "non détecté" }],
+            ["Noise/click", { symptom: "physical", state: "powered_off", caseSymptom: "bruit / clic" }],
+            ["Water/fire/shock", { symptom: "water", state: "powered_off", caseSymptom: "eau / feu / choc" }],
+            ["Ransomware/encrypted", { symptom: "encrypted", value: "legal", caseSymptom: "ransomware / chiffré" }],
+            ["Multiple failed disks", { support: "raid", symptom: "physical", urgency: "critical", caseSymptom: "plusieurs disques défaillants" }]
+          ]
+        },
+        {
+          key: "urgency",
+          question: "Urgency",
+          options: [
+            ["Standard", { urgency: "standard" }],
+            ["Priority", { urgency: "business" }],
+            ["Emergency 24-48 h", { urgency: "critical" }]
+          ]
+        },
+        {
+          key: "value",
+          question: "Client type",
+          options: [
+            ["Individual", { value: "personal", clientType: "Particulier" }],
+            ["Business", { value: "business", clientType: "Entreprise" }],
+            ["Lawyer", { value: "legal", clientType: "Avocat", symptom: "encrypted" }],
+            ["Insurer", { value: "legal", clientType: "Assureur", symptom: "encrypted" }],
+            ["Accountant", { value: "business", clientType: "Comptable" }],
+            ["Police/investigator", { value: "legal", clientType: "Police / enquêteur", symptom: "encrypted" }]
+          ]
+        }
+      ]
+    }
+    : {
+      assistant: "NEXURADATA",
+      you: "Vous",
+      estimatePrefix: "Estimation",
+      stripePrefix: "Stripe",
+      paymentHint: "L'assistant ne facture pas à l'aveugle. Il ouvre un lien Stripe Checkout existant si un paiement est déjà attaché au dossier; sinon le paiement part après accord écrit.",
+      finalPrompt: "Une phrase dans vos mots. J'ouvre le dossier.",
+      steps: [
+        {
+          key: "mood",
+          question: "Comment ça va avec ça?",
+          options: labels.moodOptions.map(([label, mood]) => [label, { mood }])
+        },
+        {
+          key: "support",
+          question: "Type de média",
+          options: [
+            ["HDD", { support: "drive" }],
+            ["SSD/NVMe", { support: "ssd" }],
+            ["USB/carte SD", { support: "removable" }],
+            ["Téléphone", { support: "phone" }],
+            ["RAID/NAS/serveur", { support: "raid", urgency: "business" }],
+            ["Dossier légal/forensique", { support: "drive", symptom: "encrypted", value: "legal", clientType: "Avocat", caseSymptom: "ransomware / chiffré" }]
+          ]
+        },
+        {
+          key: "symptom",
+          question: "Symptôme",
+          options: [
+            ["Fichiers supprimés", { symptom: "deleted", caseSymptom: "fichiers supprimés" }],
+            ["Formaté", { symptom: "deleted", history: "rebuild", caseSymptom: "formaté" }],
+            ["Non détecté", { symptom: "not_detected", caseSymptom: "non détecté" }],
+            ["Bruit/clic", { symptom: "physical", state: "powered_off", caseSymptom: "bruit / clic" }],
+            ["Eau/feu/choc", { symptom: "water", state: "powered_off", caseSymptom: "eau / feu / choc" }],
+            ["Ransomware/chiffré", { symptom: "encrypted", value: "legal", caseSymptom: "ransomware / chiffré" }],
+            ["Plusieurs disques défaillants", { support: "raid", symptom: "physical", urgency: "critical", caseSymptom: "plusieurs disques défaillants" }]
+          ]
+        },
+        {
+          key: "urgency",
+          question: "Urgence",
+          options: [
+            ["Standard", { urgency: "standard" }],
+            ["Priorité", { urgency: "business" }],
+            ["Urgence 24–48 h", { urgency: "critical" }]
+          ]
+        },
+        {
+          key: "value",
+          question: "Type de client",
+          options: [
+            ["Particulier", { value: "personal", clientType: "Particulier" }],
+            ["Entreprise", { value: "business", clientType: "Entreprise" }],
+            ["Avocat", { value: "legal", clientType: "Avocat", symptom: "encrypted" }],
+            ["Assureur", { value: "legal", clientType: "Assureur", symptom: "encrypted" }],
+            ["Comptable", { value: "business", clientType: "Comptable" }],
+            ["Police/enquêteur", { value: "legal", clientType: "Police / enquêteur", symptom: "encrypted" }]
+          ]
+        }
+      ]
+    };
+  const conversationAnswers = {};
+  const renderBrief = (diagnostic) => {
+    const handoff = diagnostic?.brief;
+    if (!brief || !briefFields || !briefFocus || !handoff) return;
+
+    brief.hidden = !diagnosisShown;
+    const fieldRows = [
+      [labels.serverVerified, handoff.recommendedPath || diagnostic.recommendedPath],
+      [labels.serviceLevel, `${handoff.serviceLevelLabel || diagnostic.serviceLevelLabel || ""} ${handoff.sla || diagnostic.sla || ""}`.trim()],
+      [labels.nextAction, handoff.nextStep],
+      [labels.quoteReadiness, handoff.quoteLabel || handoff.quoteReadiness]
+    ].filter(([, value]) => value);
+
+    briefFields.replaceChildren(...fieldRows.flatMap(([term, description]) => {
+      const dt = document.createElement("dt");
+      dt.textContent = term;
+      const dd = document.createElement("dd");
+      dd.textContent = description;
+      return [dt, dd];
+    }));
+    renderList(briefFocus, uniqueItems([handoff.clientAction, ...(handoff.operatorFocus || []), ...(handoff.missingInfo || []).map((item) => `${labels.missing}: ${item}`)]).slice(0, 5));
+  };
+  const renderServerHandoff = (diagnostic) => {
+    const handoff = diagnostic?.brief;
+    if (!result || !diagnosisShown || !handoff) return;
+
+    result.querySelector("[data-chatbot-server-handoff]")?.remove();
+
+    const message = document.createElement("div");
+    message.className = "chatbot-message chatbot-message-assistant";
+    message.setAttribute("data-chatbot-server-handoff", "");
+
+    const title = document.createElement("p");
+    const titleStrong = document.createElement("strong");
+    titleStrong.textContent = `${labels.serverVerified}: ${handoff.recommendedPath || diagnostic.recommendedPath || ""}`;
+    title.append(titleStrong);
+    message.append(title);
+
+    [
+      handoff.nextStep && `${labels.nextAction}: ${handoff.nextStep}`,
+      handoff.clientAction,
+      handoff.missingInfo?.length ? `${labels.missing}: ${handoff.missingInfo.join(" / ")}` : ""
+    ].filter(Boolean).forEach((line) => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = line;
+      message.append(paragraph);
+    });
+
+    result.append(message);
+  };
+  const appendServerBriefToSummary = (diagnostic) => {
+    const handoff = diagnostic?.brief;
+    if (!handoff || latestDiagnosticSummary.includes(`${labels.brief}:`)) return;
+    latestDiagnosticSummary = `${latestDiagnosticSummary} ${labels.brief}: ${handoff.recommendedPath || diagnostic.recommendedPath}. ${labels.serviceLevel}: ${handoff.serviceLevelLabel || diagnostic.serviceLevelLabel || ""}. ${labels.nextAction}: ${handoff.nextStep || ""}. ${labels.operatorFocus}: ${(handoff.operatorFocus || []).join(" / ")}.`;
+    syncSummaryActions();
+    if (diagnosisShown) applyDiagnosisToMainForm();
+  };
+  const normalizeSignalText = (...values) => values
+    .filter((value) => typeof value === "string")
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const hasSignal = (text, words) => words.some((word) => text.includes(word));
+  const buildExpertSignals = ({ support, symptom, urgency, value, state, context }) => {
+    const text = normalizeSignalText(context, support, symptom, urgency, value, state);
+    const keys = [];
+    const add = (key) => {
+      if (!keys.includes(key)) keys.push(key);
+    };
+    const mentionsInfrastructure = hasSignal(text, ["raid", "nas", "synology", "qnap", "server", "serveur", "rebuild", "reconstruction"]);
+    const mentionsPhone = hasSignal(text, ["iphone", "android", "samsung", "passcode", "icloud", "google account", "verrouille", "locked"]);
+    const mentionsForensic = hasSignal(text, ["preuve", "evidence", "legal", "juridique", "avocat", "lawyer", "court", "tribunal", "assurance", "insurer", "claim", "litige"]);
+    const mentionsBusinessImpact = hasSignal(text, ["operations blocked", "operations bloquees", "payroll", "paie", "production", "client waiting", "client attend", "server down", "serveur down", "revenue loss", "perte de revenu"]);
+    const routeOverride = mentionsForensic ? "forensic" : mentionsInfrastructure ? "infrastructure" : mentionsPhone ? "phone" : "";
+
+    if (mentionsInfrastructure && !["raid", "server"].includes(support)) add("supportMismatch");
+    if (mentionsBusinessImpact && urgency === "standard") add("urgencyUnderstated");
+    if (hasSignal(text, ["click", "clique", "bruit", "noise", "drop", "tombe", "liquid", "liquide", "eau", "water", "not detected", "non detecte", "overheat", "chauffe"]) && !["physical", "water", "not_detected"].includes(symptom)) add("physicalHidden");
+    if (mentionsForensic && value !== "legal") add("forensicHidden");
+    if (hasSignal(text, ["chkdsk", "fsck", "first aid", "disk utility", "utilitaire de disque", "repair", "reparer", "repare", "rebuild", "reconstruction", "initialize", "initialiser", "format", "factory reset"])) add("repairAttempted");
+    if (hasSignal(text, ["bitlocker", "filevault", "veracrypt", "password", "mot de passe", "recovery key", "cle de recuperation", "passcode", "icloud", "google account", "locked", "verrouille"])) add("credentialDependent");
+    if (hasSignal(text, ["rice", "riz", "hair dryer", "seche cheveux", "freezer", "congel", "opened", "ouvert", "liquid", "liquide", "water", "eau", "isopropyl", "alcool"])) add("contamination");
+
+    const labelsByKey = labels.expertSignals || {};
+    const hiddenHazards = keys.filter((key) => !["supportMismatch", "urgencyUnderstated"].includes(key));
+    const contradictions = keys.filter((key) => ["supportMismatch", "urgencyUnderstated"].includes(key));
+
+    return {
+      keys,
+      hiddenHazards,
+      contradictions,
+      routeOverride,
+      scoreBoost: hiddenHazards.length + (contradictions.length * 2),
+      labels: keys.map((key) => labelsByKey[key] || key),
+      has: (key) => keys.includes(key)
+    };
+  };
+  const applyExpertOverrides = ({ support, symptom, urgency, value }, expertSignals) => ({
+    support: expertSignals.routeOverride === "infrastructure" ? "raid" : expertSignals.routeOverride === "phone" ? "phone" : support,
+    symptom: expertSignals.has("physicalHidden") ? "physical" : symptom,
+    urgency: expertSignals.has("urgencyUnderstated") ? "business" : urgency,
+    value: expertSignals.routeOverride === "forensic" ? "legal" : value
+  });
+  const buildClientIntelligence = ({ support, symptom, urgency, value, mood, context }) => {
+    const text = normalizeSignalText(context, support, symptom, urgency, value, mood);
+    let needKey = "technical_recovery";
+    let signalKey = "neutral";
+
+    if (hasSignal(text, ["photo", "video", "souvenir", "famille", "family", "father", "mother", "mere", "pere", "decede", "passed away", "wedding", "mariage", "baby", "bebe"])) {
+      needKey = "personal_memory";
+    } else if (hasSignal(text, ["preuve", "evidence", "legal", "juridique", "avocat", "lawyer", "court", "tribunal", "litige", "assurance", "insurer", "claim", "rh", "hr"]) || value === "legal") {
+      needKey = "legal_or_insurance";
+    } else if (hasSignal(text, ["payroll", "paie", "accounting", "comptabil", "quickbooks", "server", "serveur", "operations bloquees", "operations blocked", "production", "client waiting", "client attend", "invoice", "facture", "nas", "raid"]) || support === "raid" || support === "server" || value === "business") {
+      needKey = "business_continuity";
+    } else if (hasSignal(text, ["medical", "patient", "confidentiel", "confidential", "client list", "liste client", "employee", "employe"]) || value === "medical") {
+      needKey = "privacy_sensitive";
+    } else if (hasSignal(text, ["click", "clique", "bruit", "noise", "eau", "liquid", "drop", "tombe", "non detecte", "not detected", "redemarrage", "rebuild", "reconstruction"]) || ["physical", "water", "not_detected"].includes(symptom)) {
+      needKey = "urgent_stabilization";
+    }
+
+    if (mood === "stressed" || hasSignal(text, ["panique", "panic", "desespere", "desperate", "pleure", "crying", "devast", "decede", "passed away", "irreplaceable", "irremplacable"])) {
+      signalKey = "distressed";
+    } else if (hasSignal(text, ["frustre", "frustrated", "fache", "angry", "tanne", "exhausted", "epuise", "personne repond"])) {
+      signalKey = "frustrated";
+    } else if (mood === "business_blocked" || needKey === "business_continuity" || hasSignal(text, ["operations blocked", "operations bloquees", "payroll", "paie", "production", "server down", "serveur down"])) {
+      signalKey = "business_pressure";
+    } else if (mood === "legal_pressure" || needKey === "legal_or_insurance") {
+      signalKey = "legal_anxiety";
+    }
+
+    const [primary, nextStep] = labels.proposals[needKey] || labels.proposals.technical_recovery;
+    const scoreBoost = (signalKey === "distressed" ? 3 : ["business_pressure", "legal_anxiety"].includes(signalKey) ? 2 : 0) + (["personal_memory", "business_continuity", "legal_or_insurance", "urgent_stabilization"].includes(needKey) ? 2 : 0);
+
+    return {
+      needKey,
+      signalKey,
+      needLabel: labels.needLabels[needKey],
+      signalLabel: labels.signalLabels[signalKey],
+      empathy: labels.empathyLines[signalKey],
+      proposal: { primary, nextStep },
+      scoreBoost
+    };
+  };
+  const buildReasons = ({ support, symptom, urgency, history, value, state }, expertSignals = {}) => {
+    const items = uniqueItems([
+      ...(expertSignals.labels || []),
+      (support === "raid" || support === "server") && labels.reasons.infrastructure,
+      support === "ssd" && labels.reasons.ssd,
+      support === "phone" && labels.reasons.phone,
+      (symptom === "physical" || symptom === "water") && labels.reasons.physical,
+      symptom === "encrypted" && labels.reasons.encrypted,
+      symptom === "not_detected" && labels.reasons.notDetected,
+      (urgency === "critical" || urgency === "business") && labels.reasons.urgent,
+      history !== "no_attempt" && labels.reasons.attempted,
+      (value === "business" || value === "legal" || value === "medical") && labels.reasons.sensitive,
+      (state === "running" || state === "unknown") && labels.reasons.running,
+      labels.reasons.default
+    ]);
+    return items.slice(0, 5);
+  };
+  const buildQuestions = ({ support, symptom, history }, expertSignals = {}) => {
+    const items = uniqueItems([
+      (expertSignals.contradictions || []).length > 0 && labels.questions.contradiction,
+      expertSignals.has?.("urgencyUnderstated") && labels.questions.impact,
+      expertSignals.has?.("repairAttempted") && labels.questions.attempted,
+      expertSignals.has?.("credentialDependent") && labels.questions.credentials,
+      expertSignals.has?.("contamination") && labels.questions.contamination,
+      (support === "raid" || support === "server") && labels.questions.raid,
+      support === "phone" && labels.questions.phone,
+      (symptom === "physical" || symptom === "water" || symptom === "not_detected") && labels.questions.physical,
+      symptom === "deleted" && labels.questions.deleted,
+      symptom === "encrypted" && labels.questions.encrypted,
+      history !== "no_attempt" && labels.questions.attempted,
+      labels.questions.default
+    ]);
+    return items.slice(0, 5);
+  };
+  const buildFixes = ({ isCritical, expertSignals }) => uniqueItems([
+    labels.fixes.safe,
+    labels.fixes.route,
+    labels.fixes.intake,
+    labels.fixes.missing,
+    isCritical && labels.fixes.emergency,
+    (expertSignals?.keys || []).length > 0 && labels.fixes.expert,
+    labels.fixes.handoff
+  ]);
+  const setSelectValue = (form, name, value) => {
+    const field = form?.elements?.[name];
+    if (!field || !value) return false;
+    field.value = value;
+    return field.value === value;
+  };
+  const applyDiagnosisToMainForm = () => {
+    const intakeForm = document.querySelector("[data-intake-form]");
+    if (!intakeForm) return false;
+
+    setSelectValue(intakeForm, "support", latestCasePayload.support);
+    setSelectValue(intakeForm, "urgence", latestCasePayload.urgence);
+    setSelectValue(intakeForm, "profil", latestCasePayload.profil);
+    setSelectValue(intakeForm, "impact", latestCasePayload.impact);
+    setSelectValue(intakeForm, "sensibilite", latestCasePayload.sensibilite);
+
+    const messageField = intakeForm.elements?.message;
+    if (messageField && (!messageField.value.trim() || messageField.dataset.chatbotFilled === "true")) {
+      messageField.value = latestDiagnosticSummary;
+      messageField.dataset.chatbotFilled = "true";
+    }
+
+    const status = intakeForm.querySelector("[data-form-status]") || document.querySelector("[data-form-status]");
+    if (status && diagnosisShown) {
+      status.dataset.state = "success";
+      status.textContent = labels.autoFillStatus;
+    }
+
+    try {
+      sessionStorage.setItem("nexuradata_diagnostic_summary", latestDiagnosticSummary);
+      sessionStorage.setItem("nexuradata_diagnostic_payload", JSON.stringify(latestCasePayload));
+    } catch {
+      // Optional browser handoff only.
+    }
+
+    return true;
+  };
+  const syncSummaryActions = () => {
+    if (serviceLink) {
+      serviceLink.href = latestServiceHref;
+    }
+
+    if (emailLink) {
+      emailLink.href = `mailto:contact@nexuradata.ca?subject=${encodeURIComponent(labels.emailSubject)}&body=${encodeURIComponent(latestDiagnosticSummary)}`;
+    }
+  };
+  const applyServerDiagnostic = (diagnostic) => {
+    if (!diagnostic) return;
+    latestServerDiagnostic = diagnostic;
+    renderBrief(diagnostic);
+    renderServerHandoff(diagnostic);
+    appendServerBriefToSummary(diagnostic);
+
+    if (diagnostic.servicePath && serviceLink) {
+      latestServiceHref = `${homePrefix}${diagnostic.servicePath}`;
+      serviceLink.href = latestServiceHref;
+    }
+
+    const serverExpertLabels = localizeExpertSignalKeys(diagnostic.expertSignals?.signals || []);
+    if (serverExpertLabels.length > 0) {
+      renderList(expertSignalsTarget, serverExpertLabels);
+      if (expert && diagnosisShown) expert.hidden = false;
+    }
+
+    const serverQuestions = diagnostic.missingInfoLabels || [];
+    if (serverQuestions.length > 0) {
+      const existingQuestions = questionsTarget ? [...questionsTarget.querySelectorAll("li")].map((item) => item.textContent) : [];
+      renderList(questionsTarget, uniqueItems([...serverQuestions, ...existingQuestions]).slice(0, 5));
+    }
+
+    if (diagnostic.clientActions?.length) {
+      const existingProtocol = protocolTarget ? [...protocolTarget.querySelectorAll("li")].map((item) => item.textContent) : [];
+      renderList(protocolTarget, uniqueItems([...diagnostic.clientActions, ...existingProtocol]).slice(0, 5));
+    }
+
+    try {
+      sessionStorage.setItem("nexuradata_server_diagnostic", JSON.stringify(diagnostic));
+    } catch {
+      // Optional browser handoff only.
+    }
+  };
+  const requestServerDiagnostic = async (scenario) => {
+    const requestId = ++diagnosticRequestId;
+
+    try {
+      const response = await fetch(diagnosticEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify(scenario)
+      });
+      const data = await parseBotJsonResponse(response);
+
+      if (requestId !== diagnosticRequestId || !response.ok || !data?.ok) return;
+      applyServerDiagnostic(data.diagnostic);
+    } catch {
+      // Static previews and offline sessions keep the local diagnostic.
+    }
+  };
+  const scheduleServerDiagnostic = (scenario) => {
+    if (!diagnosisShown) return;
+    window.clearTimeout(serverDiagnosticTimer);
+    serverDiagnosticTimer = window.setTimeout(() => requestServerDiagnostic(scenario), 320);
+  };
+  const syncPaymentLink = () => {
+    if (!paymentLink) return;
+
+    const checkoutHref = findActiveStripeCheckoutHref();
+    paymentLink.href = checkoutHref || statusHref;
+
+    if (checkoutHref) {
+      paymentLink.target = "_blank";
+      paymentLink.rel = "noopener noreferrer";
+    } else {
+      paymentLink.removeAttribute("target");
+      paymentLink.removeAttribute("rel");
+    }
+  };
+  const normalizeForMatch = (value) => `${value || ""}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const inferScenarioFromContext = (scenario) => {
+    const text = normalizeForMatch(scenario.context);
+    const inferred = { ...scenario };
+
+    if (/\b(raid|nas|synology|qnap|serveur|server|vmware|hyper-v)\b/.test(text)) inferred.support = text.includes("serveur") || text.includes("server") ? "server" : "raid";
+    else if (/\b(iphone|ipad|android|telephone|phone|cellulaire|mobile)\b/.test(text)) inferred.support = "phone";
+    else if (/\b(ssd|nvme|m\.2)\b/.test(text)) inferred.support = "ssd";
+    else if (/\b(usb|cle usb|carte sd|microsd|sd card)\b/.test(text)) inferred.support = "removable";
+
+    if (/\b(liquide|eau|cafe|mouille|water|liquid|wet)\b/.test(text)) inferred.symptom = "water";
+    else if (/\b(bruit|clac|clique|choc|tombe|drop|noise|clicking|burn|odeur)\b/.test(text)) inferred.symptom = "physical";
+    else if (/\b(chiffre|bitlocker|mot de passe|password|preuve|legal|juridique|assurance|police)\b/.test(text)) inferred.symptom = "encrypted";
+    else if (/\b(non detecte|non reconnu|plus detecte|plus reconnu|not detected|unrecognized|n'apparait|apparait pas)\b/.test(text) || /n.est plus (detecte|reconnu)/.test(text)) inferred.symptom = "not_detected";
+    else if (/\b(lent|slow|freeze|bloque|instable)\b/.test(text)) inferred.symptom = "slow";
+    else if (/\b(supprime|efface|formatte|delete|deleted|format)\b/.test(text)) inferred.symptom = "deleted";
+
+    if (/\b(urgent|urgence|maintenant|bloque|production|entreprise|business|client|serveur|server|critique|critical)\b/.test(text)) inferred.urgency = /\b(maintenant|bloque|critique|critical|production)\b/.test(text) ? "critical" : "business";
+
+    if (/\b(logiciel|software|recuva|disk drill|easeus|tent[eé]|tried)\b/.test(text)) inferred.history = "software";
+    if (/\b(ouvert|opened|demont[eé]|riz|rice|chaleur|heat|congele|freezer)\b/.test(text)) inferred.history = "opened";
+    if (/\b(rebuild|reconstruction|initialis[eé]|initialize|formatte|formatted)\b/.test(text)) inferred.history = "rebuild";
+    if (/\b(redemarr[eé]|reboot|redemar|powered on|encore allume)\b/.test(text)) inferred.history = "powered_on";
+
+    if (/\b(preuve|legal|juridique|assurance|lawyer|court|police)\b/.test(text)) inferred.value = "legal";
+    else if (/\b(medical|sante|patient|health)\b/.test(text)) inferred.value = "medical";
+    else if (/\b(entreprise|business|client|compta|serveur|server|production)\b/.test(text)) inferred.value = "business";
+
+    if (/\b(encore allume|running|powered on|ouvert sur l'ecran)\b/.test(text)) inferred.state = "running";
+    if (/\b(eteint|off|debranche|unplugged)\b/.test(text)) inferred.state = "powered_off";
+
+    return inferred;
+  };
+  const buildScenarioFromDiagnosticForm = () => {
+    const formData = new FormData(diagnosticForm);
+    const scenario = inferScenarioFromContext({
+      support: formData.get("support") || "drive",
+      symptom: formData.get("symptom") || "not_detected",
+      urgency: formData.get("urgency") || "standard",
+      history: formData.get("history") || "no_attempt",
+      value: formData.get("value") || "personal",
+      state: formData.get("state") || "unknown",
+      mood: formData.get("mood") || "okay",
+      context: `${formData.get("context") || ""}`.trim().slice(0, 620)
+    });
+    scenario.caseSymptom = `${formData.get("caseSymptom") || ""}`.trim();
+    scenario.clientType = `${formData.get("clientType") || ""}`.trim();
+    return scenario;
+  };
+  const buildBotEstimate = (scenario) => {
+    const quoted = isEnglishDocument ? "Firm quote after review" : "Prix ferme après diagnostic";
+    const paymentAfterApproval = isEnglishDocument
+      ? "Payment link after case opening and written approval."
+      : "Lien de paiement après ouverture du dossier et accord écrit.";
+    const paymentPortal = conversationCopy.paymentHint;
+    const hasHighRisk = ["physical", "water", "encrypted"].includes(scenario.symptom) || ["opened", "rebuild"].includes(scenario.history) || ["legal", "medical"].includes(scenario.value);
+
+    if (scenario.value === "legal" || scenario.symptom === "encrypted") {
+      return {
+        price: isEnglishDocument ? "Forensic review from $2,500 CAD" : "Revue forensique dès 2 500 $ CA",
+        payment: paymentPortal
+      };
+    }
+
+    if (scenario.support === "raid" || scenario.support === "server") {
+      return {
+        price: isEnglishDocument ? "Server/RAID triage $399-$1,200 CAD; recovery usually $1,200+ CAD" : "Triage serveur/RAID 399 $-1 200 $ CA; récupération souvent 1 200 $+ CA",
+        payment: isEnglishDocument ? `${paymentAfterApproval} Stripe deposit can be created from the admin cockpit.` : `${paymentAfterApproval} Un dépôt Stripe peut être créé depuis le cockpit admin.`
+      };
+    }
+
+    if (hasHighRisk) {
+      return {
+        price: scenario.support === "phone" ? (isEnglishDocument ? "Physical phone cases from $699 CAD" : "Téléphone physique dès 699 $ CA") : quoted,
+        payment: paymentAfterApproval
+      };
+    }
+
+    if (scenario.support === "phone") {
+      return { price: isEnglishDocument ? "Phone logical recovery from $299 CAD" : "Téléphone logique dès 299 $ CA", payment: paymentAfterApproval };
+    }
+
+    if (scenario.support === "removable") {
+      return { price: isEnglishDocument ? "USB / memory card from $299 CAD" : "USB / carte mémoire dès 299 $ CA", payment: paymentAfterApproval };
+    }
+
+    if (scenario.symptom === "deleted") {
+      return { price: isEnglishDocument ? "Deleted files from $199 CAD" : "Fichiers supprimés dès 199 $ CA", payment: paymentAfterApproval };
+    }
+
+    if (scenario.support === "ssd") {
+      return { price: isEnglishDocument ? "SSD / NVMe lab work from $649 CAD" : "SSD / NVMe en laboratoire dès 649 $ CA", payment: paymentAfterApproval };
+    }
+
+    return { price: isEnglishDocument ? "HDD / external drive from $299 CAD; complex cases from $649 CAD" : "HDD / disque externe dès 299 $ CA; cas complexes dès 649 $ CA", payment: paymentAfterApproval };
+  };
+  const setDiagnosticValues = (values = {}) => {
+    Object.entries(values).forEach(([name, value]) => {
+      const field = diagnosticForm?.elements?.[name];
+      if (field) field.value = value;
+    });
+  };
+  const createConversationBubble = (role, text) => {
+    const row = document.createElement("div");
+    row.className = `chatbot-conversation-row is-${role}`;
+    if (role === "assistant") {
+      const avatar = document.createElement("img");
+      avatar.className = "chatbot-conversation-avatar";
+      avatar.src = "/assets/nexuradata-icon.png";
+      avatar.alt = "";
+      avatar.width = 28;
+      avatar.height = 28;
+      avatar.decoding = "async";
+      avatar.loading = "lazy";
+      row.appendChild(avatar);
+    }
+    const bubble = document.createElement("p");
+    bubble.className = `chatbot-conversation-line is-${role}`;
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    return row;
+  };
+  const showTypingThen = (next, delay = 420) => {
+    if (!thread) { next(); return; }
+    const row = document.createElement("div");
+    row.className = "chatbot-conversation-row is-assistant";
+    const avatar = document.createElement("img");
+    avatar.className = "chatbot-conversation-avatar";
+    avatar.src = "/assets/nexuradata-icon.png";
+    avatar.alt = "";
+    avatar.width = 28;
+    avatar.height = 28;
+    avatar.decoding = "async";
+    row.appendChild(avatar);
+    const bubble = document.createElement("p");
+    bubble.className = "chatbot-conversation-line is-assistant";
+    const dots = document.createElement("span");
+    dots.className = "chatbot-typing";
+    dots.textContent = "...";
+    bubble.appendChild(dots);
+    row.appendChild(bubble);
+    thread.appendChild(row);
+    quickActions?.replaceChildren();
+    window.setTimeout(next, delay);
+  };
+  const initLiveClock = () => {
+    const liveBadge = dock.querySelector("[data-chatbot-live]");
+    const clockEl = dock.querySelector("[data-chatbot-clock]");
+    if (!liveBadge || !clockEl) return;
+    const tick = () => {
+      try {
+        const now = new Date();
+        const time = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Toronto",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).format(now);
+        const hourMtl = Number(new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Toronto",
+          hour: "2-digit",
+          hour12: false
+        }).format(now));
+        const dayMtl = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Toronto",
+          weekday: "short"
+        }).format(now);
+        const isWeekday = !["Sat", "Sun"].includes(dayMtl);
+        const open = isWeekday && hourMtl >= 8 && hourMtl < 19;
+        clockEl.textContent = `MTL · ${time}`;
+        liveBadge.dataset.liveState = open ? "open" : "closed";
+      } catch {
+        clockEl.textContent = "MTL";
+      }
+    };
+    tick();
+    window.setInterval(tick, 30000);
+  };
+  const renderConversation = () => {
+    // Legacy step-by-step quiz disabled. The /api/concierge LLM now drives
+    // the conversation end-to-end via free-text input. We only clear the step
+    // badge so it does not display a stale "01 / 04" indicator.
+    const stepBadge = dock.querySelector("[data-chatbot-step]");
+    if (stepBadge) stepBadge.textContent = "";
+    if (quickActions) quickActions.replaceChildren();
+    dock.dataset.chatbotPhase = "open-text";
+    return;
+    // eslint-disable-next-line no-unreachable
+    if (!thread || !quickActions) return;
+
+    const answeredSteps = conversationCopy.steps.filter((step) => conversationAnswers[step.key]);
+    const currentStep = conversationCopy.steps.find((step) => !conversationAnswers[step.key]);
+    dock.dataset.chatbotPhase = currentStep ? "asking" : "open-text";
+
+    const stepBadge = dock.querySelector("[data-chatbot-step]");
+    if (stepBadge) {
+      const total = conversationCopy.steps.length;
+      const current = currentStep ? answeredSteps.length + 1 : total;
+      stepBadge.textContent = `${String(current).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+    }
+
+    const lines = [];
+
+    if (answeredSteps.length === 0) {
+      lines.push(createConversationBubble("assistant", conversationCopy.steps[0].question));
+    } else {
+      answeredSteps.forEach((step) => {
+        lines.push(createConversationBubble("assistant", step.question));
+        lines.push(createConversationBubble("user", conversationAnswers[step.key]));
+      });
+      if (currentStep) {
+        lines.push(createConversationBubble("assistant", currentStep.question));
+      } else {
+        lines.push(createConversationBubble("assistant", conversationCopy.finalPrompt));
+      }
+    }
+
+    thread.replaceChildren(...lines);
+    quickActions.replaceChildren();
+
+    if (currentStep) {
+      currentStep.options.forEach(([label, values]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "chatbot-quick-choice";
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          conversationAnswers[currentStep.key] = label;
+          setDiagnosticValues(values);
+          showTypingThen(() => {
+            renderConversation();
+            const scenario = updateDiagnosis();
+            const estimate = buildBotEstimate(scenario);
+            if (estimateTarget) {
+              estimateTarget.hidden = false;
+              estimateTarget.textContent = `${conversationCopy.estimatePrefix}: ${estimate.price}. ${conversationCopy.stripePrefix}: ${estimate.payment}`;
+            }
+          });
+          trackGaEvent("chatbot_conversation_answer", { event_category: "diagnostic", method: currentStep.key });
+        });
+        quickActions.append(button);
+      });
+      return;
+    }
+
+    const estimate = buildBotEstimate(buildScenarioFromDiagnosticForm());
+    if (estimateTarget) {
+      estimateTarget.hidden = false;
+      estimateTarget.textContent = `${conversationCopy.estimatePrefix}: ${estimate.price}. ${conversationCopy.stripePrefix}: ${estimate.payment}`;
+    }
+  };
+  const updateDiagnosis = () => {
+    const scenario = buildScenarioFromDiagnosticForm();
+    const context = scenario.context || "";
+    latestServerDiagnostic = null;
+    if (brief) brief.hidden = true;
+    const expertSignals = buildExpertSignals(scenario);
+    const effectiveScenario = { ...scenario, ...applyExpertOverrides(scenario, expertSignals) };
+    const clientIntelligence = buildClientIntelligence(effectiveScenario);
+    const score =
+      ({ raid: 3, server: 3, ssd: 2, phone: 1, drive: 0, removable: 0 }[effectiveScenario.support] || 0) +
+      ({ water: 4, physical: 4, encrypted: 3, not_detected: 2, slow: 1, deleted: 0 }[effectiveScenario.symptom] || 0) +
+      ({ critical: 4, business: 2, standard: 0 }[effectiveScenario.urgency] || 0) +
+      ({ rebuild: 4, opened: 3, software: 2, powered_on: 2, no_attempt: 0 }[effectiveScenario.history] || 0) +
+      ({ legal: 2, medical: 2, business: 1, personal: 0 }[effectiveScenario.value] || 0) +
+      ({ running: 2, unknown: 1, powered_off: 0, unplugged: 0 }[effectiveScenario.state] || 0) +
+      clientIntelligence.scoreBoost +
+      expertSignals.scoreBoost;
+    const level = score >= 13 ? "critical" : score >= 9 ? "high" : score >= 5 ? "priority" : "logical";
+    const isCritical = level === "critical";
+    const confidence = Math.min(96, 62 + (score * 3));
+    const [title, route, avoid] = labels.cases[level];
+    const selectedSupport = optionLabel(labels.supportOptions, effectiveScenario.support);
+    const selectedSymptom = optionLabel(labels.symptomOptions, effectiveScenario.symptom);
+    const selectedUrgency = optionLabel(labels.urgencyOptions, effectiveScenario.urgency);
+    result.innerHTML = `
+      <div class="chatbot-message chatbot-message-assistant">
+        <p>${clientIntelligence.empathy}</p>
+        <p><strong>${title}</strong></p>
+        <p>${route}</p>
+        <p>${avoid}</p>
+      </div>
+    `;
+    const protocolItems = labels.protocols[level] || [];
+    const fixItems = buildFixes({ isCritical, expertSignals });
+    const reasonItems = buildReasons(effectiveScenario, expertSignals);
+    const questionItems = buildQuestions(effectiveScenario, expertSignals);
+    renderList(protocolTarget, protocolItems);
+    renderList(fixesTarget, fixItems);
+    renderList(expertSignalsTarget, expertSignals.labels.length ? expertSignals.labels : [labels.guardrail]);
+    if (expert) expert.hidden = true;
+    renderList(reasonsTarget, reasonItems);
+    renderList(questionsTarget, questionItems);
+    if (fixed) fixed.hidden = !diagnosisShown;
+    if (insight) insight.hidden = !diagnosisShown;
+    if (protocolTarget) protocolTarget.hidden = !diagnosisShown;
+    latestServiceHref = getServiceHref(effectiveScenario.support, effectiveScenario.symptom, effectiveScenario.value);
+    latestCasePayload = {
+      support: mapCaseSupport(effectiveScenario.support, effectiveScenario.symptom, effectiveScenario.value),
+      symptome: mapCaseSymptom(effectiveScenario),
+      urgence: mapCaseUrgency(effectiveScenario.urgency, effectiveScenario.symptom, effectiveScenario.value),
+      profil: mapCaseClientType(effectiveScenario),
+      impact: mapCaseImpact(effectiveScenario.urgency, effectiveScenario.value),
+      sensibilite: mapCaseSensitivity(effectiveScenario.symptom, effectiveScenario.value)
+    };
+    latestDiagnosticSummary = [
+      `${title}`,
+      `${labels.contextLabel}: ${context || labels.placeholder}`,
+      `${labels.supportLabel}: ${selectedSupport}`,
+      `${labels.symptomLabel}: ${selectedSymptom}`,
+      `${labels.urgencyLabel}: ${selectedUrgency}`,
+      `${labels.moodLabel}: ${moodLabelFor(effectiveScenario.mood)}`,
+      `${labels.route}: ${route}`,
+      `${labels.avoid}: ${avoid}`
+    ].filter(Boolean).join("\n");
+    syncSummaryActions();
+    if (diagnosisShown) applyDiagnosisToMainForm();
+    emergencyLink.hidden = !isCritical;
+    emergencyLink.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(`${labels.waIntro}\n${latestDiagnosticSummary}`)}`;
+    return scenario;
+  };
+
+  const showDiagnosisResult = () => {
+    diagnosisShown = true;
+    setDiagnosisVisibility(true);
+    const scenario = updateDiagnosis();
+    scheduleServerDiagnostic(scenario);
+    applyDiagnosisToMainForm();
+    caseForm?.scrollIntoView({ block: "nearest" });
+    caseForm?.querySelector("input")?.focus({ preventScroll: true });
+  };
+
+  const copyDiagnosticSummary = async () => {
+    if (!copyButton || !latestDiagnosticSummary) return;
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(latestDiagnosticSummary);
+      } else {
+        const buffer = document.createElement("textarea");
+        buffer.className = "chatbot-copy-buffer";
+        buffer.value = latestDiagnosticSummary;
+        buffer.setAttribute("readonly", "");
+        document.body.appendChild(buffer);
+        buffer.select();
+        document.execCommand("copy");
+        buffer.remove();
+      }
+
+      copyButton.textContent = labels.copied;
+    } catch {
+      copyButton.textContent = labels.copyFailed;
+    }
+
+    setTimeout(() => {
+      copyButton.textContent = labels.copySummary;
+    }, 1400);
+  };
+
+  const submitAutonomousCase = async (event) => {
+    event.preventDefault();
+
+    if (!caseForm?.checkValidity()) {
+      caseForm?.reportValidity();
+      return;
+    }
+
+    const formData = new FormData(caseForm);
+    const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value || "";
+    const payload = {
+      nom: `${formData.get("nom") || ""}`.trim(),
+      courriel: `${formData.get("courriel") || ""}`.trim(),
+      telephone: `${formData.get("telephone") || ""}`.trim(),
+      ville: `${formData.get("ville") || ""}`.trim(),
+      preferenceContact: `${formData.get("preferenceContact") || "email"}`.trim(),
+      support: latestCasePayload.support,
+      symptome: latestCasePayload.symptome,
+      urgence: latestCasePayload.urgence,
+      profil: latestCasePayload.profil,
+      impact: latestCasePayload.impact,
+      sensibilite: latestCasePayload.sensibilite,
+      message: latestDiagnosticSummary,
+      consentement: formData.get("consentement") === "on",
+      website: `${formData.get("website") || ""}`.trim(),
+      "cf-turnstile-response": turnstileToken,
+      sourcePath: window.location.pathname
+    };
+
+    setCaseStatus("loading", labels.openingCase);
+
+    if (caseSubmitButton) {
+      caseSubmitButton.disabled = true;
+      caseSubmitButton.textContent = labels.openingCase;
+    }
+
+    try {
+      const response = await fetch(caseForm.getAttribute("data-intake-endpoint") || "/api/intake", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await parseBotJsonResponse(response);
+
+      if (response.ok && data?.ok) {
+        const caseId = data.caseId || "";
+        const serverPlan = data.automation || data.concierge || null;
+        setCaseStatus("success", labels.caseOpened(caseId, serverPlan));
+
+        if (statusLink && caseId) {
+          statusLink.href = `${statusHref}?caseId=${encodeURIComponent(caseId)}`;
+        }
+
+        if (paymentLink && caseId) {
+          paymentLink.href = `${statusHref}?caseId=${encodeURIComponent(caseId)}#paiement`;
+          paymentLink.textContent = labels.paymentPrepared;
+        }
+
+        if (serverPlan?.servicePath && serviceLink) {
+          latestServiceHref = `${homePrefix}${serverPlan.servicePath}`;
+          serviceLink.href = latestServiceHref;
+        }
+
+        if (data.concierge?.whatsappUrl && emergencyLink) {
+          emergencyLink.hidden = false;
+          emergencyLink.href = data.concierge.whatsappUrl;
+        }
+
+        try {
+          sessionStorage.setItem("nexuradata_latest_case_id", caseId);
+          sessionStorage.setItem("nexuradata_diagnostic_summary", latestDiagnosticSummary);
+          if (serverPlan) sessionStorage.setItem("nexuradata_server_automation", JSON.stringify(serverPlan));
+        } catch {
+          // Optional browser handoff only.
+        }
+
+        trackIntakeFormSubmit(data?.delivery?.client || "chatbot_case_assistant");
+        trackContactIntent("chatbot_autonomous_case_created");
+        return;
+      }
+
+      if (data?.fallback === "mailto" || response.status >= 500 || [404, 405, 429].includes(response.status) || /anti-abus|temporarily unavailable|indisponible/i.test(data?.message || "")) {
+        setCaseStatus("success", labels.caseFallback);
+        syncSummaryActions();
+        window.location.href = emailLink?.href || "mailto:contact@nexuradata.ca";
+        return;
+      }
+
+      setCaseStatus("error", data?.message || labels.caseError);
+    } catch {
+      setCaseStatus("success", labels.caseFallback);
+      syncSummaryActions();
+      window.location.href = emailLink?.href || "mailto:contact@nexuradata.ca";
+    } finally {
+      if (caseSubmitButton) {
+        caseSubmitButton.disabled = false;
+        caseSubmitButton.textContent = labels.submitCase;
+      }
+    }
+  };
+
+  // ── CONCIERGE: multi-turn LLM-backed concierge ──────────────
+  // Conversation history kept in-memory only; never persisted client-side.
+  const conciergeEndpoint = "/api/concierge";
+  const conciergeLocale = isEnglishDocument ? "en" : "fr";
+  const conciergeMaxHistory = 12;
+  const conciergeMaxChars = 1800;
+  const conciergeMaxImages = 2;
+  const conciergeMaxImageBytes = 5 * 1024 * 1024;
+  const conciergeAllowedImageMimes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  const conciergeState = {
+    history: [],
+    busy: false,
+    greeted: false,
+    disabled: false,
+    pendingImages: []
+  };
+  const conciergeCopy = isEnglishDocument
+    ? {
+      greeting:
+        "Hi, this is NEXURADATA. Tell me what happened to the device — what kind of media it is, what it does or doesn't do right now, and how urgent this is for you. I read everything before suggesting anything.",
+      thinking: "Reading…",
+      networkError: "I lost the connection for a moment. Send your message again — I'll pick it up.",
+      placeholder: "Describe the device, what changed, and the files you need.",
+      submitDefault: "Send",
+      submitBusy: "Reading…",
+      attachLabel: "+ Photo",
+      attachRemove: "Remove",
+      attachTooLarge: "Image too large (max 5 MB).",
+      attachBadType: "Use a JPEG, PNG or WebP image.",
+      attachTooMany: "Two images max per message."
+    }
+    : {
+      greeting:
+        "Bonjour, ici NEXURADATA. Décrivez-moi ce qui est arrivé à l'appareil — quel type de support, ce qu'il fait ou ne fait plus, et l'urgence pour vous. Je lis tout avant de suggérer quoi que ce soit.",
+      thinking: "Lecture…",
+      networkError: "J'ai perdu la connexion un instant. Renvoyez votre message — je le reprends.",
+      placeholder: "Décrivez l'appareil, ce qui a changé et les fichiers dont vous avez besoin.",
+      submitDefault: "Envoyer",
+      submitBusy: "Lecture…",
+      attachLabel: "+ Photo",
+      attachRemove: "Retirer",
+      attachTooLarge: "Image trop lourde (max 5 Mo).",
+      attachBadType: "Utilisez une image JPEG, PNG ou WebP.",
+      attachTooMany: "Deux images maximum par message."
+    };
+  const submitButton = diagnosticForm.querySelector("[data-chatbot-diagnostic-submit]");
+  const contextField = diagnosticForm.querySelector('textarea[name="context"]');
+  if (contextField) {
+    contextField.placeholder = conciergeCopy.placeholder;
+    contextField.required = false;
+  }
+  if (submitButton) {
+    submitButton.textContent = conciergeCopy.submitDefault;
+  }
+  const scrollThreadToBottom = () => {
+    if (!panel) return;
+    window.requestAnimationFrame(() => {
+      panel.scrollTop = panel.scrollHeight;
+    });
+  };
+  const appendChatBubble = (role, text) => {
+    if (!thread || !text) return null;
+    const node = document.createElement("p");
+    node.className = `chatbot-conversation-line is-${role === "user" ? "user" : "assistant"}`;
+    node.textContent = text;
+    thread.appendChild(node);
+    scrollThreadToBottom();
+    return node;
+  };
+  // Lightweight typing indicator: a single assistant bubble with three dots
+  // animated via textContent rotation. Removed when a real reply arrives so
+  // the IBM bubble stack stays clean.
+  let typingIndicatorNode = null;
+  let typingIndicatorTimer = null;
+  const showTypingIndicator = () => {
+    if (!thread || typingIndicatorNode) return;
+    typingIndicatorNode = document.createElement("p");
+    typingIndicatorNode.className = "chatbot-conversation-line is-assistant is-typing";
+    typingIndicatorNode.setAttribute("aria-label", conciergeCopy.thinking);
+    typingIndicatorNode.textContent = `${conciergeCopy.thinking} ·`;
+    thread.appendChild(typingIndicatorNode);
+    scrollThreadToBottom();
+    let dots = 1;
+    typingIndicatorTimer = window.setInterval(() => {
+      dots = (dots % 3) + 1;
+      if (typingIndicatorNode) {
+        typingIndicatorNode.textContent = `${conciergeCopy.thinking} ${"·".repeat(dots)}`;
+      }
+    }, 480);
+  };
+  const hideTypingIndicator = () => {
+    if (typingIndicatorTimer) {
+      window.clearInterval(typingIndicatorTimer);
+      typingIndicatorTimer = null;
+    }
+    if (typingIndicatorNode?.parentNode) {
+      typingIndicatorNode.parentNode.removeChild(typingIndicatorNode);
+    }
+    typingIndicatorNode = null;
+  };
+  const renderConciergeSuggestions = (suggestions = [], opts = {}) => {
+    if (!quickActions) return;
+    quickActions.replaceChildren();
+    // Always offer the attach action so visitors can send a photo of the
+    // damaged drive / error screen on any turn.
+    const attachButton = document.createElement("button");
+    attachButton.type = "button";
+    attachButton.className = "chatbot-quick-choice";
+    attachButton.textContent = conciergeCopy.attachLabel;
+    attachButton.addEventListener("click", () => {
+      if (conciergeState.busy) return;
+      fileInput.click();
+    });
+    quickActions.appendChild(attachButton);
+    if (!Array.isArray(suggestions) || suggestions.length === 0) return;
+    suggestions.slice(0, 3).forEach((label, index) => {
+      const text = `${label || ""}`.trim().slice(0, 80);
+      if (!text) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chatbot-quick-choice";
+      // First chip on a priority-intake turn doubles as the strong CTA.
+      if (opts.priorityIntake && index === 0) {
+        button.setAttribute("data-chatbot-priority-cta", "true");
+        button.style.fontWeight = "600";
+      }
+      button.textContent = text;
+      button.addEventListener("click", () => {
+        if (conciergeState.busy || !contextField) return;
+        contextField.value = text;
+        diagnosticForm.requestSubmit?.() || diagnosticForm.dispatchEvent(new Event("submit", { cancelable: true }));
+      });
+      quickActions.appendChild(button);
+    });
+  };
+  const ensureConciergeGreeting = () => {
+    if (conciergeState.greeted || !thread) return;
+    conciergeState.greeted = true;
+    appendChatBubble("assistant", conciergeCopy.greeting);
+  };
+
+  // ── Attachment UI: image previews + hidden file input.
+  // We add a single `+ Photo` chip into the existing quick-actions strip and
+  // a hidden file input. Image previews live in their own row created on
+  // demand. No HTML or CSS changes — everything is JS-driven and reuses the
+  // existing `chatbot-quick-choice` IBM-style chip styling.
+  let attachmentRow = null;
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = Array.from(conciergeAllowedImageMimes).join(",");
+  fileInput.multiple = true;
+  fileInput.hidden = true;
+  fileInput.setAttribute("data-chatbot-image-input", "");
+  diagnosticForm.appendChild(fileInput);
+
+  const ensureAttachmentRow = () => {
+    if (attachmentRow) return attachmentRow;
+    attachmentRow = document.createElement("div");
+    attachmentRow.className = "chatbot-quick-actions";
+    attachmentRow.setAttribute("data-chatbot-attachments", "");
+    attachmentRow.style.marginTop = "0.5rem";
+    if (quickActions?.parentNode) {
+      quickActions.parentNode.insertBefore(attachmentRow, quickActions.nextSibling);
+    } else {
+      diagnosticForm.appendChild(attachmentRow);
+    }
+    return attachmentRow;
+  };
+
+  const renderAttachmentChips = () => {
+    const row = ensureAttachmentRow();
+    row.replaceChildren();
+    if (conciergeState.pendingImages.length === 0) {
+      row.style.display = "none";
+      return;
+    }
+    row.style.display = "";
+    conciergeState.pendingImages.forEach((image, index) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chatbot-quick-choice";
+      chip.textContent = `${image.name} · ${conciergeCopy.attachRemove}`;
+      chip.addEventListener("click", () => {
+        conciergeState.pendingImages.splice(index, 1);
+        renderAttachmentChips();
+      });
+      row.appendChild(chip);
+    });
+  };
+
+  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+
+  const handleAttachFiles = async (fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    for (const file of Array.from(fileList)) {
+      if (conciergeState.pendingImages.length >= conciergeMaxImages) {
+        appendChatBubble("assistant", conciergeCopy.attachTooMany);
+        break;
+      }
+      if (!conciergeAllowedImageMimes.has(file.type)) {
+        appendChatBubble("assistant", conciergeCopy.attachBadType);
+        continue;
+      }
+      if (file.size > conciergeMaxImageBytes) {
+        appendChatBubble("assistant", conciergeCopy.attachTooLarge);
+        continue;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        conciergeState.pendingImages.push({
+          name: `${file.name || "image"}`.slice(0, 60),
+          dataUrl: `${dataUrl}`
+        });
+      } catch {
+        // swallow read errors silently — the user can retry.
+      }
+    }
+    renderAttachmentChips();
+  };
+
+  fileInput.addEventListener("change", () => {
+    handleAttachFiles(fileInput.files);
+    fileInput.value = "";
+  });
+  const setConciergeBusy = (busy) => {
+    conciergeState.busy = busy;
+    if (submitButton) {
+      submitButton.disabled = busy;
+      submitButton.textContent = busy ? conciergeCopy.submitBusy : conciergeCopy.submitDefault;
+    }
+    if (contextField) contextField.disabled = busy;
+  };
+  const pushConciergeMessage = (role, content) => {
+    if (!content) return;
+    conciergeState.history.push({ role, content: `${content}`.slice(0, conciergeMaxChars) });
+    if (conciergeState.history.length > conciergeMaxHistory) {
+      conciergeState.history.splice(0, conciergeState.history.length - conciergeMaxHistory);
+    }
+  };
+  const handleConciergeTurn = async (rawInput) => {
+    const userText = `${rawInput || ""}`.trim().slice(0, conciergeMaxChars);
+    const attachments = conciergeState.pendingImages.slice(0, conciergeMaxImages);
+    if (!userText && attachments.length === 0) return;
+    if (conciergeState.busy) return;
+    ensureConciergeGreeting();
+    // Visible bubble: text + a hint about how many images were attached.
+    const visibleText = attachments.length > 0
+      ? `${userText}${userText ? "\n" : ""}[${attachments.length} image${attachments.length > 1 ? "s" : ""}]`
+      : userText;
+    appendChatBubble("user", visibleText || `[${attachments.length} image]`);
+
+    // History payload: multimodal when images are attached, plain string otherwise.
+    let historyContent;
+    if (attachments.length > 0) {
+      historyContent = [
+        ...(userText ? [{ type: "text", text: userText }] : []),
+        ...attachments.map((image) => ({ type: "image_url", image_url: { url: image.dataUrl } }))
+      ];
+    } else {
+      historyContent = userText;
+    }
+    conciergeState.history.push({ role: "user", content: historyContent });
+    if (conciergeState.history.length > conciergeMaxHistory) {
+      conciergeState.history.splice(0, conciergeState.history.length - conciergeMaxHistory);
+    }
+    // Clear pending attachments now that they have been queued.
+    conciergeState.pendingImages = [];
+    renderAttachmentChips();
+    if (contextField) contextField.value = "";
+    setConciergeBusy(true);
+    if (quickActions) quickActions.replaceChildren();
+    showTypingIndicator();
+
+    // Page context lets the model adapt to where the user came from
+    // (e.g. the RAID page vs the phone page) without leaking PII.
+    const pageContext = {
+      path: window.location.pathname || "/",
+      title: (document.title || "").slice(0, 160)
+    };
+
+    let data = null;
+    try {
+      const response = await fetch(conciergeEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({
+          locale: conciergeLocale,
+          messages: conciergeState.history,
+          page: pageContext
+        })
+      });
+      data = await parseBotJsonResponse(response);
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.message || "concierge-unavailable");
+      }
+    } catch {
+      hideTypingIndicator();
+      appendChatBubble("assistant", conciergeCopy.networkError);
+      setConciergeBusy(false);
+      return;
+    }
+
+    hideTypingIndicator();
+    const reply = `${data.reply || ""}`.trim();
+    if (reply) {
+      appendChatBubble("assistant", reply);
+      pushConciergeMessage("assistant", reply);
+    }
+    renderConciergeSuggestions(data.suggestions || [], { priorityIntake: Boolean(data.priorityIntake) });
+
+    if (data.triage) {
+      latestServerDiagnostic = data.triage;
+      showDiagnosisResult();
+      applyServerDiagnostic(data.triage);
+      trackGaEvent("chatbot_concierge_triage", {
+        event_category: "diagnostic",
+        method: data.provider || "openai"
+      });
+      if (data.priorityIntake) {
+        trackGaEvent("chatbot_concierge_priority", {
+          event_category: "diagnostic",
+          method: data.provider || "openai"
+        });
+      }
+    } else {
+      trackGaEvent("chatbot_concierge_turn", {
+        event_category: "diagnostic",
+        method: data.provider || "openai"
+      });
+    }
+    setConciergeBusy(false);
+  };
+  toggleButton?.addEventListener("click", () => {
+    if (dock.dataset.chatbotOpen === "true") ensureConciergeGreeting();
+  });
+  diagnosticForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const value = contextField ? contextField.value : "";
+    const hasText = `${value || ""}`.trim().length > 0;
+    const hasImages = conciergeState.pendingImages.length > 0;
+    if (!hasText && !hasImages) {
+      // Empty submit falls back to the legacy local renderer so the dock
+      // never feels frozen if the model isn't called yet.
+      showDiagnosisResult();
+      return;
+    }
+    handleConciergeTurn(value);
+  });
+  diagnosticForm.addEventListener("change", () => {
+    const scenario = updateDiagnosis();
+    if (diagnosisShown) {
+      scheduleServerDiagnostic(scenario);
+      setCaseStatus("", "");
+      trackGaEvent("chatbot_diagnostic", { event_category: "diagnostic", method: "local_triage" });
+    }
+  });
+  diagnosticForm.addEventListener("input", () => {
+    if (!diagnosisShown) return;
+    const scenario = updateDiagnosis();
+    scheduleServerDiagnostic(scenario);
+    setCaseStatus("", "");
+  });
+  caseForm?.addEventListener("submit", submitAutonomousCase);
+  toggleButton?.addEventListener("click", () => {
+    setDockOpen(dock.dataset.chatbotOpen !== "true", true);
+  });
+  closeButton?.addEventListener("click", () => {
+    setDockOpen(false, true);
+  });
+  dock.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && dock.dataset.chatbotOpen === "true") {
+      event.preventDefault();
+      setDockOpen(false, true);
+    }
+  });
+  // Close on outside click — but decide from pointerdown so that a re-render
+  // triggered by an in-dock click does not detach the target before we check.
+  let pointerDownInsideDock = false;
+  document.addEventListener("pointerdown", (event) => {
+    if (dock.dataset.chatbotOpen !== "true") {
+      pointerDownInsideDock = false;
+      return;
+    }
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    pointerDownInsideDock = path.includes(dock) || dock.contains(event.target);
+  }, true);
+  document.addEventListener("click", (event) => {
+    if (dock.dataset.chatbotOpen !== "true") return;
+    if (pointerDownInsideDock) {
+      pointerDownInsideDock = false;
+      return;
+    }
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    if (path.includes(dock) || dock.contains(event.target)) return;
+    setDockOpen(false);
+  });
+  renderConversation();
+  updateDiagnosis();
+  setDiagnosisVisibility(false);
+  syncPaymentLink();
+  watchHeroMediaOverlap();
+  initLiveClock();
+
+  document.querySelectorAll('a[href="#diagnostic-assistant"]').forEach((trigger) => {
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      setDockOpen(true, true);
+      setTimeout(() => dock.focus({ preventScroll: true }), 0);
+    });
+  });
+
+  dock.querySelectorAll("[data-chatbot-action]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      if (link.dataset.chatbotAction === "copy_summary") {
+        event.preventDefault();
+        copyDiagnosticSummary();
+      }
+
+      if (link.dataset.chatbotAction === "email_summary" || link.dataset.chatbotAction === "service_route") {
+        syncSummaryActions();
+      }
+
+      if (link.dataset.chatbotAction === "case") {
+        applyDiagnosisToMainForm();
+      }
+      trackContactIntent(`chatbot_${link.dataset.chatbotAction || "open"}`);
+    });
   });
 }());
 
@@ -397,7 +2704,6 @@ document.querySelectorAll(".site-nav .brand-logo").forEach((logo) => {
 });
 
 const revealElements = document.querySelectorAll("[data-reveal]");
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const initializeMobileNav = () => {
   const navbars = document.querySelectorAll(".navbar, .site-nav");
@@ -485,104 +2791,15 @@ const showAllReveals = () => {
   revealElements.forEach((element) => element.classList.add("is-visible"));
 };
 
-if (!("IntersectionObserver" in window) || prefersReducedMotion.matches) {
-  showAllReveals();
-} else if (revealElements.length > 0) {
-  const observer = new IntersectionObserver(
-    (entries, activeObserver) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
+showAllReveals();
 
-        entry.target.classList.add("is-visible");
-
-        // Stagger direct children for grid containers
-        if (entry.target.classList.contains("stagger-parent")) {
-          Array.from(entry.target.children).forEach((child, i) => {
-            child.style.transitionDelay = `${i * 68}ms`;
-          });
-        }
-
-        activeObserver.unobserve(entry.target);
-      });
-    },
-    {
-      threshold: 0.12,
-      rootMargin: "0px 0px -40px 0px"
-    }
-  );
-
-  revealElements.forEach((element) => observer.observe(element));
-}
-
-// Counter animation for [data-count] elements (hero panel stats)
 const counterElements = document.querySelectorAll("[data-count]");
-if (counterElements.length > 0 && "IntersectionObserver" in window && !prefersReducedMotion.matches) {
-  const counterObserver = new IntersectionObserver(
-    (entries, obs) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const el = entry.target;
-        const target = parseInt(el.dataset.count, 10);
-        const suffix = el.dataset.countSuffix || "";
-        const locale = document.documentElement.lang?.startsWith("en") ? "en-CA" : "fr-CA";
-        const duration = 1400;
-        const startTime = performance.now();
-        const tick = (now) => {
-          const progress = Math.min((now - startTime) / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3);
-          el.textContent = Math.floor(eased * target).toLocaleString(locale) + suffix;
-          if (progress < 1) {
-            requestAnimationFrame(tick);
-          } else {
-            el.textContent = target.toLocaleString(locale) + suffix;
-          }
-        };
-        requestAnimationFrame(tick);
-        obs.unobserve(el);
-      });
-    },
-    { threshold: 0.6 }
-  );
-  counterElements.forEach((el) => counterObserver.observe(el));
-}
-
-// Smooth FAQ open/close animation via Web Animations API
-document.querySelectorAll(".faq-item").forEach((details) => {
-  const summary = details.querySelector("summary");
-  const content = details.querySelector("p");
-  if (!summary || !content) return;
-
-  summary.addEventListener("click", (e) => {
-    if (prefersReducedMotion.matches) return;
-    e.preventDefault();
-
-    if (!details.open) {
-      details.open = true;
-      const h = content.scrollHeight;
-      content.animate(
-        [
-          { maxHeight: "0", opacity: "0", paddingBottom: "0" },
-          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" }
-        ],
-        { duration: 300, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
-      );
-    } else {
-      const h = content.scrollHeight;
-      const anim = content.animate(
-        [
-          { maxHeight: h + "px", opacity: "1", paddingBottom: "1.4rem" },
-          { maxHeight: "0", opacity: "0", paddingBottom: "0" }
-        ],
-        { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
-      );
-      anim.onfinish = () => {
-        details.open = false;
-        anim.cancel();
-      };
-    }
-  });
+counterElements.forEach((element) => {
+  const target = parseInt(element.dataset.count, 10);
+  if (Number.isNaN(target)) return;
+  const suffix = element.dataset.countSuffix || "";
+  const locale = document.documentElement.lang?.startsWith("en") ? "en-CA" : "fr-CA";
+  element.textContent = target.toLocaleString(locale) + suffix;
 });
 
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
@@ -602,7 +2819,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     event.preventDefault();
 
     target.scrollIntoView({
-      behavior: prefersReducedMotion.matches ? "auto" : "smooth",
+      behavior: "auto",
       block: "start"
     });
   });
@@ -934,6 +3151,7 @@ const createStatusPayment = (payment) => {
     link.href = payment.checkoutUrl;
     link.target = "_blank";
     link.rel = "noreferrer";
+    link.dataset.stripeCheckoutLink = "";
     link.textContent = publicI18n.paymentAction;
 
     actions.append(link);
@@ -945,6 +3163,131 @@ const createStatusPayment = (payment) => {
 };
 
 let currentStatusCredentials = null;
+
+const renderQuotesSection = (record, statusPanel) => {
+  const section = statusPanel?.querySelector("[data-status-quotes-section]");
+  const list = statusPanel?.querySelector("[data-status-quotes]");
+  const messageTarget = statusPanel?.querySelector("[data-status-quotes-message]");
+  if (!section || !list) return;
+  const quotes = Array.isArray(record.quotes) ? record.quotes : [];
+  if (messageTarget) messageTarget.textContent = "";
+  if (quotes.length === 0) {
+    section.hidden = true;
+    list.replaceChildren();
+    return;
+  }
+  section.hidden = false;
+  list.replaceChildren(...quotes.map((quote) => createStatusQuote(quote, record, messageTarget)));
+};
+
+const quoteStatusLabel = (status) => {
+  const fr = { sent: "Envoyée", approved: "Approuvée", declined: "Refusée", expired: "Expirée", paid: "Payée", draft: "Brouillon" };
+  const en = { sent: "Sent", approved: "Approved", declined: "Declined", expired: "Expired", paid: "Paid", draft: "Draft" };
+  const map = isEnglishDocument ? en : fr;
+  return map[status] || status || "—";
+};
+
+const createStatusQuote = (quote, record, messageTarget) => {
+  const article = document.createElement("article");
+  article.className = "status-payment status-quote";
+
+  const head = document.createElement("div");
+  head.className = "status-payment-head";
+
+  const title = document.createElement("p");
+  title.className = "status-payment-title";
+  title.textContent = quote.title || (isEnglishDocument ? "Quote" : "Soumission");
+
+  const badge = document.createElement("span");
+  badge.className = `status-payment-badge is-${quote.status || "sent"}`;
+  badge.textContent = quoteStatusLabel(quote.status);
+  head.append(title, badge);
+
+  const meta = document.createElement("p");
+  meta.className = "status-payment-meta";
+  meta.textContent = formatCurrency((Number(quote.amountCad) || 0) * 100, "CAD");
+
+  article.append(head, meta);
+
+  if (Array.isArray(quote.lineItems) && quote.lineItems.length > 0) {
+    const list = document.createElement("ul");
+    list.className = "status-quote-items";
+    quote.lineItems.forEach((item) => {
+      const li = document.createElement("li");
+      const qty = Number(item.quantity || 1);
+      const sub = formatCurrency((Number(item.amountCad) || 0) * 100 * qty, "CAD");
+      li.textContent = `${item.label} — ${qty} × ${sub}`;
+      list.append(li);
+    });
+    article.append(list);
+  }
+
+  if (quote.expiresAt) {
+    const exp = document.createElement("p");
+    exp.className = "status-payment-meta";
+    exp.textContent = (isEnglishDocument ? "Valid until " : "Valide jusqu'au ") + formatTimestamp(quote.expiresAt);
+    article.append(exp);
+  }
+
+  if (quote.status === "sent") {
+    const actions = document.createElement("div");
+    actions.className = "status-payment-actions";
+    const approveBtn = document.createElement("button");
+    approveBtn.type = "button";
+    approveBtn.className = "button button-primary button-small";
+    approveBtn.textContent = isEnglishDocument ? "Approve" : "Approuver";
+    const declineBtn = document.createElement("button");
+    declineBtn.type = "button";
+    declineBtn.className = "button button-secondary button-small";
+    declineBtn.textContent = isEnglishDocument ? "Decline" : "Refuser";
+
+    const submit = async (action) => {
+      if (!currentStatusCredentials) return;
+      approveBtn.disabled = true;
+      declineBtn.disabled = true;
+      if (messageTarget) {
+        messageTarget.textContent = isEnglishDocument ? "Sending decision…" : "Envoi de la décision…";
+      }
+      try {
+        const url = `/api/cases/${encodeURIComponent(currentStatusCredentials.caseId)}/quotes/${encodeURIComponent(quote.id)}/${action}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessCode: currentStatusCredentials.accessCode })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || (isEnglishDocument ? "Decision failed." : "Décision échouée."));
+        }
+        if (messageTarget) {
+          messageTarget.textContent = isEnglishDocument
+            ? `Quote ${action === "accept" ? "approved" : "declined"}.`
+            : `Soumission ${action === "accept" ? "approuvée" : "refusée"}.`;
+        }
+        const statusForm = document.querySelector("[data-status-form]");
+        if (statusForm) {
+          statusForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+        }
+      } catch (error) {
+        approveBtn.disabled = false;
+        declineBtn.disabled = false;
+        if (messageTarget) messageTarget.textContent = error.message;
+      }
+    };
+
+    approveBtn.addEventListener("click", () => submit("accept"));
+    declineBtn.addEventListener("click", () => submit("decline"));
+    actions.append(approveBtn, declineBtn);
+    article.append(actions);
+  } else if (quote.status === "approved" && quote.approvedAt) {
+    const stamp = document.createElement("p");
+    stamp.className = "status-payment-meta";
+    stamp.textContent = (isEnglishDocument ? "Approved on " : "Approuvée le ") + formatTimestamp(quote.approvedAt);
+    article.append(stamp);
+  }
+
+  return article;
+};
 
 const renderAuthorizationState = (record, statusPanel) => {
   const section = statusPanel?.querySelector("[data-authorization-section]");
@@ -1176,10 +3519,14 @@ const renderStatusRecord = (record, statusPanel) => {
 
     if (payments.length > 0) {
       paymentsTarget.replaceChildren(...payments.map(createStatusPayment));
+      document.dispatchEvent(new CustomEvent("nexuradata:payments-rendered"));
     } else {
       paymentsTarget.replaceChildren();
+      document.dispatchEvent(new CustomEvent("nexuradata:payments-rendered"));
     }
   }
+
+  renderQuotesSection(record, statusPanel);
 
   if (timelineTarget) {
     timelineTarget.replaceChildren(...(record.steps || []).map(createStatusStep));
@@ -1518,8 +3865,14 @@ if (operationsRoot) {
   const metaUpdated = operationsRoot.querySelector("[data-ops-meta-updated]");
   const metaClient = operationsRoot.querySelector("[data-ops-meta-client]");
   const metaEmail = operationsRoot.querySelector("[data-ops-meta-email]");
+  const metaPhone = operationsRoot.querySelector("[data-ops-meta-phone]");
+  const metaCity = operationsRoot.querySelector("[data-ops-meta-city]");
+  const metaContact = operationsRoot.querySelector("[data-ops-meta-contact]");
   const metaSupport = operationsRoot.querySelector("[data-ops-meta-support]");
+  const metaSymptom = operationsRoot.querySelector("[data-ops-meta-symptom]");
   const metaUrgency = operationsRoot.querySelector("[data-ops-meta-urgency]");
+  const metaIndicativePrice = operationsRoot.querySelector("[data-ops-meta-indicative-price]");
+  const metaReceived = operationsRoot.querySelector("[data-ops-meta-received]");
   const metaSource = operationsRoot.querySelector("[data-ops-meta-source]");
   const metaAccessSent = operationsRoot.querySelector("[data-ops-meta-access-sent]");
   const metaStatusSent = operationsRoot.querySelector("[data-ops-meta-status-sent]");
@@ -1539,6 +3892,7 @@ if (operationsRoot) {
   const caseSubmitButton = caseForm?.querySelector('button[type="submit"]');
   const paymentSubmitButton = paymentForm?.querySelector('button[type="submit"]');
   const metaAcquisition = operationsRoot.querySelector("[data-ops-meta-acquisition]");
+  const metaAssigned = operationsRoot.querySelector("[data-ops-meta-assigned]");
   const quoteStatusDisplay = operationsRoot.querySelector("[data-ops-quote-status]");
   const quoteAmountDisplay = operationsRoot.querySelector("[data-ops-quote-amount]");
   const quotePreapprovalDisplay = operationsRoot.querySelector("[data-ops-quote-preapproval]");
@@ -1547,6 +3901,7 @@ if (operationsRoot) {
   const quoteResult = operationsRoot.querySelector("[data-ops-quote-result]");
   const quoteSendButton = operationsRoot.querySelector("[data-ops-quote-send]");
   const quoteApproveButton = operationsRoot.querySelector("[data-ops-quote-approve]");
+  const quotePdfLink = operationsRoot.querySelector("[data-ops-quote-pdf]");
   const quoteExpireButton = operationsRoot.querySelector("[data-ops-quote-expire]");
   const quoteDeclineButton = operationsRoot.querySelector("[data-ops-quote-decline]");
   const reminderTypeSelect = operationsRoot.querySelector("[data-ops-reminder-type]");
@@ -1558,7 +3913,55 @@ if (operationsRoot) {
   const conciergeWhatsApp = operationsRoot.querySelector("[data-ops-concierge-whatsapp]");
   const conciergeCopyButton = operationsRoot.querySelector("[data-ops-concierge-copy]");
   const conciergeGenerateButton = operationsRoot.querySelector("[data-ops-concierge-generate]");
+  const automationApplyButton = operationsRoot.querySelector("[data-ops-automation-apply]");
   const conciergeResult = operationsRoot.querySelector("[data-ops-concierge-result]");
+  const automationSuiteSummary = operationsRoot.querySelector("[data-ops-automation-suite-summary]");
+  const automationSuiteScore = operationsRoot.querySelector("[data-ops-automation-suite-score]");
+  const automationSuiteJobs = operationsRoot.querySelector("[data-ops-automation-suite-jobs]");
+  const automationSuiteCopyButton = operationsRoot.querySelector("[data-ops-automation-suite-copy]");
+  const automationSuiteResult = operationsRoot.querySelector("[data-ops-automation-suite-result]");
+  const payoutCopyButton = document.querySelector("[data-ops-payout-copy]");
+  const payoutResult = document.querySelector("[data-ops-payout-result]");
+  const pricingState = operationsRoot.querySelector("[data-ops-pricing-state]");
+  const pricingSummary = operationsRoot.querySelector("[data-ops-pricing-summary]");
+  const pricingQuote = operationsRoot.querySelector("[data-ops-pricing-quote]");
+  const pricingPaid = operationsRoot.querySelector("[data-ops-pricing-paid]");
+  const pricingBalance = operationsRoot.querySelector("[data-ops-pricing-balance]");
+  const pricingAction = operationsRoot.querySelector("[data-ops-pricing-action]");
+  const pricingConfidence = operationsRoot.querySelector("[data-ops-pricing-confidence]");
+  const pricingRules = operationsRoot.querySelector("[data-ops-pricing-rules]");
+  const pricingPrefillButton = operationsRoot.querySelector("[data-ops-pricing-prefill]");
+  const pricingCreateButton = operationsRoot.querySelector("[data-ops-pricing-create]");
+  const pricingCopyButton = operationsRoot.querySelector("[data-ops-pricing-copy]");
+  const pricingResult = operationsRoot.querySelector("[data-ops-pricing-result]");
+  const payoutRunbook = [
+    "NEXURADATA payout runbook",
+    "1. Ouvrir Stripe Dashboard en mode live.",
+    "2. Vérifier Balance > Available > CAD.",
+    "3. Confirmer le compte bancaire NEXURADATA et les délais de disponibilité.",
+    "4. Rapprocher les paiements payés avec les dossiers et factures internes.",
+    "5. Créer la payout dans Stripe seulement après validation du montant disponible.",
+    "6. Consigner la payout et ne jamais partager de clé Stripe dans un ticket ou un chat."
+  ].join("\n");
+  let currentPricingDecision = null;
+  let currentAutomationSuite = null;
+
+  const writeTextToClipboard = async (text) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const buffer = document.createElement("textarea");
+    buffer.value = text;
+    buffer.setAttribute("readonly", "");
+    buffer.style.position = "fixed";
+    buffer.style.left = "-9999px";
+    document.body.append(buffer);
+    buffer.select();
+    document.execCommand("copy");
+    buffer.remove();
+  };
 
   const createStepRow = (step = { title: "", note: "", state: "pending" }) => {
     const wrapper = document.createElement("div");
@@ -1643,6 +4046,149 @@ if (operationsRoot) {
     approved: "Approuvée",
     expired: "Expirée",
     declined: "Refusée"
+  };
+
+  const paymentStatusValue = (payment) => `${payment?.status || "open"}`.toLowerCase();
+
+  const sumPaymentAmounts = (payments, predicate) =>
+    payments.filter(predicate).reduce((total, payment) => total + (Number(payment.amountCents) || 0), 0);
+
+  const buildPricingDecision = (record = {}) => {
+    const payments = Array.isArray(record.payments) ? record.payments : [];
+    const quoteAmountCents = Number(record.quoteAmountCents) || 0;
+    const paidAmountCents = sumPaymentAmounts(payments, (payment) => paymentStatusValue(payment) === "paid");
+    const openAmountCents = sumPaymentAmounts(payments, (payment) => {
+      const status = paymentStatusValue(payment);
+      return status !== "paid" && status !== "expired" && status !== "failed";
+    });
+    const balanceCents = Math.max(quoteAmountCents - paidAmountCents, 0);
+    const blockers = [];
+
+    if (!record.caseId) {
+      blockers.push("Aucun dossier réel n'est chargé.");
+    }
+
+    if (quoteAmountCents <= 0) {
+      blockers.push("Aucune soumission chiffrée n'est enregistrée.");
+    }
+
+    if (record.quoteStatus !== "approved") {
+      blockers.push("La soumission n'est pas approuvée.");
+    }
+
+    if (!record.preapprovalConfirmed) {
+      blockers.push("La préapprobation client n'est pas confirmée.");
+    }
+
+    if (quoteAmountCents > 0 && balanceCents <= 0) {
+      blockers.push("Le solde calculé est nul ou déjà payé.");
+    }
+
+    if (openAmountCents > 0) {
+      blockers.push(`Une demande de paiement ouverte existe déjà (${formatCurrency(openAmountCents, "cad")}).`);
+    }
+
+    const ready = blockers.length === 0;
+    const amount = (balanceCents / 100).toFixed(2);
+    const label = paidAmountCents > 0
+      ? `Solde final - ${record.caseId || "dossier"}`
+      : `Paiement approuvé - ${record.caseId || "dossier"}`;
+    const description = [
+      "Montant calculé par l'intelligence prix NEXURADATA.",
+      `Soumission approuvée: ${formatCurrency(quoteAmountCents, "cad")}.`,
+      `Paiements Stripe confirmés: ${formatCurrency(paidAmountCents, "cad")}.`,
+      `Solde exact à percevoir: ${formatCurrency(balanceCents, "cad")}.`,
+      "Vérifier l'identité du client et le dossier avant l'envoi."
+    ].join(" ");
+    const rules = ready
+      ? [
+        "Soumission approuvée et préapprobation confirmée.",
+        `Calcul job: ${formatCurrency(quoteAmountCents, "cad")} - ${formatCurrency(paidAmountCents, "cad")} = ${formatCurrency(balanceCents, "cad")}.`,
+        "Le job peut préremplir le paiement exact, mais l'opérateur déclenche l'envoi final.",
+        "Les acomptes, remises, remboursements et cas spéciaux restent en revue humaine."
+      ]
+      : blockers.map((blocker) => `Bloqué: ${blocker}`);
+
+    return {
+      version: "local-fallback",
+      jobName: "price-intelligence",
+      jobMode: ready ? "ready_to_prefill" : "blocked",
+      ready,
+      confidence: ready ? 90 : Math.max(15, 82 - (blockers.length * 18)),
+      blockers,
+      quoteAmountCents,
+      quoteAmountFormatted: formatCurrency(quoteAmountCents, "cad"),
+      paidAmountCents,
+      paidAmountFormatted: formatCurrency(paidAmountCents, "cad"),
+      balanceCents,
+      balanceFormatted: formatCurrency(balanceCents, "cad"),
+      openAmountCents,
+      paymentKind: "final",
+      amount,
+      label,
+      description,
+      rules,
+      summary: ready
+        ? "Job local prêt: le montant exact peut être prérempli, mais la création intelligente passera par le serveur."
+        : "Job bloqué: corriger les points ci-dessous avant qu'un montant soit proposé.",
+      actionLabel: ready ? "Préremplir" : "Bloquée",
+      suggestedPayment: ready
+        ? {
+          paymentKind: "final",
+          amount,
+          label,
+          description,
+          sendEmail: true
+        }
+        : null,
+      copyText: [
+        `Décision price intelligence - ${record.caseId || "aucun dossier"}`,
+        `Mode: ${ready ? "ready_to_prefill" : "blocked"}`,
+        `Soumission: ${formatCurrency(quoteAmountCents, "cad")}`,
+        `Payé confirmé: ${formatCurrency(paidAmountCents, "cad")}`,
+        `Solde exact: ${formatCurrency(balanceCents, "cad")}`,
+        `Action: ${ready ? "préremplir le paiement final" : "ne pas envoyer"}`,
+        ...rules.map((rule) => `- ${rule}`)
+      ].join("\n")
+    };
+  };
+
+  const renderPricingDecision = (record) => {
+    currentPricingDecision = record?.pricingDecision || buildPricingDecision(record);
+
+    if (pricingState) {
+      pricingState.textContent = currentPricingDecision.ready ? "Prêt" : "Bloqué";
+      pricingState.classList.toggle("is-ready", currentPricingDecision.ready);
+      pricingState.classList.toggle("is-blocked", !currentPricingDecision.ready);
+    }
+
+    if (pricingSummary) pricingSummary.textContent = currentPricingDecision.summary;
+    if (pricingQuote) pricingQuote.textContent = currentPricingDecision.quoteAmountFormatted || formatCurrency(currentPricingDecision.quoteAmountCents, "cad");
+    if (pricingPaid) pricingPaid.textContent = currentPricingDecision.paidAmountFormatted || formatCurrency(currentPricingDecision.paidAmountCents, "cad");
+    if (pricingBalance) pricingBalance.textContent = currentPricingDecision.balanceFormatted || formatCurrency(currentPricingDecision.balanceCents, "cad");
+    if (pricingAction) pricingAction.textContent = currentPricingDecision.actionLabel;
+    if (pricingConfidence) pricingConfidence.textContent = `${Number(currentPricingDecision.confidence) || 0}%`;
+
+    if (pricingRules) {
+      pricingRules.replaceChildren(...currentPricingDecision.rules.map((rule) => {
+        const item = document.createElement("li");
+        item.textContent = rule;
+        return item;
+      }));
+    }
+
+    if (pricingPrefillButton) {
+      pricingPrefillButton.disabled = !currentPricingDecision.ready || !currentPricingDecision.suggestedPayment;
+    }
+
+    if (pricingCreateButton) {
+      pricingCreateButton.disabled = !currentPricingDecision.ready || !currentPricingDecision.suggestedPayment;
+    }
+
+    if (pricingResult) {
+      pricingResult.textContent = "";
+      pricingResult.dataset.state = "";
+    }
   };
 
   const renderHistory = (history) => {
@@ -1752,7 +4298,7 @@ if (operationsRoot) {
   const renderConcierge = (concierge) => {
     if (conciergeSummary) {
       conciergeSummary.textContent = concierge
-        ? `${concierge.priorityLabel || "Suivi"} · ${concierge.recommendedPath || "Parcours à confirmer"} · ${concierge.channel === "whatsapp" ? "WhatsApp prêt" : "Courriel ou téléphone"}`
+        ? `${concierge.priorityLabel || "Suivi"} · ${concierge.serviceLevelLabel || "Automation"} · ${concierge.sla || "SLA à confirmer"} · ${concierge.channel === "whatsapp" ? "WhatsApp prêt" : "Courriel ou téléphone"}`
         : "Aucun message concierge disponible.";
     }
 
@@ -1767,6 +4313,79 @@ if (operationsRoot) {
     }
   };
 
+  const automationModeLabels = {
+    ready_to_send: "Prêt",
+    ready_to_draft: "Brouillon prêt",
+    ready_to_log: "Relance prête",
+    ready_to_request: "Demande prête",
+    ready_to_respond: "Réponse prête",
+    human_review: "Revue humaine",
+    monitoring: "Surveillance",
+    blocked: "Bloqué",
+    complete: "Complet",
+    clear: "Clair"
+  };
+
+  const renderAutomationSuite = (suite) => {
+    currentAutomationSuite = suite || null;
+
+    if (automationSuiteSummary) {
+      automationSuiteSummary.textContent = suite?.summary || "Aucun plan automation disponible pour ce dossier.";
+    }
+
+    if (automationSuiteScore) {
+      automationSuiteScore.textContent = suite ? `${Number(suite.confidence) || 0}% global` : "—";
+    }
+
+    if (automationSuiteJobs) {
+      const jobs = Array.isArray(suite?.jobs) ? suite.jobs : [];
+
+      if (jobs.length === 0) {
+        automationSuiteJobs.innerHTML = "<p class=\"form-note\">Aucun module automation n'est disponible.</p>";
+      } else {
+        automationSuiteJobs.replaceChildren(...jobs.map((job) => {
+          const item = document.createElement("article");
+          item.className = "ops-automation-job";
+
+          const head = document.createElement("div");
+          head.className = "ops-automation-job-head";
+
+          const title = document.createElement("p");
+          title.className = "ops-automation-job-title";
+          title.textContent = job.label || job.id || "Module";
+
+          const mode = `${job.mode || "monitoring"}`;
+          const badge = document.createElement("span");
+          badge.className = `ops-automation-job-badge is-${mode.replace(/_/g, "-")}`;
+          badge.textContent = automationModeLabels[mode] || mode;
+
+          head.append(title, badge);
+
+          const summary = document.createElement("p");
+          summary.className = "ops-automation-job-summary";
+          summary.textContent = job.summary || "Aucun résumé disponible.";
+
+          const meta = document.createElement("p");
+          meta.className = "ops-automation-job-meta";
+          const signals = Array.isArray(job.signals) && job.signals.length ? ` · ${job.signals.slice(0, 3).join(" / ")}` : "";
+          meta.textContent = `${job.action || "Surveiller"} · ${Number(job.confidence) || 0}%${signals}`;
+
+          item.append(head, summary, meta);
+          return item;
+        }));
+      }
+    }
+
+    if (automationSuiteCopyButton) {
+      automationSuiteCopyButton.disabled = !suite?.copyText;
+    }
+
+    if (automationSuiteResult) {
+      automationSuiteResult.textContent = "";
+      automationSuiteResult.dataset.state = "";
+    }
+  };
+
   const fillCaseDetail = (record) => {
     if (casePanel) {
       casePanel.hidden = false;
@@ -1777,38 +4396,76 @@ if (operationsRoot) {
     if (metaUpdated) metaUpdated.textContent = formatTimestamp(record.updatedAt);
     if (metaClient) metaClient.textContent = record.name;
     if (metaEmail) metaEmail.textContent = record.email;
+    if (metaPhone) metaPhone.textContent = record.phone || "—";
+    if (metaCity) metaCity.textContent = record.city || "—";
+    if (metaContact) metaContact.textContent = record.preferredContact || "—";
     if (metaSupport) metaSupport.textContent = record.support;
+    if (metaSymptom) metaSymptom.textContent = record.symptom || "—";
     if (metaUrgency) metaUrgency.textContent = record.urgency;
+    if (metaIndicativePrice) metaIndicativePrice.textContent = record.indicativePrice || "—";
+    if (metaReceived) metaReceived.textContent = record.receivedAt ? formatTimestamp(record.receivedAt) : "—";
     if (metaSource) metaSource.textContent = record.sourcePath || "/";
     if (metaAcquisition) metaAcquisition.textContent = record.acquisitionSource || "—";
+    if (metaAssigned) metaAssigned.textContent = record.assignedTo || "—";
     if (metaAccessSent) metaAccessSent.textContent = record.accessCodeLastSentAt ? formatTimestamp(record.accessCodeLastSentAt) : "Pas encore";
     if (metaStatusSent) metaStatusSent.textContent = record.statusEmailLastSentAt ? formatTimestamp(record.statusEmailLastSentAt) : "Pas encore";
     if (messageTarget) messageTarget.textContent = record.message;
     if (currentCaseIdInput) currentCaseIdInput.value = record.caseId;
     renderConcierge(record.concierge);
+    renderAutomationSuite(record.automationSuite);
 
     if (caseForm) {
       const statusInput = caseForm.querySelector('[name="status"]');
+      const receivedAtInput = caseForm.querySelector('[name="receivedAt"]');
+      const cityInput = caseForm.querySelector('[name="city"]');
+      const contactInput = caseForm.querySelector('[name="preferredContact"]');
+      const symptomInput = caseForm.querySelector('[name="symptom"]');
+      const clientTypeInput = caseForm.querySelector('[name="clientType"]');
       const nextStepInput = caseForm.querySelector('[name="nextStep"]');
       const summaryInput = caseForm.querySelector('[name="clientSummary"]');
+      const diagnosticInput = caseForm.querySelector('[name="diagnosticSummary"]');
+      const probabilityInput = caseForm.querySelector('[name="recoveryProbability"]');
+      const timelineInput = caseForm.querySelector('[name="estimatedTimeline"]');
+      const conditionsInput = caseForm.querySelector('[name="quoteConditions"]');
       const notifyInput = caseForm.querySelector('[name="notifyClient"]');
       const qualInput = caseForm.querySelector('[name="qualificationSummary"]');
       const notesInput = caseForm.querySelector('[name="internalNotes"]');
       const flagsInput = caseForm.querySelector('[name="handlingFlags"]');
       const acqInput = caseForm.querySelector('[name="acquisitionSource"]');
+      const assignedInput = caseForm.querySelector('[name="assignedTo"]');
+      const lastActionInput = caseForm.querySelector('[name="lastAction"]');
+      const nextActionInput = caseForm.querySelector('[name="nextAction"]');
+      const documentsInput = caseForm.querySelector('[name="documentsSummary"]');
       const quoteAmtInput = caseForm.querySelector('[name="quoteAmount"]');
       const preapprovalInput = caseForm.querySelector('[name="preapprovalConfirmed"]');
 
       if (statusInput) statusInput.value = record.status;
+      if (receivedAtInput) receivedAtInput.value = record.receivedAt ? new Date(record.receivedAt).toISOString().slice(0, 16) : "";
+      if (cityInput) cityInput.value = record.city || "";
+      if (contactInput) contactInput.value = record.preferredContact || "";
+      if (symptomInput) symptomInput.value = record.symptom || "";
+      if (clientTypeInput) clientTypeInput.value = record.clientType || "";
       if (nextStepInput) nextStepInput.value = record.nextStep;
       if (summaryInput) summaryInput.value = record.clientSummary;
+      if (diagnosticInput) diagnosticInput.value = record.diagnosticSummary || "";
+      if (probabilityInput) probabilityInput.value = record.recoveryProbability || "";
+      if (timelineInput) timelineInput.value = record.estimatedTimeline || "";
+      if (conditionsInput) conditionsInput.value = record.quoteConditions || "Aucune donnée récupérée = aucune facture.";
       if (notifyInput) notifyInput.checked = false;
       if (qualInput) qualInput.value = record.qualificationSummary || "";
       if (notesInput) notesInput.value = record.internalNotes || "";
       if (flagsInput) flagsInput.value = record.handlingFlags || "";
       if (acqInput) acqInput.value = record.acquisitionSource || "";
+      if (assignedInput) assignedInput.value = record.assignedTo || "";
+      if (lastActionInput) lastActionInput.value = record.lastAction || "";
+      if (nextActionInput) nextActionInput.value = record.nextAction || "";
+      if (documentsInput) documentsInput.value = record.documentsSummary || "";
       if (quoteAmtInput) quoteAmtInput.value = record.quoteAmountCents ? (record.quoteAmountCents / 100).toFixed(2) : "";
       if (preapprovalInput) preapprovalInput.checked = Boolean(record.preapprovalConfirmed);
+    }
+
+    if (quotePdfLink) {
+      quotePdfLink.href = `${searchEndpoint.replace(/\/cases$/, "/quote-pdf")}?caseId=${encodeURIComponent(record.caseId)}`;
     }
 
     if (quoteStatusDisplay) quoteStatusDisplay.textContent = quoteStatusLabels[record.quoteStatus] || record.quoteStatus || "Aucune";
@@ -1822,6 +4479,7 @@ if (operationsRoot) {
     }
 
     renderPayments(record.payments || []);
+    renderPricingDecision(record);
 
     if (accessResult) {
       accessResult.textContent = "";
@@ -1846,6 +4504,11 @@ if (operationsRoot) {
     if (conciergeResult) {
       conciergeResult.textContent = "";
       conciergeResult.dataset.state = "";
+    }
+
+    if (pricingResult) {
+      pricingResult.textContent = "";
+      pricingResult.dataset.state = "";
     }
 
     renderHistory(record.history || []);
@@ -1989,12 +4652,25 @@ if (operationsRoot) {
             action: "update",
             caseId,
             status: caseForm.querySelector('[name="status"]')?.value.trim() || "",
+            receivedAt: caseForm.querySelector('[name="receivedAt"]')?.value.trim() || "",
+            city: caseForm.querySelector('[name="city"]')?.value.trim() || "",
+            preferredContact: caseForm.querySelector('[name="preferredContact"]')?.value.trim() || "",
+            symptom: caseForm.querySelector('[name="symptom"]')?.value.trim() || "",
+            clientType: caseForm.querySelector('[name="clientType"]')?.value.trim() || "",
             nextStep: caseForm.querySelector('[name="nextStep"]')?.value.trim() || "",
             clientSummary: caseForm.querySelector('[name="clientSummary"]')?.value.trim() || "",
+            diagnosticSummary: caseForm.querySelector('[name="diagnosticSummary"]')?.value.trim() || "",
+            recoveryProbability: caseForm.querySelector('[name="recoveryProbability"]')?.value.trim() || "",
+            estimatedTimeline: caseForm.querySelector('[name="estimatedTimeline"]')?.value.trim() || "",
+            quoteConditions: caseForm.querySelector('[name="quoteConditions"]')?.value.trim() || "",
             qualificationSummary: caseForm.querySelector('[name="qualificationSummary"]')?.value.trim() || "",
             internalNotes: caseForm.querySelector('[name="internalNotes"]')?.value.trim() || "",
             handlingFlags: caseForm.querySelector('[name="handlingFlags"]')?.value.trim() || "",
             acquisitionSource: caseForm.querySelector('[name="acquisitionSource"]')?.value.trim() || "",
+            assignedTo: caseForm.querySelector('[name="assignedTo"]')?.value.trim() || "",
+            lastAction: caseForm.querySelector('[name="lastAction"]')?.value.trim() || "",
+            nextAction: caseForm.querySelector('[name="nextAction"]')?.value.trim() || "",
+            documentsSummary: caseForm.querySelector('[name="documentsSummary"]')?.value.trim() || "",
             quoteAmount: caseForm.querySelector('[name="quoteAmount"]')?.value.trim() || "",
             preapprovalConfirmed: Boolean(caseForm.querySelector('[name="preapprovalConfirmed"]')?.checked),
             notifyClient: Boolean(caseForm.querySelector('[name="notifyClient"]')?.checked),
@@ -2177,6 +4853,10 @@ if (operationsRoot) {
         if (action === "quote-send") {
           const amt = caseForm?.querySelector('[name="quoteAmount"]')?.value.trim() || "";
           if (amt) body.quoteAmount = amt;
+          body.diagnosticSummary = caseForm?.querySelector('[name="diagnosticSummary"]')?.value.trim() || "";
+          body.recoveryProbability = caseForm?.querySelector('[name="recoveryProbability"]')?.value.trim() || "";
+          body.estimatedTimeline = caseForm?.querySelector('[name="estimatedTimeline"]')?.value.trim() || "";
+          body.quoteConditions = caseForm?.querySelector('[name="quoteConditions"]')?.value.trim() || "";
         }
 
         const response = await fetch(searchEndpoint, {
@@ -2291,6 +4971,152 @@ if (operationsRoot) {
         setMessage(conciergeResult, "error", error instanceof Error ? error.message : "Concierge indisponible.");
       } finally {
         setButtonBusy(conciergeGenerateButton, false);
+      }
+    });
+  }
+
+  if (automationApplyButton) {
+    automationApplyButton.addEventListener("click", async () => {
+      const caseId = currentCaseIdInput?.value || "";
+      if (!caseId) {
+        setMessage(conciergeResult, "error", "Chargez d'abord un dossier.");
+        return;
+      }
+
+      setMessage(conciergeResult, "success", "Application du plan automatisé...");
+      setButtonBusy(automationApplyButton, true, "Application...");
+
+      try {
+        const response = await fetch(searchEndpoint, {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ action: "apply-automation", caseId })
+        });
+        const data = await parseJsonResponse(response);
+
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.message || "Automation indisponible.");
+        }
+
+        if (data.case) fillCaseDetail(data.case);
+        setMessage(conciergeResult, "success", "Plan automatisé appliqué au dossier, à la timeline et aux champs opérateur.");
+      } catch (error) {
+        setMessage(conciergeResult, "error", error instanceof Error ? error.message : "Automation indisponible.");
+      } finally {
+        setButtonBusy(automationApplyButton, false);
+      }
+    });
+  }
+
+  if (automationSuiteCopyButton) {
+    automationSuiteCopyButton.addEventListener("click", async () => {
+      try {
+        await writeTextToClipboard(currentAutomationSuite?.copyText || "Aucun plan automation disponible.");
+        setMessage(automationSuiteResult, "success", "Plan automation copié.");
+      } catch {
+        setMessage(automationSuiteResult, "error", "Copie impossible.");
+      }
+    });
+  }
+
+  if (payoutCopyButton) {
+    payoutCopyButton.addEventListener("click", async () => {
+      try {
+        await writeTextToClipboard(payoutRunbook);
+        setMessage(payoutResult, "success", "Runbook payout copié.");
+      } catch {
+        setMessage(payoutResult, "error", "Copie impossible. Ouvrez Stripe et suivez la checklist visible.");
+      }
+    });
+  }
+
+  if (pricingPrefillButton) {
+    pricingPrefillButton.addEventListener("click", () => {
+      if (!currentPricingDecision?.ready || !currentPricingDecision.suggestedPayment || !paymentForm) {
+        setMessage(pricingResult, "error", "Le job prix est bloqué. Corrigez les garde-fous avant de préremplir.");
+        return;
+      }
+
+      const suggestedPayment = currentPricingDecision.suggestedPayment;
+
+      const kindInput = paymentForm.querySelector('[name="paymentKind"]');
+      const amountInput = paymentForm.querySelector('[name="amount"]');
+      const labelInput = paymentForm.querySelector('[name="label"]');
+      const descriptionInput = paymentForm.querySelector('[name="description"]');
+      const sendEmailInput = paymentForm.querySelector('[name="sendEmail"]');
+
+      if (kindInput) kindInput.value = suggestedPayment.paymentKind || currentPricingDecision.paymentKind || "final";
+      if (amountInput) amountInput.value = suggestedPayment.amount || currentPricingDecision.amount;
+      if (labelInput) labelInput.value = suggestedPayment.label || currentPricingDecision.label;
+      if (descriptionInput) descriptionInput.value = suggestedPayment.description || currentPricingDecision.description;
+      if (sendEmailInput) sendEmailInput.checked = true;
+
+      setMessage(pricingResult, "success", "Paiement exact prérempli. Révisez, puis utilisez le bouton Paiements pour créer et envoyer le lien Stripe.");
+      setMessage(paymentStatus, "success", "Demande de paiement préparée par l'intelligence prix, en attente d'envoi opérateur.");
+    });
+  }
+
+  if (pricingCreateButton) {
+    pricingCreateButton.addEventListener("click", async () => {
+      const caseId = currentCaseIdInput?.value || "";
+
+      if (!caseId) {
+        setMessage(pricingResult, "error", "Chargez d'abord un dossier réel.");
+        return;
+      }
+
+      if (!currentPricingDecision?.ready) {
+        setMessage(pricingResult, "error", "Le job prix est bloqué. Aucun lien Stripe ne sera créé.");
+        return;
+      }
+
+      setButtonBusy(pricingCreateButton, true, "Création...");
+      setMessage(pricingResult, "success", "Création du lien intelligent côté serveur...");
+
+      try {
+        const response = await fetch(searchEndpoint, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            accept: "application/json"
+          },
+          body: JSON.stringify({
+            action: "create-smart-payment",
+            caseId
+          })
+        });
+        const data = await parseJsonResponse(response);
+
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.message || "Le job prix n'a pas pu créer le lien.");
+        }
+
+        if (data.case) {
+          fillCaseDetail(data.case);
+        }
+
+        setMessage(
+          pricingResult,
+          data.delivery === "sent" ? "success" : "error",
+          data.delivery === "sent"
+            ? "Lien Stripe exact créé et envoyé au client."
+            : `Lien exact créé. Envoi automatique non effectué: ${data.delivery}.`
+        );
+      } catch (error) {
+        setMessage(pricingResult, "error", error instanceof Error ? error.message : "Le job prix n'a pas pu créer le lien.");
+      } finally {
+        setButtonBusy(pricingCreateButton, false);
+      }
+    });
+  }
+
+  if (pricingCopyButton) {
+    pricingCopyButton.addEventListener("click", async () => {
+      try {
+        await writeTextToClipboard(currentPricingDecision?.copyText || "Aucune décision price intelligence disponible.");
+        setMessage(pricingResult, "success", "Décision job copiée.");
+      } catch {
+        setMessage(pricingResult, "error", "Copie impossible.");
       }
     });
   }
@@ -2544,4 +5370,291 @@ if (opsViewRoot) {
 
     loadView();
   }
+}
+
+/* ── RemoteFix client portal and admin dashboard ──────────── */
+
+const remoteFixForm = document.querySelector("[data-remotefix-form]");
+const remoteFixSessionPanel = document.querySelector("[data-remotefix-session]");
+
+const remoteFixParams = new URLSearchParams(window.location.search);
+const remoteFixCredentials = {
+  caseId: remoteFixParams.get("caseId") || "",
+  sessionId: remoteFixParams.get("sessionId") || "",
+  token: remoteFixParams.get("token") || ""
+};
+
+const remoteFixJson = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+const remoteFixIdempotencyKey = () => {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return `rf-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+};
+
+const remoteFixDiagnosticPayload = () => ({
+  caseId: remoteFixCredentials.caseId,
+  sessionId: remoteFixCredentials.sessionId,
+  sessionToken: remoteFixCredentials.token,
+  agentVersion: "tauri-simulated-0.1",
+  platform: "browser_simulated",
+  diagnostics: {
+    disks: [{
+      model: "RemoteFix simulated disk",
+      sizeGb: 1000,
+      smartStatus: "passed",
+      isDetected: true,
+      hasMountPoint: false,
+      fileSystem: "NTFS",
+      isReadOnly: true
+    }],
+    cloud: { provider: "onedrive", syncStatus: "stuck", previousVersionsFound: 3 },
+    outlook: { profileDetected: true, pstFilesFound: 1, ostFilesFound: 1, indexingHealthy: false },
+    system: { freeSpaceGb: 128, criticalEventsLast24h: 0, malwareIndicators: 0, ransomwareExtensionsDetected: [] }
+  }
+});
+
+const renderRemoteFixClientOverview = (data) => {
+  const sessionSummary = document.querySelector("[data-remotefix-session-summary]");
+  const reportTarget = document.querySelector("[data-remotefix-report]");
+  const runButton = document.querySelector("[data-remotefix-run-diagnostic]");
+  if (remoteFixSessionPanel) remoteFixSessionPanel.hidden = false;
+  if (sessionSummary) {
+    sessionSummary.textContent = `${data.case?.caseId || "Dossier"} · ${data.triage?.decision || "diagnostic"} · ${data.session?.status || "session"}`;
+  }
+  if (runButton) runButton.disabled = !data.hasConsent;
+  if (reportTarget) {
+    reportTarget.textContent = JSON.stringify({
+      dossier: data.case?.caseId,
+      statut: data.case?.status,
+      decision: data.triage?.decision,
+      service: data.triage?.service,
+      rapport: data.diagnostic?.summary || "Aucun rapport agent reçu.",
+      actionsAutorisees: data.diagnostic?.safeActionsToOffer || data.triage?.allowedActions || [],
+      actionsBloquees: data.diagnostic?.blockedActions || data.triage?.blockedActions || []
+    }, null, 2);
+  }
+};
+
+if (remoteFixForm) {
+  const messageTarget = document.querySelector("[data-remotefix-message]");
+  const resultPanel = document.querySelector("[data-remotefix-result]");
+  const submitButton = remoteFixForm.querySelector('button[type="submit"]');
+  const endpoint = remoteFixForm.getAttribute("data-remotefix-endpoint") || "/api/remotefix/cases";
+
+  remoteFixForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!remoteFixForm.checkValidity()) {
+      remoteFixForm.reportValidity();
+      return;
+    }
+    const formData = new FormData(remoteFixForm);
+    const payload = {
+      client: {
+        name: `${formData.get("name") || ""}`.trim(),
+        email: `${formData.get("email") || ""}`.trim(),
+        phone: `${formData.get("phone") || ""}`.trim(),
+        type: `${formData.get("clientType") || "individual"}`
+      },
+      intake: {
+        deviceType: `${formData.get("deviceType") || "unknown"}`,
+        systemType: `${formData.get("systemType") || "unknown"}`,
+        symptom: `${formData.get("symptom") || "unknown"}`,
+        urgency: `${formData.get("urgency") || "standard"}`,
+        problemStartedAt: `${formData.get("problemStartedAt") || ""}`.trim(),
+        containsCriticalData: formData.get("containsCriticalData") === "on",
+        attemptedFix: formData.get("attemptedFix") === "on",
+        legalMatter: formData.get("legalMatter") === "on",
+        notes: `${formData.get("notes") || ""}`.trim()
+      },
+      idempotencyKey: remoteFixIdempotencyKey()
+    };
+
+    setButtonBusy(submitButton, true, "Création...");
+    setMessage(messageTarget, "success", "Création du dossier, triage et lien sécurisé...");
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await remoteFixJson(response);
+      if (!response.ok || !data?.ok) throw new Error(data?.message || "RemoteFix indisponible.");
+
+      if (resultPanel) resultPanel.hidden = false;
+      document.querySelector("[data-remotefix-case-title]").textContent = `Dossier ${data.caseId}`;
+      document.querySelector("[data-remotefix-decision]").textContent = data.triage?.decision || "—";
+      document.querySelector("[data-remotefix-service]").textContent = data.triage?.service || "—";
+      document.querySelector("[data-remotefix-risk]").textContent = `${data.triage?.riskLabel || "—"} (${data.triage?.riskScore || 0}/100)`;
+      document.querySelector("[data-remotefix-price]").textContent = data.triage?.priceRange || "—";
+      document.querySelector("[data-remotefix-next]").textContent = data.triage?.nextAction || "—";
+      const secureLink = document.querySelector("[data-remotefix-secure-link]");
+      const reportLink = document.querySelector("[data-remotefix-report-link]");
+      if (secureLink) secureLink.href = data.session?.publicUrl || "#";
+      if (reportLink) reportLink.href = `/api/remotefix/report-pdf?caseId=${encodeURIComponent(data.caseId)}&sessionId=${encodeURIComponent(data.session?.id || "")}&token=${encodeURIComponent(new URL(data.session?.publicUrl || window.location.href).searchParams.get("token") || "")}`;
+      setMessage(messageTarget, data.email?.sent ? "success" : "error", data.email?.sent ? "Dossier créé et courriel Resend envoyé." : "Dossier créé. Courriel simulé ou non configuré.");
+    } catch (error) {
+      setMessage(messageTarget, "error", error instanceof Error ? error.message : "RemoteFix indisponible.");
+    } finally {
+      setButtonBusy(submitButton, false);
+    }
+  });
+}
+
+if (remoteFixSessionPanel && remoteFixCredentials.caseId && remoteFixCredentials.sessionId && remoteFixCredentials.token) {
+  const consentForm = document.querySelector("[data-remotefix-consent-form]");
+  const runButton = document.querySelector("[data-remotefix-run-diagnostic]");
+  const reportTarget = document.querySelector("[data-remotefix-report]");
+  const loadRemoteFixSession = async () => {
+    const response = await fetch(`/api/remotefix/cases?caseId=${encodeURIComponent(remoteFixCredentials.caseId)}&sessionId=${encodeURIComponent(remoteFixCredentials.sessionId)}&token=${encodeURIComponent(remoteFixCredentials.token)}`, { headers: { accept: "application/json" } });
+    const data = await remoteFixJson(response);
+    if (response.ok && data?.ok) renderRemoteFixClientOverview(data);
+    else if (reportTarget) reportTarget.textContent = data?.message || "Lien RemoteFix invalide.";
+  };
+
+  consentForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const response = await fetch("/api/remotefix/consent", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ ...remoteFixCredentials, accepted: true, acceptedTermsVersion: "remotefix-terms-2026-05-07" })
+    });
+    const data = await remoteFixJson(response);
+    if (response.ok && data?.ok) {
+      setMessage(reportTarget, "success", "Consentement reçu. Le diagnostic simulé peut démarrer.");
+      if (runButton) runButton.disabled = false;
+      await loadRemoteFixSession();
+    } else {
+      setMessage(reportTarget, "error", data?.message || "Consentement impossible.");
+    }
+  });
+
+  runButton?.addEventListener("click", async () => {
+    setButtonBusy(runButton, true, "Diagnostic...");
+    const response = await fetch("/api/remotefix/diagnostics", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify(remoteFixDiagnosticPayload())
+    });
+    const data = await remoteFixJson(response);
+    if (response.ok && data?.ok) {
+      if (reportTarget) reportTarget.textContent = JSON.stringify(data.result, null, 2);
+      await loadRemoteFixSession();
+    } else {
+      setMessage(reportTarget, "error", data?.message || "Diagnostic refusé.");
+    }
+    setButtonBusy(runButton, false);
+  });
+
+  loadRemoteFixSession();
+}
+
+const remoteFixAdmin = document.querySelector("[data-remotefix-admin]");
+
+if (remoteFixAdmin) {
+  const listTarget = remoteFixAdmin.querySelector("[data-remotefix-admin-list]");
+  const detailPanel = remoteFixAdmin.querySelector("[data-remotefix-admin-detail]");
+  const messageTarget = remoteFixAdmin.querySelector("[data-remotefix-admin-message]");
+  const searchForm = remoteFixAdmin.querySelector("[data-remotefix-admin-search]");
+  let selectedOverview = null;
+
+  const loadRemoteFixDetail = async (caseId) => {
+    const response = await fetch(`/api/remotefix/admin?caseId=${encodeURIComponent(caseId)}`, { headers: { accept: "application/json" } });
+    const data = await remoteFixJson(response);
+    if (!response.ok || !data?.ok) throw new Error(data?.message || "Dossier indisponible.");
+    selectedOverview = data;
+    if (detailPanel) detailPanel.hidden = false;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-case-id]").textContent = data.case.caseId;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-title]").textContent = `${data.case.name} · ${data.case.email}`;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-decision]").textContent = `${data.triage?.decision || "—"} · ${data.triage?.riskLabel || "—"}`;
+    remoteFixAdmin.querySelector("[data-remotefix-admin-report]").textContent = data.diagnostic?.summary || "Aucun rapport reçu.";
+    remoteFixAdmin.querySelector("[data-remotefix-admin-actions]").textContent = (data.diagnostic?.safeActionsToOffer || data.triage?.allowedActions || []).join(", ") || "Lecture seulement";
+    remoteFixAdmin.querySelector("[data-remotefix-admin-blocked]").textContent = (data.diagnostic?.blockedActions || data.triage?.blockedActions || []).join(", ") || "—";
+    remoteFixAdmin.querySelector("[data-remotefix-admin-pdf]").href = `/api/remotefix/report-pdf?caseId=${encodeURIComponent(data.case.caseId)}`;
+    const auditTarget = remoteFixAdmin.querySelector("[data-remotefix-admin-audit]");
+    auditTarget.replaceChildren(...(data.audit || []).map((entry) => {
+      const item = document.createElement("li");
+      item.textContent = `${formatTimestamp(entry.createdAt)} · ${entry.actor} · ${entry.event}`;
+      return item;
+    }));
+  };
+
+  const loadRemoteFixAdminList = async () => {
+    const formData = new FormData(searchForm);
+    const query = `${formData.get("query") || ""}`.trim();
+    const response = await fetch(`/api/remotefix/admin?query=${encodeURIComponent(query)}`, { headers: { accept: "application/json" } });
+    const data = await remoteFixJson(response);
+    if (!response.ok || !data?.ok) throw new Error(data?.message || "Dashboard indisponible.");
+    listTarget.replaceChildren(...(data.items || []).map((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ops-case-item";
+      button.innerHTML = `<strong>${escapeHtml(item.caseId)}</strong><span>${escapeHtml(item.name)} · ${escapeHtml(item.triage.decision)}</span><small>${escapeHtml(item.triage.riskLabel)} · ${escapeHtml(item.status)}</small>`;
+      button.addEventListener("click", async () => {
+        try {
+          await loadRemoteFixDetail(item.caseId);
+          setMessage(messageTarget, "success", "Dossier RemoteFix chargé.");
+        } catch (error) {
+          setMessage(messageTarget, "error", error instanceof Error ? error.message : "Dossier indisponible.");
+        }
+      });
+      return button;
+    }));
+    setMessage(messageTarget, "success", `${(data.items || []).length} dossier(s) RemoteFix.`);
+  };
+
+  searchForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await loadRemoteFixAdminList();
+    } catch (error) {
+      setMessage(messageTarget, "error", error instanceof Error ? error.message : "Dashboard indisponible.");
+    }
+  });
+
+  remoteFixAdmin.querySelector("[data-remotefix-admin-email]")?.addEventListener("click", async () => {
+    if (!selectedOverview?.case?.caseId) return;
+    const response = await fetch("/api/remotefix/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ caseId: selectedOverview.case.caseId })
+    });
+    const data = await remoteFixJson(response);
+    setMessage(messageTarget, response.ok && data?.ok ? "success" : "error", response.ok && data?.ok ? "Courriel sécurisé envoyé ou simulé." : data?.message || "Envoi impossible.");
+    if (response.ok && data?.ok) await loadRemoteFixDetail(selectedOverview.case.caseId);
+  });
+
+  remoteFixAdmin.querySelector("[data-remotefix-admin-payment]")?.addEventListener("click", async () => {
+    if (!selectedOverview?.case?.caseId) return;
+    const response = await fetch("/api/remotefix/payments", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ caseId: selectedOverview.case.caseId })
+    });
+    const data = await remoteFixJson(response);
+    setMessage(messageTarget, response.ok && data?.ok ? "success" : "error", response.ok && data?.ok ? "Paiement Stripe créé." : data?.message || "Paiement impossible.");
+  });
+
+  remoteFixAdmin.querySelector("[data-remotefix-admin-approve]")?.addEventListener("click", async () => {
+    if (!selectedOverview?.case?.caseId) return;
+    const session = selectedOverview.sessions?.[0];
+    const action = remoteFixAdmin.querySelector("[data-remotefix-admin-command]")?.value || "read_diagnostics";
+    const response = await fetch("/api/remotefix/commands", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ caseId: selectedOverview.case.caseId, sessionId: session?.id, action, paymentAuthorized: true })
+    });
+    const data = await remoteFixJson(response);
+    setMessage(messageTarget, response.ok && data?.ok ? "success" : "error", response.ok && data?.ok ? `Commande signée: ${data.command.id}` : data?.message || "Commande refusée.");
+    if (response.ok && data?.ok) await loadRemoteFixDetail(selectedOverview.case.caseId);
+  });
+
+  searchForm?.requestSubmit();
 }

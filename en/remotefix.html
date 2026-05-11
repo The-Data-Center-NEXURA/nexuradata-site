@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>NEXURA RemoteFix | Secure remote diagnostics</title>
+  <meta name="description" content="RemoteFix portal to create a case, receive a secure link, provide consent and run a read-only simulated diagnostic.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://www.nexuradata.ca/en/remotefix">
+  <link rel="alternate" hreflang="fr-CA" href="https://nexuradata.ca/remotefix">
+  <link rel="alternate" hreflang="en-CA" href="https://nexuradata.ca/en/remotefix">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site.css?v=20260508c">
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container">
+      <nav class="site-nav" aria-label="Main navigation">
+        <a class="brand" href="/en/" aria-label="NEXURA DATA home">
+          <img src="/assets/nexuradata-master.svg" alt="NEXURA DATA" class="brand-logo">
+        </a>
+        <div class="nav-links">
+          <a href="/en/services-recuperation-forensique-montreal">Services</a>
+          <a href="/en/tarifs-recuperation-donnees-montreal">Pricing</a>
+          <a href="/en/suivi-dossier-client-montreal">Case status</a>
+          <a href="/en/#contact">Contact</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-shell remotefix-page">
+    <section class="page-hero remotefix-hero" aria-labelledby="remotefix-title">
+      <div class="container remotefix-hero-grid">
+        <article>
+          <p class="eyebrow">NEXURA RemoteFix</p>
+          <h1 id="remotefix-title">Secure remote diagnostics</h1>
+          <p>NEXURA RemoteFix resolves simple issues remotely when the server signs an authorized command, diagnoses complex issues, and transfers dangerous cases to the NEXURA DATA lab.</p>
+        </article>
+        <aside class="remotefix-principle" aria-label="Security principle">
+          <p>The agent never decides.</p>
+          <p>The server decides, signs, expires and audits.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="remote-intake-title">
+      <div class="container remotefix-layout">
+        <form class="page-card remotefix-form" data-remotefix-form data-remotefix-endpoint="/api/remotefix/cases">
+          <p class="eyebrow">Module 1 — Smart intake</p>
+          <h2 id="remote-intake-title">Create a RemoteFix case</h2>
+          <label class="field"><span>Name</span><input name="name" autocomplete="name" required></label>
+          <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+          <label class="field"><span>Phone</span><input type="tel" name="phone" autocomplete="tel"></label>
+          <label class="field"><span>Client type</span><select name="clientType" required><option value="individual">Individual</option><option value="business">Business</option><option value="lawyer">Lawyer</option><option value="insurance">Insurance</option></select></label>
+          <label class="field"><span>Device</span><select name="deviceType" required><option value="external_drive">External drive</option><option value="ssd_nvme">SSD / NVMe</option><option value="windows_pc">Windows PC</option><option value="mac">Mac</option><option value="linux">Linux</option><option value="cloud">Cloud</option><option value="outlook">Outlook</option><option value="nas_server">NAS / server</option><option value="phone">Phone</option><option value="ransomware">Ransomware</option></select></label>
+          <label class="field"><span>System</span><select name="systemType"><option value="windows">Windows</option><option value="macos">macOS</option><option value="linux">Linux</option><option value="nas">NAS</option><option value="ios">iPhone / iOS</option><option value="android">Android</option><option value="cloud">Cloud</option><option value="unknown">Unknown</option></select></label>
+          <label class="field"><span>Problem</span><select name="symptom" required><option value="drive_detected_inaccessible">Detected but inaccessible</option><option value="format_prompt">Format prompt</option><option value="deleted_files">Deleted files</option><option value="cloud_sync_stuck">Cloud sync stuck</option><option value="outlook_missing_mail">Missing Outlook mail</option><option value="system_slow_errors">Slow system / errors</option><option value="nas_raid_warning">NAS / RAID warning</option><option value="clicking_drive">Clicking drive</option><option value="ssd_not_detected">SSD not detected</option><option value="encrypted_files">Encrypted files</option><option value="unknown">Unknown</option></select></label>
+          <label class="field"><span>Since when?</span><input name="problemStartedAt" maxlength="120" placeholder="Example: this morning, yesterday, one week"></label>
+          <label class="field"><span>Urgency</span><select name="urgency" required><option value="standard">Standard</option><option value="priority">Priority</option><option value="emergency">Emergency</option></select></label>
+          <label class="consent-check"><input type="checkbox" name="attemptedFix"><span>I already tried something</span></label>
+          <label class="consent-check"><input type="checkbox" name="containsCriticalData"><span>The data is critical</span></label>
+          <label class="consent-check"><input type="checkbox" name="legalMatter"><span>Legal, insurance or evidence context</span></label>
+          <label class="field"><span>Notes</span><textarea name="notes" rows="5" maxlength="4000" placeholder="Add useful diagnostic details."></textarea></label>
+          <button class="button button-primary" type="submit">Create case and secure link</button>
+          <p class="form-status" data-remotefix-message aria-live="polite"></p>
+        </form>
+
+        <section class="page-card remotefix-result" data-remotefix-result hidden aria-live="polite">
+          <p class="eyebrow">Server result</p>
+          <h2 data-remotefix-case-title>RemoteFix case</h2>
+          <dl class="remotefix-readout">
+            <dt>Decision</dt><dd data-remotefix-decision>—</dd>
+            <dt>Service</dt><dd data-remotefix-service>—</dd>
+            <dt>Risk</dt><dd data-remotefix-risk>—</dd>
+            <dt>Estimate</dt><dd data-remotefix-price>—</dd>
+            <dt>Next action</dt><dd data-remotefix-next>—</dd>
+          </dl>
+          <div class="remotefix-actions">
+            <a class="button button-secondary" href="#" data-remotefix-secure-link>Open secure link</a>
+            <a class="button button-outline" href="#" data-remotefix-report-link>PDF report</a>
+          </div>
+        </section>
+
+        <section class="page-card remotefix-session" data-remotefix-session hidden>
+          <p class="eyebrow">Secure client portal</p>
+          <h2>Consent and simulated diagnostic</h2>
+          <p data-remotefix-session-summary>The secure link loads the RemoteFix case.</p>
+          <form data-remotefix-consent-form>
+            <label class="consent-check"><input type="checkbox" name="accepted" required><span>I authorize read-only diagnostics only. No repair starts without a signed server action.</span></label>
+            <button class="button button-primary" type="submit">Give consent</button>
+          </form>
+          <button class="button button-secondary" type="button" data-remotefix-run-diagnostic disabled>Run simulated diagnostic</button>
+          <pre class="remotefix-report" data-remotefix-report></pre>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <section class="footer-top" aria-label="Identity and information">
+        <img src="/assets/nexuradata-master.svg" alt="NEXURA DATA" class="footer-logo">
+      </section>
+      <section class="footer-legal" aria-label="Legal links">
+        <a href="/en/mentions-legales">Legal notice</a>
+        <a href="/en/politique-confidentialite">Privacy policy</a>
+        <a href="/en/conditions-intervention-paiement">Intervention terms</a>
+      </section>
+      <section class="footer-note" aria-label="Operating note">
+        <p>NEXURA RemoteFix is a diagnostic portal. The temporary agent reads authorized information and waits for signed server commands.</p>
+      </section>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=20260508c" defer></script>
+</body>
+
+</html>

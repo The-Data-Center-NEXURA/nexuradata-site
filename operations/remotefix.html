@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>RemoteFix admin | NEXURADATA</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site.css?v=20260508c">
+</head>
+
+<body>
+  <main class="ops-shell remotefix-admin" data-remotefix-admin>
+    <header class="ops-header">
+      <a class="brand" href="/operations/" aria-label="Console NEXURADATA">
+        <img src="/assets/nexuradata-master.svg" alt="NEXURA DATA" class="brand-logo">
+      </a>
+      <nav class="ops-nav" aria-label="Navigation opérateur">
+        <a href="/operations/">Dossiers</a>
+        <a href="/operations/remotefix.html" aria-current="page">RemoteFix</a>
+      </nav>
+    </header>
+
+    <section class="ops-panel">
+      <div class="ops-section-heading">
+        <p class="eyebrow">Contrôle admin</p>
+        <h1>Dashboard RemoteFix</h1>
+        <p>Voir dossiers, rapports, audit, commandes signées, paiement et courriel sécurisé.</p>
+      </div>
+      <form class="ops-toolbar" data-remotefix-admin-search>
+        <label><span>Recherche</span><input name="query" placeholder="Dossier, nom ou courriel"></label>
+        <button type="submit" class="button button-primary">Filtrer</button>
+      </form>
+      <p class="form-status" data-remotefix-admin-message aria-live="polite"></p>
+    </section>
+
+    <section class="ops-grid remotefix-admin-grid">
+      <aside class="ops-panel">
+        <h2>Dossiers</h2>
+        <div class="ops-case-list" data-remotefix-admin-list></div>
+      </aside>
+
+      <section class="ops-panel" data-remotefix-admin-detail hidden>
+        <div class="ops-detail-header">
+          <div>
+            <p class="eyebrow" data-remotefix-admin-case-id>RemoteFix</p>
+            <h2 data-remotefix-admin-title>Dossier</h2>
+          </div>
+          <a class="button button-outline" href="#" data-remotefix-admin-pdf target="_blank" rel="noopener noreferrer">Voir rapport PDF</a>
+        </div>
+
+        <dl class="remotefix-readout">
+          <dt>Décision</dt><dd data-remotefix-admin-decision>—</dd>
+          <dt>Rapport</dt><dd data-remotefix-admin-report>—</dd>
+          <dt>Actions possibles</dt><dd data-remotefix-admin-actions>—</dd>
+          <dt>Actions bloquées</dt><dd data-remotefix-admin-blocked>—</dd>
+        </dl>
+
+        <section class="remotefix-admin-actions" aria-label="Actions administrateur">
+          <button type="button" class="button button-secondary" data-remotefix-admin-email>Envoyer courriel sécurisé</button>
+          <button type="button" class="button button-secondary" data-remotefix-admin-payment>Créer paiement Stripe</button>
+          <label><span>Approuver action serveur</span><select data-remotefix-admin-command>
+            <option value="assign_drive_letter">Assignation lettre lecteur</option>
+            <option value="mount_volume">Montage volume</option>
+            <option value="restart_sync_service">Relance service OneDrive</option>
+            <option value="reindex_outlook">Réindexation Outlook</option>
+          </select></label>
+          <button type="button" class="button button-primary" data-remotefix-admin-approve>Signer commande</button>
+        </section>
+
+        <section>
+          <h3>Audit log</h3>
+          <ol class="remotefix-audit" data-remotefix-admin-audit></ol>
+        </section>
+      </section>
+    </section>
+  </main>
+  <script src="/assets/js/site.js?v=20260508c" defer></script>
+</body>
+
+</html>

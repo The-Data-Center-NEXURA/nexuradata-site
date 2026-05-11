@@ -4,10 +4,10 @@ This file is the single-page tracker for Google, Facebook/Meta and WhatsApp laun
 
 ## Repo-ready items
 
-- [x] GA4 installed on public pages with Measurement ID `G-TC31YSS01P`
+- [x] GA4 consent-gated on public pages with Measurement ID `G-TC31YSS01P`
 - [x] CSP allows Google Tag Manager and Google Analytics
 - [x] Privacy policy discloses GA4 analytics use and Google opt-out
-- [x] Meta Pixel installed with ID `751859640106935`
+- [x] Meta Pixel consent-gated with ID `751859640106935`
 - [x] CSP allows Meta Pixel script and event endpoints
 - [x] Privacy policy discloses Meta Pixel measurement use
 - [x] Merchant Center feed exists at `merchant-feed.xml` with French-first service listings
@@ -69,8 +69,8 @@ These cannot be verified from the repository. They must be completed in Google, 
 
 ### Facebook / Meta
 
-- [x] Facebook Page exists as `NEXURADATA` at `https://www.facebook.com/nexuradata`
-- [x] Facebook URL restored to homepage structured data `sameAs`
+- [x] Facebook Page URL reserved as `https://www.facebook.com/nexuradata`
+- [x] Public homepage avoids Facebook links until unauthenticated visibility is confirmed
 - [ ] Public unauthenticated Facebook Page visibility confirmed
 - [ ] Page category set to `Data Recovery Service`
 - [ ] Website, email and phone added

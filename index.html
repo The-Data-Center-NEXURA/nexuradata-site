@@ -19,25 +19,26 @@
   <meta property="og:title" content="Récupération de données à Montréal | NEXURADATA">
   <meta property="og:description"
     content="Récupération de données, supports critiques et forensique numérique pour Montréal et le Grand Montréal.">
-  <meta property="og:url" content="https://nexuradata.ca/">
+  <meta property="og:url" content="https://www.nexuradata.ca/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Récupération de données à Montréal | NEXURADATA">
   <meta name="twitter:description"
     content="Récupération de données, supports critiques et forensique numérique pour Montréal, Laval, Longueuil et le Grand Montréal.">
   <meta name="twitter:image" content="https://nexuradata.ca/assets/icons/og-default.png">
-  <link rel="canonical" href="https://nexuradata.ca/">
+  <link rel="canonical" href="https://www.nexuradata.ca/">
   <link rel="alternate" hreflang="fr-CA" href="https://nexuradata.ca/">
   <link rel="alternate" hreflang="en-CA" href="https://nexuradata.ca/en/">
   <link rel="alternate" hreflang="x-default" href="https://nexuradata.ca/en/">
   <link rel="manifest" href="site.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="preload" as="image" href="assets/icons/hero-lab-media.avif" type="image/avif">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/site.css?v=20260504a">
+  <link rel="stylesheet" href="assets/css/site.css?v=20260508c">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -50,7 +51,6 @@
       "image": "https://nexuradata.ca/assets/icons/og-default.png",
       "logo": "https://nexuradata.ca/assets/nexuradata-master.svg",
       "sameAs": [
-        "https://www.facebook.com/nexuradata",
         "https://wa.me/14388130592"
       ],
       "priceRange": "$$",
@@ -165,10 +165,7 @@
       "url": "https://nexuradata.ca/"
     }
   </script>
-  <script src="assets/js/site.js" defer></script>
-  <!-- Google Analytics 4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TC31YSS01P"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TC31YSS01P');</script>
+  <script src="assets/js/site.js?v=20260508c" defer></script>
 </head>
 
 <body>
@@ -182,10 +179,10 @@
             translate="no">
         </a>
         <div class="nav-links">
-          <a href="/services-recuperation-forensique-montreal.html">Services</a>
-          <a href="/tarifs-recuperation-donnees-montreal.html">Tarifs</a>
-          <a href="/politique-confidentialite.html">Confidentialité</a>
-          <a href="/conditions-intervention-paiement.html">Conditions</a>
+          <a href="/services-recuperation-forensique-montreal">Services</a>
+          <a href="/tarifs-recuperation-donnees-montreal">Tarifs</a>
+          <a href="/politique-confidentialite">Confidentialité</a>
+          <a href="/conditions-intervention-paiement">Conditions</a>
           <a href="/#contact">Contact</a>
           <a href="/en/" class="lang-switch" lang="en">EN</a>
         </div>
@@ -195,11 +192,24 @@
 
   <main id="contenu">
     <section class="hero section" aria-labelledby="hero-title">
-      <div class="hero-backdrop" aria-hidden="true"></div>
+      <div class="hero-backdrop" aria-hidden="true">
+        <video class="hero-video" data-motion-video autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+          <source src="/assets/video/hero-loop.mp4" type="video/mp4">
+        </video>
+        <canvas class="kinetic-canvas" data-kinetic-canvas></canvas>
+      </div>
       <div class="container hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">Récupération de données · Montréal</p>
-          <h1 id="hero-title">Vos données ne sont pas perdues. Pas encore.</h1>
+          <p class="hero-status" data-hero-status>
+            <span class="hero-status-dot" aria-hidden="true"></span>
+            <span class="hero-status-label">LABO ACTIF</span>
+            <span class="hero-status-sep" aria-hidden="true">·</span>
+            <span class="hero-status-clock" data-hero-clock aria-label="Heure de Montréal">--:--</span>
+            <span class="hero-status-sep" aria-hidden="true">·</span>
+            <span class="hero-status-place">MTL</span>
+          </p>
+          <h1 id="hero-title">Vos données ne sont pas <span class="hero-h1-strike">perdues</span>. <span class="hero-h1-coda">Récupérables.</span></h1>
           <p class="hero-lead">
             Disque, SSD, téléphone, NAS, RAID ou serveur inaccessible: décrivez ce qui s'est passé. NEXURADATA
             évalue gratuitement le risque, le prix et la prochaine étape sécurisée avant toute intervention.
@@ -207,8 +217,7 @@
 
           <div class="hero-actions">
             <a href="#contact" class="button button-primary">Ouvrir un dossier</a>
-            <a href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20."
-              class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_hero">WhatsApp direct</a>
+            <a href="#diagnostic-assistant" class="button button-secondary" data-contact-intent="diagnostic_hero">Diagnostic guidé</a>
             <a href="tel:+14388130592" class="button button-outline" data-contact-intent="phone_hero">Appeler maintenant</a>
           </div>
           <ul class="hero-points" role="list">
@@ -217,37 +226,36 @@
             <li>Confidentialité, réception sécurisée et suivi clair.</li>
           </ul>
           <div class="trust-tags">
-            <span>WhatsApp direct</span>
+            <span>Diagnostic guidé</span>
             <span>Préqualification rapide</span>
+            <span>Post-quantique</span>
             <span>Évaluation gratuite</span>
             <span>Urgences 24/7</span>
           </div>
         </div>
 
         <aside class="hero-panel hero-lab-panel" aria-label="Engagement laboratoire">
-          <div class="cinematic-loop" aria-hidden="true">
-            <div class="cinematic-loop-stage">
-              <span class="cinematic-scan-line"></span>
-              <span class="cinematic-data-node node-one"></span>
-              <span class="cinematic-data-node node-two"></span>
-              <span class="cinematic-data-node node-three"></span>
-              <span class="cinematic-data-node node-four"></span>
+          <figure class="lab-snapshot lab-snapshot-video" data-facebook-video-stage>
+            <picture>
+              <source srcset="assets/icons/hero-lab-media.avif" type="image/avif">
+              <source srcset="assets/icons/hero-lab-media.webp" type="image/webp">
+              <img class="lab-snapshot-media" src="assets/icons/hero-lab-media.jpg" alt="Carte électronique inspectée en contexte de récupération de données" width="1200" height="800" decoding="async" fetchpriority="high">
+            </picture>
+            <figcaption class="lab-video-story">
+              <span>Le parcours</span>
+              <strong>Perdre les données. Les retrouver.</strong>
+            </figcaption>
+            <div class="lab-video-actions" aria-label="Vidéos NEXURADATA">
+              <button type="button" class="lab-video-trigger" data-facebook-video-trigger data-facebook-video-src="https://www.facebook.com/plugins/video.php?height=314&amp;href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1353554126829936%2F&amp;show_text=false&amp;width=560&amp;t=0" data-facebook-video-title="Perte de données - NEXURADATA" data-facebook-video-width="560" data-facebook-video-height="314" data-facebook-video-format="wide" aria-label="Lire la vidéo Perte de données">
+                <span class="lab-video-play" aria-hidden="true"></span>
+                <span><strong>Perte de données</strong><small>Quand tout disparaît</small></span>
+              </button>
+              <button type="button" class="lab-video-trigger" data-facebook-video-trigger data-facebook-video-src="https://www.facebook.com/plugins/video.php?height=314&amp;href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2793337254360216%2F&amp;show_text=false&amp;width=560&amp;t=0" data-facebook-video-title="Données retrouvées - NEXURADATA" data-facebook-video-width="560" data-facebook-video-height="314" data-facebook-video-format="wide" aria-label="Lire la vidéo Données retrouvées">
+                <span class="lab-video-play" aria-hidden="true"></span>
+                <span><strong>Données retrouvées</strong><small>Le dossier revient</small></span>
+              </button>
             </div>
-            <dl class="cinematic-readout">
-              <div>
-                <dt>Analyse</dt>
-                <dd>84%</dd>
-              </div>
-              <div>
-                <dt>Alignement</dt>
-                <dd>97%</dd>
-              </div>
-              <div>
-                <dt>Contrôle</dt>
-                <dd>OK</dd>
-              </div>
-            </dl>
-          </div>
+          </figure>
           <div class="lab-commitment-card">
             <p class="panel-label">Engagement laboratoire</p>
             <h2>Évaluation claire, sans engagement.</h2>
@@ -288,21 +296,21 @@
       </div>
     </section>
 
-    <section class="motion-story" aria-labelledby="motion-story-title">
-      <div class="container motion-story-grid">
-        <div class="motion-story-copy">
+    <section class="critical-story" aria-labelledby="critical-story-title">
+      <div class="container critical-story-grid">
+        <div class="critical-story-copy">
           <p class="eyebrow">Moment critique</p>
-          <h2 id="motion-story-title">La panne ne prévient pas.</h2>
+          <h2 id="critical-story-title">La panne ne prévient pas.</h2>
           <p>Quand les fichiers disparaissent, chaque geste compte. Le bon protocole garde le dossier récupérable.</p>
         </div>
-        <div class="motion-failure-visual" aria-hidden="true">
-          <span class="failure-frame frame-one"></span>
-          <span class="failure-frame frame-two"></span>
-          <span class="failure-frame frame-three"></span>
-          <span class="failure-fragment fragment-one"></span>
-          <span class="failure-fragment fragment-two"></span>
-          <span class="failure-fragment fragment-three"></span>
-          <span class="failure-fragment fragment-four"></span>
+        <div class="critical-story-panel" aria-hidden="true">
+          <span class="critical-frame frame-one"></span>
+          <span class="critical-frame frame-two"></span>
+          <span class="critical-frame frame-three"></span>
+          <span class="critical-fragment fragment-one"></span>
+          <span class="critical-fragment fragment-two"></span>
+          <span class="critical-fragment fragment-three"></span>
+          <span class="critical-fragment fragment-four"></span>
         </div>
       </div>
     </section>
@@ -388,24 +396,24 @@
               <li>Réponse &lt; 24 h</li>
               <li>Simple et rapide</li>
             </ul>
-            <a class="service-link" href="recuperation-donnees-montreal.html">Voir l'offre</a>
+            <a class="service-link" href="recuperation-donnees-montreal">Voir l'offre</a>
           </article>
 
           <article class="page-card service-card">
             <p class="service-index">02 / entreprise</p>
             <h3>RAID, NAS, serveur ou stockage critique en panne</h3>
-            <p>Pour les entreprises quand un serveur, un NAS ou un RAID bloque le travail ou contient des données importantes.</p>
+            <p>Pour les entreprises quand un serveur, un NAS ou un RAID bloque le travail, contient des données importantes ou exige une décision rapide sans reconstruction improvisée.</p>
             <ul class="offer-points" role="list">
-              <li>RAID dégradé, NAS inaccessible ou serveur hors ligne</li>
-              <li>On évite les reconstructions improvisées qui peuvent empirer le problème</li>
-              <li>Pour équipes TI, dirigeants, cabinets et partenaires techniques</li>
+              <li>RAID dégradé, NAS inaccessible, volume serveur hors ligne ou VM critique</li>
+              <li>Collecte de contexte: modèle, ordre des disques, contrôleur, logs et dernière action tentée</li>
+              <li>Plan clair pour TI, direction, MSP, cabinet ou assureur avant toute manipulation</li>
             </ul>
             <ul class="pill-list offer-meta" role="list">
+              <li>Triage serveur dès 399 $</li>
               <li>Urgence 7 j / 7</li>
-              <li>Priorité</li>
-              <li>Dossier entreprise</li>
+              <li>Décision TI</li>
             </ul>
-            <a class="service-link" href="recuperation-raid-ssd-montreal.html">Voir l'offre</a>
+            <a class="service-link" href="recuperation-raid-ssd-montreal">Voir l'offre</a>
           </article>
 
           <article class="page-card service-card">
@@ -422,7 +430,7 @@
               <li>Données sensibles</li>
               <li>Devis clair</li>
             </ul>
-            <a class="service-link" href="recuperation-telephone-montreal.html">Voir l'offre</a>
+            <a class="service-link" href="recuperation-telephone-montreal">Voir l'offre</a>
           </article>
 
           <article class="page-card service-card">
@@ -439,7 +447,7 @@
               <li>Preuve protégée</li>
               <li>Dossier juridique</li>
             </ul>
-            <a class="service-link" href="forensique-numerique-montreal.html">Voir l'offre</a>
+            <a class="service-link" href="forensique-numerique-montreal">Voir l'offre</a>
           </article>
 
           <article class="page-card service-card">
@@ -456,13 +464,13 @@
               <li>Contact unique</li>
               <li>Prix confirmé</li>
             </ul>
-            <a class="service-link" href="mandats-entreprise.html">Voir l'offre</a>
+            <a class="service-link" href="mandats-entreprise">Voir l'offre</a>
           </article>
         </div>
 
         <div class="page-links" data-reveal>
-          <a class="button button-secondary" href="tarifs-recuperation-donnees-montreal.html">Tarifs</a>
-          <a class="button button-secondary" href="suivi-dossier-client-montreal.html">Suivi de dossier</a>
+          <a class="button button-secondary" href="tarifs-recuperation-donnees-montreal">Tarifs</a>
+          <a class="button button-secondary" href="suivi-dossier-client-montreal">Suivi de dossier</a>
         </div>
       </div>
     </section>
@@ -518,8 +526,8 @@
 
           <article class="page-card trust-card">
             <h3>Technicien certifié</h3>
-            <p>Les dossiers sensibles sont traités par un examinateur certifié en analyse numérique.</p>
-            <a class="service-link" href="le-laboratoire.html">Le laboratoire</a>
+            <p>Les dossiers sensibles sont relus par le fondateur, examinateur certifié en analyse numérique, avant toute consigne risquée.</p>
+            <a class="service-link" href="le-laboratoire">Le laboratoire</a>
           </article>
 
           <article class="page-card trust-card">
@@ -535,20 +543,20 @@
           <article class="page-card trust-card">
             <h3>Données confidentielles</h3>
             <p>Vos fichiers ne sont pas partagés. L'accès est limité et le dossier est suivi du début à la fin.</p>
-            <a class="service-link" href="reception-securisee-donnees-montreal.html">Processus sécurisé</a>
+            <a class="service-link" href="reception-securisee-donnees-montreal">Processus sécurisé</a>
           </article>
 
           <article class="page-card trust-card">
             <h3>Tarifs affichés</h3>
             <p>Les prix de départ sont publiés pour les cas les plus courants. Pas de frais cachés ni de devis opaque.
             </p>
-            <a class="service-link" href="tarifs-recuperation-donnees-montreal.html">Consulter la grille</a>
+            <a class="service-link" href="tarifs-recuperation-donnees-montreal">Consulter la grille</a>
           </article>
 
           <article class="page-card trust-card">
             <h3>Un seul contact</h3>
-            <p>Vous savez à qui parler. Le même responsable suit votre dossier du début à la fin.</p>
-            <a class="service-link" href="mot-du-fondateur.html">Mot du fondateur</a>
+            <p>Vous savez à qui parler. Le fondateur garde la responsabilité du cadre, de la méthode et des décisions sensibles.</p>
+            <a class="service-link" href="mot-du-fondateur">Mot du fondateur</a>
           </article>
 
           <article class="page-card trust-card trust-card-wide">
@@ -574,13 +582,19 @@
             <p class="cert-kicker">Certification</p>
             <h3>Examinateur certifié CFE</h3>
             <p>Certification reconnue pour les dossiers d'analyse numérique, de preuve et d'enquête.</p>
-            <a class="service-link" href="le-laboratoire.html">Le laboratoire</a>
+            <a class="service-link" href="le-laboratoire">Le laboratoire</a>
           </div>
           <div class="page-card cert-card">
             <p class="cert-kicker">Vie privée</p>
             <h3>Conforme Loi&nbsp;25 — Québec</h3>
             <p>On collecte seulement les renseignements nécessaires pour ouvrir et gérer votre dossier.</p>
-            <a class="service-link" href="politique-confidentialite.html">Politique de confidentialité</a>
+            <a class="service-link" href="politique-confidentialite">Politique de confidentialité</a>
+          </div>
+          <div class="page-card cert-card">
+            <p class="cert-kicker">Post-quantique</p>
+            <h3>Préparation cryptographique</h3>
+            <p>Le sujet est partout dans l'actualité. NEXURADATA garde une posture orientée long terme pour les secrets, archives et mécanismes de confiance.</p>
+            <a class="service-link" href="resilience-donnees-entreprise-montreal">Résilience des données</a>
           </div>
           <div class="page-card cert-card">
             <p class="cert-kicker">Assurance</p>
@@ -596,13 +610,13 @@
             <p class="cert-kicker">Réception</p>
             <h3>Réception sécurisée</h3>
             <p>Le support est manipulé avec soin, avec accès restreint et suivi dès son arrivée.</p>
-            <a class="service-link" href="reception-securisee-donnees-montreal.html">Le protocole</a>
+            <a class="service-link" href="reception-securisee-donnees-montreal">Le protocole</a>
           </div>
           <div class="page-card cert-card">
             <p class="cert-kicker">Engagements</p>
             <h3>Engagements clairs</h3>
             <p>Vie privée, sécurité, français et information claire: les engagements sont publiés et tenus à jour.</p>
-            <a class="service-link" href="engagements-conformite-quebec.html">Voir les engagements</a>
+            <a class="service-link" href="engagements-conformite-quebec">Voir les engagements</a>
           </div>
         </div>
       </div>
@@ -751,7 +765,7 @@
                   <input type="checkbox" name="consentement" required>
                   <span>J'accepte que NEXURA DATA utilise les renseignements transmis dans ce formulaire afin d'ouvrir
                     et de gérer ma demande, de communiquer avec moi au sujet de ce dossier et d'assurer le suivi
-                    opérationnel du service, conformément à la <a href="politique-confidentialite.html">Politique de
+                    opérationnel du service, conformément à la <a href="politique-confidentialite">Politique de
                       confidentialité</a>.</span>
                 </label>
 
@@ -763,7 +777,7 @@
               <div class="form-actions">
                 <button type="submit" class="button button-primary">Ouvrir un dossier</button>
                 <a href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20."
-                  class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_contact">WhatsApp direct</a>
+                  class="button button-secondary" target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_emergency_contact">WhatsApp urgence</a>
                 <a href="tel:+14388130592" class="button button-outline" data-contact-intent="phone_contact">Appeler +1 438 813-0592</a>
                 <a href="mailto:contact@nexuradata.ca?subject=Urgence%20NEXURADATA"
                   class="button button-outline" data-contact-intent="email_contact">Urgence par courriel</a>
@@ -779,53 +793,45 @@
 
             <div class="contact-rail">
               <article class="contact-card contact-card-channels">
-                <h3>Canaux rapides</h3>
-                <div class="channel-list" aria-label="Canaux de contact rapides">
+                <h3>Chemin le plus rapide</h3>
+                <div class="channel-list" aria-label="Canaux d'urgence">
                   <a class="channel-link channel-link-whatsapp" href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20."
-                    target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_channel">
-                    <span>WhatsApp direct</span>
-                    <strong>Décrire le cas</strong>
+                    target="_blank" rel="noopener noreferrer" data-contact-intent="whatsapp_emergency_channel">
+                    <span>WhatsApp</span>
+                    <strong>Urgence ou média instable</strong>
                   </a>
-                  <a class="channel-link" href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer" data-contact-intent="facebook_channel">
-                    <span>Facebook</span>
-                    <strong>Page officielle</strong>
-                  </a>
-                  <a class="channel-link" href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer" data-contact-intent="google_channel">
-                    <span>Google</span>
-                    <strong>Profil et avis</strong>
+                  <a class="channel-link" href="/suivi-dossier-client-montreal" data-contact-intent="status_channel">
+                    <span>Suivi sécurisé</span>
+                    <strong>Portail client</strong>
                   </a>
                 </div>
               </article>
 
-              <article class="contact-card qr-card">
+              <article class="contact-card qr-card contact-card-compact">
                 <h3>QR mobile</h3>
                 <img src="/assets/icons/contact-qr.png" alt="QR code de contact NEXURADATA" class="contact-qr" loading="lazy" width="220" height="220">
-                <p>Scannez pour ouvrir le contact NEXURADATA sur mobile et garder le lien sous la main.</p>
+                <p>Scannez pour garder le contact sous la main.</p>
               </article>
 
-              <article class="contact-card">
-                <h3>Avant toute manipulation</h3>
+              <article class="contact-card contact-card-founder">
+                <h3>Réponse du fondateur</h3>
                 <ul class="contact-list">
-                  <li>Ne pas reformater</li>
-                  <li>Ne pas multiplier les redémarrages</li>
-                  <li>Ne pas improviser sur un RAID</li>
+                  <li>Ne reformatez pas.</li>
+                  <li>Ne multipliez pas les redémarrages.</li>
+                  <li>Ne reconstruisez pas un RAID sans plan.</li>
                 </ul>
+                <a href="/mot-du-fondateur" data-contact-intent="founder_rail">Lire le mot du fondateur</a>
               </article>
 
               <article class="contact-card">
-                <h3>Coordonnées</h3>
+                <h3>Coordonnées directes</h3>
                 <a href="tel:+14388130592" data-contact-intent="phone_rail">+1 438 813-0592</a>
                 <a href="mailto:contact@nexuradata.ca" data-contact-intent="email_rail">contact@nexuradata.ca</a>
-                <a href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20."
-                  rel="noopener noreferrer" target="_blank" class="whatsapp-inline-link" data-contact-intent="whatsapp_rail">WhatsApp +1 438 813-0592</a>
-                <a href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer" data-contact-intent="facebook_rail">Facebook NEXURADATA</a>
-                <a href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer" data-contact-intent="google_rail">Google / avis</a>
                 <p class="service-area">
                   Zone de service: Montréal et Grand Montréal<br>
                   Réception sécurisée sur rendez-vous confirmé seulement
                 </p>
-                <p><strong>Ouvert 7/7</strong> — 9 h à 18 h</p>
-                <p>Urgences acceptées en tout temps par courriel.</p>
+                <p><strong>Ouvert 7/7</strong> — 9 h à 18 h. Urgences acceptées en tout temps par courriel.</p>
               </article>
             </div>
           </div>
@@ -858,22 +864,23 @@
 
         <div class="footer-block">
           <small>CANAUX</small>
-          <p><a href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20." target="_blank" rel="noopener noreferrer">WhatsApp</a></p>
-          <p><a href="https://www.facebook.com/nexuradata" target="_blank" rel="noopener noreferrer">Facebook</a></p>
+          <p><a href="https://wa.me/14388130592?text=Bonjour%20NEXURADATA%2C%20je%20veux%20ouvrir%20un%20dossier.%20Support%3A%20disque%2FSSD%2FRAID%2Ftelephone.%20Symptomes%3A%20.%20Urgence%3A%20." target="_blank" rel="noopener noreferrer">WhatsApp urgence</a></p>
+          <p><a href="/suivi-dossier-client-montreal">Suivi de dossier</a></p>
           <p><a href="https://www.google.com/search?q=NEXURADATA" target="_blank" rel="noopener noreferrer">Google</a></p>
         </div>
 
         <div class="footer-block">
           <small>CONFIDENTIALITÉ</small>
           <p><a href="mailto:privacy@nexuradata.ca">privacy@nexuradata.ca</a></p>
+          <p><button type="button" class="footer-cookie-button" data-cookie-preferences>Préférences témoins</button></p>
         </div>
       </section>
 
       <section class="footer-legal" aria-label="Liens légaux">
-        <a href="/mentions-legales.html">Mentions légales</a>
-        <a href="/politique-confidentialite.html">Politique de confidentialité</a>
-        <a href="/engagements-conformite-quebec.html">Engagements Québec</a>
-        <a href="/conditions-intervention-paiement.html">Conditions d'intervention</a>
+        <a href="/mentions-legales">Mentions légales</a>
+        <a href="/politique-confidentialite">Politique de confidentialité</a>
+        <a href="/engagements-conformite-quebec">Engagements Québec</a>
+        <a href="/conditions-intervention-paiement">Conditions d'intervention</a>
       </section>
 
       <section class="footer-note" aria-label="Note d'exploitation">

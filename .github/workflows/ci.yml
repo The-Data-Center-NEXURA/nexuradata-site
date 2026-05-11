@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '20 14 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -12,6 +14,7 @@ jobs:
   test:
     name: Tests + build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -21,14 +24,48 @@ jobs:
           git fetch --no-tags --depth=1 origin ${{ github.ref }}
           git checkout --detach FETCH_HEAD
 
+      - name: Use pinned Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Install NEXURA site dependencies
+        run: npm ci --prefix apps/nexadura-site
+
+      - name: Run secret scan
+        run: npm run secret:scan
+
+      - name: Run dependency audit
+        run: npm run audit
+
+      - name: Verify package signatures
+        run: npm run audit:signatures
 
       - name: Run quality gate
         run: npm run check
 
-      - name: Run tests
-        run: npm test
+      - name: Run UI smoke checks
+        run: npm run ui:smoke
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Check NEXURA Next site
+        run: npm run nexura-site:check
+
+      - name: Upload coverage report
+        if: always() && hashFiles('coverage/lcov.info') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/lcov.info
+            coverage/index.html
+          if-no-files-found: ignore
 
       - name: Build release output
         run: npm run build

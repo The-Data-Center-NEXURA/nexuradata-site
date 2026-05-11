@@ -9,7 +9,7 @@
       <g:id>svc-deleted-files</g:id>
       <g:title>Récupération de fichiers supprimés — Montréal</g:title>
       <g:description>Suppression accidentelle, corbeille vidée ou dossier manquant. Récupération ciblée sans dommage physique apparent. Évaluation initiale sans frais.</g:description>
-      <g:link>https://nexuradata.ca/tarifs-recuperation-donnees-montreal.html</g:link>
+      <g:link>https://nexuradata.ca/tarifs-recuperation-donnees-montreal</g:link>
       <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
       <g:price>79.00 CAD</g:price>
       <g:availability>in_stock</g:availability>
@@ -23,7 +23,7 @@
       <g:id>svc-external-usb-card</g:id>
       <g:title>Récupération disque externe, USB et carte mémoire — Montréal</g:title>
       <g:description>Support encore détecté ou partiellement lisible, accès instable, récupération de photos, vidéos ou documents courants. Évaluation initiale sans frais.</g:description>
-      <g:link>https://nexuradata.ca/tarifs-recuperation-donnees-montreal.html</g:link>
+      <g:link>https://nexuradata.ca/tarifs-recuperation-donnees-montreal</g:link>
       <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
       <g:price>129.00 CAD</g:price>
       <g:availability>in_stock</g:availability>
@@ -37,7 +37,7 @@
       <g:id>svc-phone-mobile</g:id>
       <g:title>Récupération téléphone et mobile — Montréal</g:title>
       <g:description>Photos, vidéos, messages ou fichiers sur appareil mobile. Dossiers ne nécessitant pas de micro-soudure au niveau carte. Évaluation initiale sans frais.</g:description>
-      <g:link>https://nexuradata.ca/recuperation-telephone-montreal.html</g:link>
+      <g:link>https://nexuradata.ca/recuperation-telephone-montreal</g:link>
       <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
       <g:price>149.00 CAD</g:price>
       <g:availability>in_stock</g:availability>
@@ -51,7 +51,7 @@
       <g:id>svc-hdd-ssd-intermediate</g:id>
       <g:title>Récupération disque dur et SSD — Montréal</g:title>
       <g:description>Disque ou SSD inaccessible, structure logique endommagée, travail spécialisé sans réparation mécanique lourde confirmée. Évaluation initiale sans frais.</g:description>
-      <g:link>https://nexuradata.ca/recuperation-donnees-montreal.html</g:link>
+      <g:link>https://nexuradata.ca/recuperation-donnees-montreal</g:link>
       <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
       <g:price>350.00 CAD</g:price>
       <g:availability>in_stock</g:availability>
@@ -65,7 +65,7 @@
       <g:id>svc-raid-nas-server</g:id>
       <g:title>Récupération RAID, NAS et serveur — Montréal</g:title>
       <g:description>Grappes RAID, NAS et serveurs. Le prix dépend du nombre de disques, du type de panne, de l'urgence et des tentatives antérieures. Évaluation initiale sans frais.</g:description>
-      <g:link>https://nexuradata.ca/recuperation-raid-ssd-montreal.html</g:link>
+      <g:link>https://nexuradata.ca/recuperation-raid-ssd-montreal</g:link>
       <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
       <g:price>650.00 CAD</g:price>
       <g:availability>in_stock</g:availability>
@@ -79,7 +79,7 @@
       <g:id>svc-digital-forensics</g:id>
       <g:title>Forensique numérique — Montréal</g:title>
       <g:description>Préservation, analyse d'incident, documentation chronologique et traitement de dossiers sensibles. Pour contextes RH, juridiques, assurance et cybersécurité.</g:description>
-      <g:link>https://nexuradata.ca/forensique-numerique-montreal.html</g:link>
+      <g:link>https://nexuradata.ca/forensique-numerique-montreal</g:link>
       <g:image_link>https://nexuradata.ca/assets/icons/og-default.png</g:image_link>
       <g:price>500.00 CAD</g:price>
       <g:availability>in_stock</g:availability>

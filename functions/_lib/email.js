@@ -57,7 +57,7 @@ const emailCta = (label, url) =>
 const emailBlock = (text) =>
   `<div style="background:rgba(232,228,220,0.05);border-left:2px solid rgba(232,228,220,0.18);padding:12px 16px;border-radius:0 3px 3px 0;margin:0 0 4px;"><p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#c8c4bc;line-height:1.65;">${escapeHtml(text).replace(/\n/g, "<br>")}</p></div>`;
 
-const sendResendEmail = async (env, payload, idempotencyKey) => {
+export const sendResendEmail = async (env, payload, idempotencyKey) => {
   const apiKey = normalizeText(env?.RESEND_API_KEY, 256);
   const from = normalizeText(env?.RESEND_FROM_EMAIL, 200);
 

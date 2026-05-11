@@ -1,0 +1,11 @@
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "type": "command",
+                "command": "python3 ./scripts/hooks/cloudflare-functions-safety.py",
+                "timeout": 5
+            }
+        ]
+    }
+}
