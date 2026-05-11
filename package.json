@@ -37,7 +37,7 @@
     "prepare": "node ./scripts/setup-hooks.mjs"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^4.1.6",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",
     "vitest": "^4.1.4",
